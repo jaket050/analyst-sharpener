@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const C = {
   bg: "#080810", surface: "#0f0f1a", card: "#13131f", border: "#1c1c2e",
@@ -2169,7 +2169,7 @@ function AnalyticsCoach({ apiKey }) {
   const [newScores, setNewScores] = useState({});
   const [savingToDb, setSavingToDb] = useState(false);
   const [dbSaved, setDbSaved] = useState(false);
-  const msgsEndRef = React.useRef(null);
+  const msgsEndRef = useRef(null);
 
   useEffect(() => {
     if (msgsEndRef.current) msgsEndRef.current.scrollIntoView({ behavior: "smooth" });
