@@ -2662,6 +2662,1007 @@ function ApiKeyBanner({ apiKey, onSet }) {
 
 // ── APP SHELL ─────────────────────────────────────────────────────────────────
 
+// ── KPI LIBRARY DATA ─────────────────────────────────────────────────────────
+// 90 cards across 5 domains: Retail/E-commerce, Healthcare, Finance,
+// Operations/Supply Chain, Marketing
+// Each card: { metric, formula, why, decision, misinterpretations, roles }
+
+const KPI_LIBRARY = {
+  retail: [
+    {
+      metric: "Conversion Rate",
+      formula: "(Orders / Sessions) × 100",
+      why: "Measures the percentage of visitors who complete a purchase. The single most direct indicator of how well your site turns traffic into revenue.",
+      decision: "Pull this when leadership asks why revenue is flat despite healthy traffic growth — it tells you whether the problem is acquisition or the purchase experience itself.",
+      misinterpretations: ["Don't compare conversion rates across channels in isolation — mobile converts lower than desktop by nature, so blended rate without segmentation misleads.", "A rising conversion rate on falling traffic can mean you're losing top-of-funnel reach while retaining only high-intent visitors."],
+      roles: ["E-commerce Analyst", "Digital Analyst", "Growth Analyst"],
+    },
+    {
+      metric: "Average Order Value (AOV)",
+      formula: "Total Revenue / Number of Orders",
+      why: "Measures how much customers spend per transaction. Increasing AOV grows revenue without acquiring new customers.",
+      decision: "Pull this when evaluating bundling strategies, upsell prompts, or free-shipping thresholds — it quantifies whether those levers are moving the needle.",
+      misinterpretations: ["AOV can be inflated by a few high-value outlier orders — always check the median alongside the mean.", "A rising AOV with falling order volume may actually mean fewer customers are buying, not that the strategy is working."],
+      roles: ["E-commerce Analyst", "Retail Analyst", "Merchandising Analyst"],
+    },
+    {
+      metric: "Customer Lifetime Value (LTV or CLV)",
+      formula: "AOV × Purchase Frequency × Customer Lifespan",
+      why: "Estimates the total revenue a customer generates over their relationship with the brand. The foundational metric for any retention strategy.",
+      decision: "Pull this when deciding how much to spend on acquisition — LTV sets the ceiling on sustainable CAC. Also critical when evaluating loyalty programs.",
+      misinterpretations: ["LTV is a prediction, not a fact — it assumes historical behavior continues, which breaks down during market disruptions.", "Simple LTV formulas ignore margin — you need gross-margin-adjusted LTV to know if customers are actually profitable."],
+      roles: ["E-commerce Analyst", "Customer Analytics Manager", "Growth Analyst"],
+    },
+    {
+      metric: "Customer Acquisition Cost (CAC)",
+      formula: "Total Marketing + Sales Spend / New Customers Acquired",
+      why: "Measures the total cost to acquire one new customer. The counterpart to LTV — together they determine business viability.",
+      decision: "Pull this when the CFO asks whether the marketing budget is efficient, or when evaluating whether to scale a specific channel.",
+      misinterpretations: ["CAC without a time boundary is meaningless — it must be calculated over a specific period.", "Blended CAC hides channel-specific inefficiency — always break down by acquisition channel."],
+      roles: ["Growth Analyst", "Marketing Analyst", "E-commerce Analyst"],
+    },
+    {
+      metric: "Cart Abandonment Rate",
+      formula: "(1 − (Completed Purchases / Carts Created)) × 100",
+      why: "Measures the percentage of shoppers who add items to cart but don't complete purchase. A high rate signals friction in the checkout experience.",
+      decision: "Pull this when conversion rate drops and you need to isolate where in the funnel the problem is — abandonment pinpoints the checkout specifically.",
+      misinterpretations: ["Industry average cart abandonment is ~70% — a 68% rate isn't necessarily a problem unless it's trending up or your category benchmark is lower.", "Some abandonment is natural browse behavior — focus on recovery rate (email/retargeting recapture) alongside the raw rate."],
+      roles: ["E-commerce Analyst", "CRO Analyst", "Digital Analyst"],
+    },
+    {
+      metric: "Return Rate",
+      formula: "(Units Returned / Units Sold) × 100",
+      why: "Measures product return frequency. High return rates destroy margin and signal product-expectation mismatch.",
+      decision: "Pull this when gross margin is declining unexpectedly or when evaluating a new product category's performance. Also a leading signal of customer dissatisfaction before review scores accumulate.",
+      misinterpretations: ["A low return rate in a category where returns should be expected (apparel, footwear) may mean customers are keeping bad products out of friction — not satisfaction.", "Return rate by channel differs significantly — marketplace returns often run higher than DTC."],
+      roles: ["Retail Analyst", "Merchandising Analyst", "E-commerce Analyst"],
+    },
+    {
+      metric: "Revenue per Visitor (RPV)",
+      formula: "Total Revenue / Total Sessions",
+      why: "Combines conversion rate and AOV into a single metric. The most complete view of how efficiently traffic is being monetized.",
+      decision: "Pull this when you need a single number to compare the monetization efficiency of different traffic sources or time periods — it collapses the conversion + AOV equation.",
+      misinterpretations: ["RPV can be high for the wrong reasons — a small number of very high-value orders on low traffic inflates it without reflecting sustainable performance.", "Don't benchmark RPV across industries; it varies enormously by category and price point."],
+      roles: ["E-commerce Analyst", "Digital Analyst", "Merchandising Analyst"],
+    },
+    {
+      metric: "Gross Margin %",
+      formula: "((Revenue − COGS) / Revenue) × 100",
+      why: "Measures profitability before operating expenses. The foundational health metric — without positive gross margin, scaling revenue makes losses bigger.",
+      decision: "Pull this when evaluating pricing decisions, promotional discounts, or new product lines — any revenue decision without gross margin context is incomplete.",
+      misinterpretations: ["Gross margin doesn't include fulfillment, shipping, or returns — in e-commerce those costs can be large enough to make positive gross margin businesses cash-flow negative.", "Margin benchmarks vary enormously by category — compare within category, not against generic retail averages."],
+      roles: ["Retail Analyst", "Finance Analyst", "E-commerce Analyst"],
+    },
+    {
+      metric: "Repeat Purchase Rate",
+      formula: "(Customers Who Bought More Than Once / Total Customers) × 100",
+      why: "Measures customer loyalty and retention. Repeat customers cost less to serve and have higher LTV than new customers.",
+      decision: "Pull this when evaluating loyalty programs, email retention campaigns, or subscription offerings — it's the outcome metric for every retention initiative.",
+      misinterpretations: ["Repeat purchase rate measured over too short a window understates true loyalty — a 90-day window may miss customers who buy quarterly.", "A rising repeat rate on a shrinking customer base can mean churn is actually worse than it looks."],
+      roles: ["E-commerce Analyst", "Customer Retention Analyst", "CRM Analyst"],
+    },
+    {
+      metric: "Inventory Turnover",
+      formula: "COGS / Average Inventory Value",
+      why: "Measures how quickly inventory sells through. Low turnover ties up cash; high turnover signals strong demand or potential stockout risk.",
+      decision: "Pull this when merchandising decisions are being made about which products to carry, discontinue, or reorder — it shows which SKUs are moving and which are dead weight.",
+      misinterpretations: ["High turnover can be a stockout problem, not just strong sales — always pair with out-of-stock rate.", "Turnover benchmarks vary significantly by category; fresh food turns daily, furniture may turn twice a year."],
+      roles: ["Retail Analyst", "Supply Chain Analyst", "Merchandising Analyst"],
+    },
+    {
+      metric: "Net Promoter Score (NPS)",
+      formula: "% Promoters (9-10) − % Detractors (0-6)",
+      why: "Measures customer satisfaction and likelihood to recommend. A leading indicator of organic growth and brand health.",
+      decision: "Pull this when evaluating whether a product, service change, or experience improvement actually moved customer sentiment — it's the outcome metric for CX initiatives.",
+      misinterpretations: ["NPS is a survey metric — response bias is significant. Non-respondents are often detractors.", "NPS varies dramatically by industry — a score of +30 is excellent in retail but mediocre in B2B SaaS. Always benchmark within your category."],
+      roles: ["CX Analyst", "Retail Analyst", "E-commerce Analyst"],
+    },
+    {
+      metric: "Sell-Through Rate",
+      formula: "(Units Sold / Units Received) × 100",
+      why: "Measures how much of a received inventory shipment actually sold. The core merchandising efficiency metric.",
+      decision: "Pull this when evaluating whether to reorder or markdown a product — a low sell-through on new arrivals is an early signal to promote before it becomes clearance.",
+      misinterpretations: ["Sell-through rate is time-dependent — a 40% rate in the first week of a seasonal product may be excellent; 40% at end of season signals a problem.", "Sell-through ignores margin — a high-sell-through product at a loss is worse than a low-sell-through product with strong margin."],
+      roles: ["Merchandising Analyst", "Retail Analyst", "Buying Analyst"],
+    },
+    {
+      metric: "Bounce Rate",
+      formula: "(Single-Page Sessions / Total Sessions) × 100",
+      why: "Measures the percentage of visitors who leave after viewing only one page. High bounce rate can signal poor landing page relevance, slow load times, or audience mismatch.",
+      decision: "Pull this when diagnosing why a paid traffic campaign is generating clicks but not conversions — it tells you whether traffic is landing on the wrong page or the page itself is the problem.",
+      misinterpretations: ["A high bounce rate on a blog post or contact page may be perfectly normal — context matters.", "GA4 changed the definition of bounce rate — it now measures 'not engaged' sessions, which is stricter than the old single-page definition. Don't compare GA4 and UA bounce rates directly."],
+      roles: ["Digital Analyst", "E-commerce Analyst", "SEO Analyst"],
+    },
+    {
+      metric: "Customer Churn Rate",
+      formula: "(Customers Lost in Period / Customers at Start of Period) × 100",
+      why: "Measures the percentage of customers who stop buying over a period. In subscription and loyalty contexts, churn directly predicts revenue trajectory.",
+      decision: "Pull this when LTV models need recalibrating or when the retention team needs to justify their budget — churn is the denominator in every LTV calculation.",
+      misinterpretations: ["Churn rate definition varies — always clarify whether it's calculated on revenue or customer count, and whether it's voluntary or total churn.", "In DTC, churn is often calculated differently than in SaaS — a customer who doesn't buy in 12 months may not be 'churned' depending on the category."],
+      roles: ["E-commerce Analyst", "Retention Analyst", "Subscription Analyst"],
+    },
+    {
+      metric: "Cost per Acquisition (CPA) by Channel",
+      formula: "Channel Ad Spend / New Customers Acquired via That Channel",
+      why: "Breaks CAC down by marketing channel to show which acquisition sources are most efficient. The operational tool for budget allocation.",
+      decision: "Pull this when the media buyer asks where to shift budget — it tells you which channels are acquiring customers at a profitable cost and which are burning money.",
+      misinterpretations: ["Last-click attribution understates the contribution of upper-funnel channels like display or social awareness — always note your attribution model.", "CPA by channel ignores the quality of acquired customers — a cheap channel that brings low-LTV customers may be worse than an expensive channel with high-LTV customers."],
+      roles: ["Marketing Analyst", "Growth Analyst", "E-commerce Analyst"],
+    },
+    {
+      metric: "Days of Inventory on Hand",
+      formula: "(Average Inventory / COGS) × Days in Period",
+      why: "Estimates how many days of sales current inventory can support. Critical for cash flow planning and avoiding both stockouts and overstock.",
+      decision: "Pull this when planning a promotional event or evaluating whether to place a reorder — it tells you whether you have enough runway or are at risk of running out.",
+      misinterpretations: ["Days on hand should be evaluated against lead time — 30 days on hand is fine if replenishment takes 5 days, but dangerous if lead time is 45 days.", "Aggregate days on hand masks SKU-level imbalance — some items may be critically low while others are overstock."],
+      roles: ["Retail Analyst", "Supply Chain Analyst", "Merchandising Analyst"],
+    },
+    {
+      metric: "Gross Merchandise Value (GMV)",
+      formula: "Total Sales Value of Merchandise Transacted",
+      why: "Measures total transaction volume on a platform, including marketplace sales. The top-line growth metric for marketplace and platform businesses.",
+      decision: "Pull this when reporting overall platform health or comparing growth across periods — it's the headline metric for marketplaces like Amazon or Shopify merchants reporting to investors.",
+      misinterpretations: ["GMV is not revenue — in marketplace businesses, revenue is only the take rate (commission) on GMV. Conflating them overstates the business.", "GMV includes returns and cancellations unless adjusted — 'net GMV' is a cleaner metric."],
+      roles: ["E-commerce Analyst", "Marketplace Analyst", "Business Analyst"],
+    },
+    {
+      metric: "Checkout Funnel Drop-off Rate by Step",
+      formula: "(Users Who Left at Step N / Users Who Entered Step N) × 100",
+      why: "Maps where in the multi-step checkout process users abandon. Pinpoints the exact friction point so CRO teams can fix the right thing.",
+      decision: "Pull this when conversion rate drops and you've already confirmed it's happening at checkout — the step-by-step view tells you whether the problem is account creation, shipping cost reveal, or payment entry.",
+      misinterpretations: ["Drop-off at the payment step is often a payment method issue, not a UX problem — check what payment options are available and whether they match your customer demographics.", "Step-level drop-off should be compared to historical baseline, not just industry benchmark — each site's checkout architecture is different."],
+      roles: ["E-commerce Analyst", "CRO Analyst", "UX Analyst"],
+    },
+  ],
+
+  healthcare: [
+    {
+      metric: "Hospital Readmission Rate",
+      formula: "(Patients Readmitted Within 30 Days / Total Discharged Patients) × 100",
+      why: "Measures the percentage of patients who return to hospital within 30 days of discharge. A core quality-of-care indicator and a CMS penalty trigger.",
+      decision: "Pull this when evaluating care transition programs or discharge planning effectiveness — it's the outcome metric for any post-discharge intervention.",
+      misinterpretations: ["30-day readmission includes unrelated diagnoses unless risk-adjusted — raw readmission rate without case-mix adjustment penalizes hospitals that serve sicker populations.", "A reduction in readmissions isn't always an improvement — if the hospital is just observing patients instead of admitting them, the rate improves artificially."],
+      roles: ["Healthcare Analyst", "Clinical Data Analyst", "Quality Analyst"],
+    },
+    {
+      metric: "Average Length of Stay (ALOS)",
+      formula: "Total Inpatient Days / Total Discharges",
+      why: "Measures how long patients stay per admission. Affects capacity, cost, and reimbursement — shorter stays generally lower cost but must not compromise care quality.",
+      decision: "Pull this when the CFO asks about capacity utilization or when evaluating a care pathway redesign — ALOS is the bridge between clinical decisions and financial outcomes.",
+      misinterpretations: ["ALOS must be risk-adjusted by DRG (diagnosis-related group) — a hospital with sicker patients will naturally have higher ALOS, which is appropriate.", "Reducing ALOS beyond clinical best practice increases readmission risk — these two metrics must be tracked together."],
+      roles: ["Healthcare Analyst", "Hospital Operations Analyst", "Revenue Cycle Analyst"],
+    },
+    {
+      metric: "Patient Satisfaction Score (HCAHPS)",
+      formula: "Survey-based composite score across care domains (communication, responsiveness, cleanliness, etc.)",
+      why: "Standardized CMS survey measuring patient experience. Publicly reported and tied to value-based reimbursement under the Hospital Value-Based Purchasing Program.",
+      decision: "Pull this when benchmarking against peer hospitals or when nursing leadership needs to prioritize experience improvements — HCAHPS identifies which care domains are dragging the composite score.",
+      misinterpretations: ["HCAHPS captures experience, not outcomes — a patient can have a great experience and poor clinical outcomes, or vice versa.", "Response rate affects reliability — low-response hospitals have noisier scores, which can make trend analysis misleading."],
+      roles: ["Healthcare Analyst", "Patient Experience Analyst", "Quality Analyst"],
+    },
+    {
+      metric: "Cost per Discharge (Cost per Case)",
+      formula: "Total Hospital Costs / Total Discharges",
+      why: "Measures operational efficiency per inpatient case. Under DRG-based reimbursement, the hospital keeps the difference between the fixed payment and actual cost.",
+      decision: "Pull this when evaluating clinical resource utilization or when comparing service lines — it reveals which patient populations or procedures are financially sustainable.",
+      misinterpretations: ["Cost per discharge varies by case mix — always segment by DRG or service line before drawing conclusions.", "Cost reduction without quality monitoring can lead to worse outcomes that are more expensive long-term (readmissions, complications)."],
+      roles: ["Healthcare Financial Analyst", "Cost Analyst", "Hospital Operations Analyst"],
+    },
+    {
+      metric: "Bed Occupancy Rate",
+      formula: "(Occupied Beds / Available Beds) × 100",
+      why: "Measures capacity utilization. Rates too low indicate underutilized capacity; rates too high (above ~85%) correlate with increased infection risk and care delays.",
+      decision: "Pull this when planning staffing levels, evaluating capacity expansion, or diagnosing ED overcrowding — it's the operational heartbeat of a hospital's throughput.",
+      misinterpretations: ["An occupancy rate of 100% does not mean the hospital is 'full' — it means surge capacity has already been absorbed and flexibility is gone.", "Occupancy is a lagging indicator of flow — the leading indicators are ED boarding time and OR turnaround time."],
+      roles: ["Hospital Operations Analyst", "Capacity Planning Analyst", "Healthcare Analyst"],
+    },
+    {
+      metric: "Claim Denial Rate",
+      formula: "(Denied Claims / Total Claims Submitted) × 100",
+      why: "Measures the percentage of insurance claims rejected by payers. High denial rates reduce revenue, delay cash flow, and signal documentation or coding problems.",
+      decision: "Pull this when revenue cycle leadership sees days in AR climbing — denial rate is usually the upstream cause, and breaking it down by denial reason identifies whether it's a coding, eligibility, or authorization problem.",
+      misinterpretations: ["Initial denial rate and final denial rate are different — many denials are overturned on appeal, so focusing only on initial denials overstates true revenue leakage.", "Denial rate by payer reveals which insurance contracts create the most friction — useful for contract renegotiation."],
+      roles: ["Revenue Cycle Analyst", "Healthcare Financial Analyst", "Billing Analyst"],
+    },
+    {
+      metric: "Days in Accounts Receivable (Days in AR)",
+      formula: "(Total AR / (Annual Revenue / 365))",
+      why: "Measures how long it takes to collect payment after a claim is submitted. A key revenue cycle efficiency metric.",
+      decision: "Pull this when the CFO is concerned about cash flow — rising days in AR often means either a payer is slow-walking claims or the billing team has a backlog.",
+      misinterpretations: ["Days in AR below 35-40 days is generally considered healthy for hospitals — but the benchmark varies by payer mix.", "A sudden drop in days in AR can mean claims are being written off, not collected — check alongside denial rate and write-off rate."],
+      roles: ["Revenue Cycle Analyst", "Healthcare Financial Analyst", "Business Office Analyst"],
+    },
+    {
+      metric: "HEDIS Measure Compliance Rate",
+      formula: "(Patients Meeting Care Standard / Eligible Population) × 100",
+      why: "HEDIS (Healthcare Effectiveness Data and Information Set) measures whether health plans are delivering recommended preventive and chronic care. Tied to plan quality ratings and star scores.",
+      decision: "Pull this when the medical director wants to know which care gaps to close first for quality program performance — HEDIS scores directly affect plan star ratings and revenue.",
+      misinterpretations: ["HEDIS is measured at the plan level, not the provider level — individual physician performance requires different analytics.", "HEDIS compliance can be improved by documentation improvements alone — sometimes the care is happening but isn't being captured in the data."],
+      roles: ["Healthcare Quality Analyst", "Population Health Analyst", "Managed Care Analyst"],
+    },
+    {
+      metric: "Emergency Department (ED) Door-to-Provider Time",
+      formula: "Average minutes from patient arrival to first provider contact",
+      why: "Measures ED throughput and responsiveness. Long wait times correlate with patient dissatisfaction, left-without-being-seen (LWBS) rates, and poor outcomes for high-acuity patients.",
+      decision: "Pull this when ED capacity planning or staffing decisions are being made — door-to-provider time is the operational lever that drives both safety and patient experience scores.",
+      misinterpretations: ["Average door-to-provider time masks bimodal distribution — check median and 90th percentile to identify the worst patient experiences.", "Improving door-to-provider time without fixing downstream boarding means patients get seen faster but then wait longer in the ED before a bed is available."],
+      roles: ["Healthcare Operations Analyst", "ED Analyst", "Clinical Data Analyst"],
+    },
+    {
+      metric: "Net Collection Rate",
+      formula: "(Payments Collected / (Charges − Contractual Adjustments)) × 100",
+      why: "Measures how effectively the revenue cycle collects what it is contractually entitled to. The most accurate indicator of revenue cycle performance.",
+      decision: "Pull this when evaluating revenue cycle vendor performance or assessing whether a billing process change improved collections — it strips out contractual write-offs that obscure true performance.",
+      misinterpretations: ["Net collection rate is often confused with gross collection rate — gross uses total charges (which include chargemaster inflations), while net uses post-contractual-adjustment amounts and is more meaningful.", "A net collection rate below 95% is a warning sign that money is being left on the table through denials, underpayments, or write-offs."],
+      roles: ["Revenue Cycle Analyst", "Healthcare Financial Analyst", "Practice Manager Analyst"],
+    },
+    {
+      metric: "Preventable Adverse Event Rate",
+      formula: "(Preventable Adverse Events / Total Patient Admissions) × 1,000",
+      why: "Tracks patient safety incidents that were avoidable — medication errors, hospital-acquired infections, falls. A core quality and accreditation metric.",
+      decision: "Pull this when the quality committee reviews safety data or when a Joint Commission survey is approaching — it identifies whether safety protocols are working.",
+      misinterpretations: ["Adverse event rate is undercounted in voluntary reporting systems — actual incident rate is typically 3-10x reported rate.", "Comparing adverse event rates across hospitals is difficult without risk adjustment for patient acuity and procedure complexity."],
+      roles: ["Patient Safety Analyst", "Quality Analyst", "Clinical Data Analyst"],
+    },
+    {
+      metric: "Medication Adherence Rate",
+      formula: "(Proportion of Days Covered using prescription fill data) × 100",
+      why: "Measures whether patients take prescribed medications as directed. Non-adherence drives preventable hospitalizations, particularly in chronic disease populations.",
+      decision: "Pull this when a population health program is evaluating whether care management interventions are improving chronic disease control — adherence is a leading indicator of downstream utilization.",
+      misinterpretations: ["Proportion of Days Covered (PDC) is not a perfect adherence measure — it assumes medications filled are actually taken.", "Adherence rates differ dramatically by drug class and condition — benchmark within disease category."],
+      roles: ["Population Health Analyst", "Pharmacy Analyst", "Managed Care Analyst"],
+    },
+    {
+      metric: "Operating Margin",
+      formula: "((Net Revenue − Operating Expenses) / Net Revenue) × 100",
+      why: "Measures a hospital's financial sustainability. The primary metric used by hospital boards and rating agencies to evaluate whether the organization can maintain and invest in its operations.",
+      decision: "Pull this when leadership is evaluating whether a service line should be expanded, contracted, or subsidized — operating margin by service line tells you which areas generate and which drain financial resources.",
+      misinterpretations: ["Negative operating margin in a service line doesn't always mean it should be cut — some service lines (like ED or trauma) are loss leaders that drive inpatient volume elsewhere.", "Non-operating income (investments, donations) can mask poor operating performance — always look at operating margin separately from total margin."],
+      roles: ["Healthcare Financial Analyst", "CFO Analyst", "Hospital Finance Analyst"],
+    },
+    {
+      metric: "Staff-to-Patient Ratio",
+      formula: "Number of Clinical Staff / Number of Patients (by unit, shift)",
+      why: "Measures nursing and clinical staff workload. Evidence shows that understaffing increases adverse events, burnout, and turnover — all of which are expensive.",
+      decision: "Pull this when evaluating staffing model changes, scheduling technology ROI, or investigating a spike in adverse events — ratio by unit and shift reveals where workload is unsustainable.",
+      misinterpretations: ["Ratio requirements vary by state regulation and unit type — ICU ratios (1:2) differ from med-surg ratios (1:4-6). There is no universal benchmark.", "Average ratio hides shift-level variability — a 1:4 average may mean some shifts are 1:6 while others are 1:2, which has very different patient safety implications."],
+      roles: ["Nursing Workforce Analyst", "Healthcare Operations Analyst", "HR Analytics"],
+    },
+    {
+      metric: "Payer Mix",
+      formula: "% of Revenue/Volume from Medicare, Medicaid, Commercial, Self-Pay",
+      why: "Measures the composition of a hospital's revenue by insurance type. Payer mix determines the effective reimbursement rate and financial risk profile of the organization.",
+      decision: "Pull this when projecting revenue impact of policy changes, evaluating a new service line's financial viability, or assessing market strategy — payer mix shifts can change the revenue picture significantly without volume changes.",
+      misinterpretations: ["High Medicare/Medicaid mix isn't inherently bad — it depends on whether the organization is efficient enough to make those reimbursement rates work.", "Payer mix should be analyzed by service line, not just at the system level — some departments serve different populations than the aggregate."],
+      roles: ["Healthcare Financial Analyst", "Revenue Cycle Analyst", "Strategic Planning Analyst"],
+    },
+    {
+      metric: "Value-Based Care Quality Score",
+      formula: "Composite of clinical quality, patient experience, and outcome metrics per CMS program requirements",
+      why: "Under value-based payment models (MSSP, BPCI, VBC contracts), quality scores determine bonus or penalty payments on top of base reimbursement.",
+      decision: "Pull this when the organization is evaluating which quality improvement initiatives will have the highest financial return — quality scores directly translate to revenue under VBC contracts.",
+      misinterpretations: ["Quality scores lag actual performance by 1-2 years in most CMS programs — current improvement efforts won't show up in payments immediately.", "Different VBC programs use different quality measure sets — MSSP ACO measures differ from BPCI measures. Don't conflate programs."],
+      roles: ["Value-Based Care Analyst", "Population Health Analyst", "Quality Analyst"],
+    },
+    {
+      metric: "Prior Authorization Approval Rate",
+      formula: "(Approved Authorizations / Total Authorization Requests) × 100",
+      why: "Measures how often payers approve clinical services before they're rendered. Low approval rates create revenue risk, care delays, and administrative cost.",
+      decision: "Pull this when evaluating whether a specific payer contract is creating excessive administrative burden — denial patterns at the authorization stage predict downstream claim denials.",
+      misinterpretations: ["Prior authorization denial rate doesn't equal revenue loss — many denials are appealed and overturned, or care is modified to meet authorization criteria.", "Approval rate varies significantly by service type — imaging and specialty drugs have lower approval rates than routine procedures."],
+      roles: ["Revenue Cycle Analyst", "Utilization Management Analyst", "Managed Care Analyst"],
+    },
+    {
+      metric: "Population Health Risk Score",
+      formula: "Composite risk model output (e.g., HCC Risk Adjustment Factor) based on patient diagnoses and demographics",
+      why: "Predicts healthcare utilization and cost for a patient population. Used to stratify patients for care management and to set capitated payment rates.",
+      decision: "Pull this when the care management team is deciding which patients to actively manage — risk scores prioritize intervention resources toward the patients most likely to have high utilization.",
+      misinterpretations: ["Risk scores predict cost, not clinical need — a patient with a high risk score may be well-managed and stable, while a lower-score patient may be in acute decline.", "Risk scores based on claims data miss undiagnosed conditions — complete documentation is essential for accurate risk capture."],
+      roles: ["Population Health Analyst", "Actuarial Analyst", "Managed Care Analyst"],
+    },
+    {
+      metric: "Surgical Site Infection (SSI) Rate",
+      formula: "(Surgical Site Infections / Total Surgical Cases) × 100",
+      why: "Measures post-surgical infection incidence. SSIs are the most common and costly healthcare-associated infection — CMS publicly reports them and adjusts payments based on performance.",
+      decision: "Pull this when the surgical quality committee is evaluating procedural protocols or when comparing performance to the NHSN benchmark — SSI rate is both a patient safety and financial metric.",
+      misinterpretations: ["SSI rate must be risk-adjusted by procedure type and patient health status — a colorectal surgeon's SSI rate should not be compared to an orthopedic surgeon's rate.", "Surveillance methodology affects detection rate — hospitals with more rigorous post-discharge surveillance will appear to have higher SSI rates even if care is equivalent."],
+      roles: ["Patient Safety Analyst", "Infection Prevention Analyst", "Quality Analyst"],
+    },
+  ],
+
+  finance: [
+    {
+      metric: "Return on Equity (ROE)",
+      formula: "Net Income / Average Shareholders' Equity",
+      why: "Measures how efficiently a company generates profit from shareholders' investment. The primary metric used by equity investors to evaluate management effectiveness.",
+      decision: "Pull this when comparing companies within a sector for investment screening, or when evaluating whether management is creating or destroying shareholder value.",
+      misinterpretations: ["High ROE can be driven by high debt (financial leverage), not operational excellence — always check alongside Debt-to-Equity ratio.", "ROE is distorted by share buybacks — companies that buy back stock reduce equity, inflating ROE without improving underlying performance."],
+      roles: ["Financial Analyst", "Equity Research Analyst", "Investment Analyst"],
+    },
+    {
+      metric: "Earnings Per Share (EPS)",
+      formula: "(Net Income − Preferred Dividends) / Weighted Average Shares Outstanding",
+      why: "Measures profitability on a per-share basis. The most widely reported corporate performance metric and the denominator in P/E valuation.",
+      decision: "Pull this when evaluating earnings trends or setting valuation targets — EPS growth rate is the primary driver of stock price appreciation for mature companies.",
+      misinterpretations: ["EPS can be manipulated through share buybacks — a company can grow EPS without growing earnings simply by reducing share count.", "GAAP EPS and adjusted EPS often differ significantly — always identify which one is being discussed and what adjustments were made."],
+      roles: ["Financial Analyst", "Equity Research Analyst", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "Price-to-Earnings Ratio (P/E)",
+      formula: "Stock Price / Earnings Per Share",
+      why: "Measures how much investors pay for each dollar of earnings. The most widely used equity valuation multiple.",
+      decision: "Pull this when screening stocks for relative value or when comparing a company's current valuation to its historical average — P/E contextualize whether a stock is expensive or cheap relative to earnings.",
+      misinterpretations: ["P/E is meaningless for companies with negative earnings — use alternative multiples like EV/Revenue or EV/EBITDA.", "Trailing P/E uses historical earnings; forward P/E uses analyst estimates — forward P/E is more predictive but dependent on forecast accuracy."],
+      roles: ["Financial Analyst", "Equity Research Analyst", "Portfolio Analyst"],
+    },
+    {
+      metric: "Debt-to-Equity Ratio (D/E)",
+      formula: "Total Liabilities / Total Shareholders' Equity",
+      why: "Measures financial leverage — how much of the business is financed by debt versus equity. High D/E amplifies both returns and risk.",
+      decision: "Pull this when assessing credit risk or evaluating whether a company can sustain additional borrowing — it's the first metric credit analysts check before rating a debt instrument.",
+      misinterpretations: ["Appropriate D/E varies by industry — utilities operate at high D/E by design; tech companies typically operate at low D/E. Cross-industry comparisons mislead.", "Book value of equity is historical cost — market-value-based D/E is more informative but requires market cap data."],
+      roles: ["Financial Analyst", "Credit Analyst", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "EBITDA",
+      formula: "Earnings Before Interest, Taxes, Depreciation, and Amortization",
+      why: "Approximates operating cash flow by adding back non-cash and financing charges to net income. Used as a proxy for operational performance and in M&A valuation.",
+      decision: "Pull this when comparing operational performance across companies with different capital structures or tax jurisdictions, or as the denominator in EV/EBITDA valuation.",
+      misinterpretations: ["EBITDA is not cash flow — it ignores working capital changes and capital expenditure requirements that can be enormous.", "EBITDA adds back D&A, but for capital-intensive businesses, those depreciation charges represent real economic costs of asset replacement."],
+      roles: ["Financial Analyst", "M&A Analyst", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "Free Cash Flow (FCF)",
+      formula: "Operating Cash Flow − Capital Expenditures",
+      why: "Measures actual cash generated after maintaining and investing in the business. The most reliable indicator of a company's ability to create value, pay dividends, or repay debt.",
+      decision: "Pull this when equity valuation relies on DCF modeling, or when assessing whether a company can sustain its dividend — FCF answers the question that net income cannot.",
+      misinterpretations: ["Negative FCF is not always bad — growth companies in investment mode may have negative FCF while building future earning power.", "FCF can be temporarily boosted by cutting capex — always check whether capex is below maintenance levels, which signals underinvestment."],
+      roles: ["Financial Analyst", "Equity Research Analyst", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "Current Ratio",
+      formula: "Current Assets / Current Liabilities",
+      why: "Measures short-term liquidity — whether the company can pay its upcoming obligations. A ratio below 1.0 means current liabilities exceed current assets.",
+      decision: "Pull this when assessing a company's near-term financial stability or when a vendor or lender is evaluating credit risk — it's the first liquidity check in any financial analysis.",
+      misinterpretations: ["A high current ratio (above 3.0) can indicate inefficient use of assets — excess cash sitting idle or inventory building up.", "Current ratio is a point-in-time snapshot — a company with a 1.5 ratio and rapidly burning cash may be in more trouble than one with a 1.2 ratio and strong cash generation."],
+      roles: ["Financial Analyst", "Credit Analyst", "Treasury Analyst"],
+    },
+    {
+      metric: "Net Profit Margin",
+      formula: "(Net Income / Revenue) × 100",
+      why: "Measures what percentage of revenue becomes profit after all expenses. The bottom-line efficiency metric.",
+      decision: "Pull this when comparing profitability across companies or evaluating whether a new product line is accretive to overall margins — it's the ultimate scorecard for every revenue dollar.",
+      misinterpretations: ["Net margin varies enormously by industry — grocery retail operates at 1-3% margin; software companies may operate at 20-30%. Cross-industry comparison is misleading.", "Net margin can be temporarily inflated by one-time items (asset sales, tax benefits) — always check for non-recurring items in the footnotes."],
+      roles: ["Financial Analyst", "Corporate Finance Analyst", "Business Analyst"],
+    },
+    {
+      metric: "Return on Assets (ROA)",
+      formula: "(Net Income / Average Total Assets) × 100",
+      why: "Measures how efficiently a company generates profit from all of its assets. Useful for comparing companies with different capital structures.",
+      decision: "Pull this when evaluating asset-heavy businesses (manufacturing, utilities, hospitals) to understand whether assets are deployed productively.",
+      misinterpretations: ["ROA is less meaningful for financial firms (banks, insurance) where assets include loans and investments that work differently from operating assets.", "Average total assets should be used (beginning + ending / 2) to avoid distortion from mid-period acquisitions."],
+      roles: ["Financial Analyst", "Corporate Finance Analyst", "Investment Analyst"],
+    },
+    {
+      metric: "Operating Leverage",
+      formula: "% Change in Operating Income / % Change in Revenue",
+      why: "Measures how sensitive operating income is to revenue changes. High operating leverage amplifies both gains in up-cycles and losses in down-cycles.",
+      decision: "Pull this when stress-testing a financial model under different revenue scenarios — a company with high operating leverage needs to be modeled with a wider range of outcomes.",
+      misinterpretations: ["Operating leverage is not the same as financial leverage — one is about cost structure (fixed vs. variable costs), the other is about debt in the capital structure.", "High operating leverage is not inherently bad — it's a feature of scalable businesses like software that become highly profitable as revenue grows."],
+      roles: ["Financial Analyst", "Corporate Finance Analyst", "FP&A Analyst"],
+    },
+    {
+      metric: "Accounts Receivable Turnover (DSO)",
+      formula: "Days Sales Outstanding = (AR / Revenue) × Days in Period",
+      why: "Measures how quickly a company collects payment from customers. High DSO ties up working capital and can signal collection problems or customer financial stress.",
+      decision: "Pull this when evaluating working capital efficiency or when assessing whether a B2B company's customers are paying on time — rising DSO is an early warning sign of customer credit deterioration.",
+      misinterpretations: ["DSO varies by industry and payment terms — a 45-day DSO may be excellent in construction and concerning in retail.", "DSO can be artificially compressed by factoring receivables — check for off-balance-sheet financing arrangements."],
+      roles: ["Financial Analyst", "Treasury Analyst", "Credit Analyst"],
+    },
+    {
+      metric: "Weighted Average Cost of Capital (WACC)",
+      formula: "(E/V × Re) + (D/V × Rd × (1−T)) where E=equity, D=debt, V=total value, Re=cost of equity, Rd=cost of debt, T=tax rate",
+      why: "The minimum return a company must earn on its invested capital to satisfy all stakeholders. Used as the discount rate in DCF valuation.",
+      decision: "Pull this when building a DCF model or evaluating whether a capital project creates or destroys value — any project with returns above WACC creates value; below WACC destroys it.",
+      misinterpretations: ["WACC inputs (especially cost of equity using CAPM) involve significant estimation uncertainty — small changes in beta or equity risk premium change WACC materially.", "WACC represents today's cost of capital — for long-horizon projects, it may need to be adjusted for expected future capital structure changes."],
+      roles: ["Financial Analyst", "Investment Banker", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "Sharpe Ratio",
+      formula: "(Portfolio Return − Risk-Free Rate) / Portfolio Standard Deviation",
+      why: "Measures risk-adjusted return — how much excess return is generated per unit of risk. The primary metric for comparing investment strategies or portfolio managers.",
+      decision: "Pull this when evaluating competing investment strategies or portfolio managers — a higher Sharpe ratio means better return per unit of risk taken.",
+      misinterpretations: ["Sharpe ratio uses standard deviation as the risk measure, which penalizes upside volatility equally with downside — Sortino ratio addresses this by using only downside deviation.", "A Sharpe ratio below 1.0 is generally considered poor, above 2.0 is very good — but context matters; these benchmarks assume normal market conditions."],
+      roles: ["Investment Analyst", "Portfolio Analyst", "Risk Analyst"],
+    },
+    {
+      metric: "Loan-to-Value Ratio (LTV) — Banking/Lending",
+      formula: "(Loan Amount / Appraised Asset Value) × 100",
+      why: "Measures the credit risk of a collateralized loan. High LTV means the lender has less cushion if the borrower defaults and the asset must be liquidated.",
+      decision: "Pull this when underwriting a mortgage, auto loan, or commercial real estate loan — LTV determines whether PMI is required, what interest rate applies, and whether the loan meets secondary market standards.",
+      misinterpretations: ["LTV uses appraised value at origination — as asset values decline (e.g., real estate crash), LTV increases, turning performing loans into underwater positions.", "Combined LTV (CLTV) must be used when there are multiple liens — a first mortgage at 70% LTV with a second mortgage brings CLTV to 90%+."],
+      roles: ["Credit Analyst", "Mortgage Analyst", "Lending Analyst"],
+    },
+    {
+      metric: "Revenue Growth Rate",
+      formula: "((Current Period Revenue − Prior Period Revenue) / Prior Period Revenue) × 100",
+      why: "The most fundamental performance metric for any growth-stage or public company. Tells the story of whether the business is gaining or losing market momentum.",
+      decision: "Pull this when setting investor expectations, evaluating market share trends, or stress-testing a long-range plan — revenue growth rate is the starting assumption for almost every financial model.",
+      misinterpretations: ["High revenue growth rate from acquisitions is fundamentally different from organic growth — always separate M&A contribution from organic performance.", "Year-over-year growth rates are distorted by base effects — a company that had a COVID-related revenue collapse in 2020 may show 100%+ growth in 2021 without actually being a high-growth business."],
+      roles: ["Financial Analyst", "FP&A Analyst", "Equity Research Analyst"],
+    },
+    {
+      metric: "Inventory Turnover — Finance Context",
+      formula: "COGS / Average Inventory",
+      why: "In financial analysis, inventory turnover reveals working capital efficiency and business model quality. High-turnover businesses are more capital-efficient and generate more cash.",
+      decision: "Pull this in retail and manufacturing financial analysis when assessing whether management is running the balance sheet efficiently — a declining turnover trend signals growing inventory risk.",
+      misinterpretations: ["Inventory turnover comparisons must be within-industry — a grocery chain turning inventory 20x per year cannot be compared to a jewelry retailer turning 2x.", "Turnover can be artificially high if COGS is rising due to input cost inflation rather than improved sales velocity."],
+      roles: ["Financial Analyst", "Equity Research Analyst", "Corporate Finance Analyst"],
+    },
+    {
+      metric: "Capital Expenditure (CapEx) as % of Revenue",
+      formula: "(Capital Expenditures / Revenue) × 100",
+      why: "Measures how much of revenue is reinvested in physical assets. Low CapEx-to-revenue ratio is a hallmark of scalable, asset-light businesses; high ratio indicates capital-intensive operations.",
+      decision: "Pull this when comparing business model quality across industries or evaluating FCF sustainability — CapEx intensity determines how much of EBITDA actually converts to free cash flow.",
+      misinterpretations: ["Maintenance CapEx (replacing existing assets) and growth CapEx (investing in new capacity) have very different implications — total CapEx doesn't tell you which one is driving the spend.", "High CapEx in a growth phase may be a positive signal of investment in future capacity, not a negative signal of inefficiency."],
+      roles: ["Financial Analyst", "FP&A Analyst", "Investment Analyst"],
+    },
+    {
+      metric: "Gross Margin — Finance Context",
+      formula: "((Revenue − COGS) / Revenue) × 100",
+      why: "In financial analysis, gross margin is the first indicator of business model quality and pricing power. High gross margin businesses generate more resources to fund growth and weather downturns.",
+      decision: "Pull this when evaluating whether price increases or input cost inflation are affecting unit economics — expanding margin signals pricing power; compressing margin signals cost pressure or competitive pricing.",
+      misinterpretations: ["Gross margin comparisons must account for revenue recognition policy — some companies capitalize costs that others expense, creating non-comparable margins.", "Gross margin improvement from product mix shift is structurally different from improvement through cost reduction or pricing — both look the same at the gross margin line."],
+      roles: ["Financial Analyst", "FP&A Analyst", "Equity Research Analyst"],
+    },
+  ],
+
+  operations: [
+    {
+      metric: "On-Time Delivery Rate (OTD)",
+      formula: "(Orders Delivered On or Before Promised Date / Total Orders Delivered) × 100",
+      why: "Measures supply chain reliability from the customer's perspective. OTD is the most direct measure of whether the supply chain is meeting its commitments.",
+      decision: "Pull this when customer complaints about late deliveries are rising or when a major contract is up for renewal — OTD is the first metric buyers examine when evaluating supplier performance.",
+      misinterpretations: ["On-time is only as good as the promise date — a company that consistently sets loose delivery windows will have a high OTD but poor customer experience.", "OTD should be segmented by lane, carrier, and product type — aggregate OTD masks where specific failures are occurring."],
+      roles: ["Supply Chain Analyst", "Logistics Analyst", "Operations Analyst"],
+    },
+    {
+      metric: "Inventory Turnover — Operations Context",
+      formula: "COGS / Average Inventory Value",
+      why: "Measures how quickly inventory is cycled through the supply chain. Higher turnover means less cash tied up in inventory and lower storage cost.",
+      decision: "Pull this when optimizing reorder points or evaluating whether a new vendor's lead time is creating excess safety stock — inventory turnover tells you whether the supply chain is holding too much or too little.",
+      misinterpretations: ["Very high turnover can mean stockouts — always monitor alongside in-stock rate or fill rate to ensure high turns aren't coming at the cost of availability.", "Turnover is a lagging indicator — it reflects past sales velocity and may not predict future demand patterns, especially in volatile categories."],
+      roles: ["Supply Chain Analyst", "Inventory Analyst", "Operations Analyst"],
+    },
+    {
+      metric: "Perfect Order Rate",
+      formula: "(Orders with No Errors / Total Orders) × 100 — errors include late, incomplete, damaged, or inaccurate documentation",
+      why: "A composite metric that captures order fulfillment quality across multiple dimensions simultaneously. The most comprehensive supply chain performance indicator.",
+      decision: "Pull this when executive leadership wants a single supply chain health number — perfect order rate condenses OTD, fill rate, damage rate, and documentation accuracy into one metric.",
+      misinterpretations: ["Even small individual error rates compound dramatically in a perfect order calculation — 98% × 98% × 98% × 98% = 92.2% perfect order rate. Don't assume individual metric performance translates linearly.", "Perfect order rate can be gamed by relaxing any one component — make sure all sub-metrics (OTD, fill rate, damage, documentation) are tracked individually as well."],
+      roles: ["Supply Chain Analyst", "Operations Analyst", "Logistics Analyst"],
+    },
+    {
+      metric: "Cash-to-Cash Cycle Time (C2C)",
+      formula: "Days Inventory Outstanding + Days Sales Outstanding − Days Payable Outstanding",
+      why: "Measures the time between paying for raw materials and receiving payment from customers. Shorter C2C means less working capital trapped in the supply chain.",
+      decision: "Pull this when evaluating working capital efficiency or when supply chain finance programs are being considered — C2C tells you where cash is sitting in the pipeline.",
+      misinterpretations: ["Negative C2C (like Amazon or Walmart) means the company is essentially funded by suppliers and customers — it's a structural advantage, not a red flag.", "Reducing C2C through extending payables can damage supplier relationships — always evaluate working capital improvement holistically."],
+      roles: ["Supply Chain Analyst", "Finance Analyst", "Operations Analyst"],
+    },
+    {
+      metric: "Supplier On-Time Performance (SOTD)",
+      formula: "(Supplier Deliveries Received On Time / Total Supplier Deliveries) × 100",
+      why: "Measures how reliably suppliers deliver materials on schedule. Supplier performance is a leading indicator of production disruptions and downstream OTD problems.",
+      decision: "Pull this when evaluating supplier scorecards for contract renewal, when supply disruptions are causing production downtime, or when sourcing decisions require risk assessment.",
+      misinterpretations: ["SOTD measures schedule adherence, not quality — a supplier that delivers on time but with defects is not a good supplier.", "SOTD must be measured at the component level, not just the supplier level — a supplier may be reliable on most items but consistently late on one critical component."],
+      roles: ["Supply Chain Analyst", "Procurement Analyst", "Vendor Management Analyst"],
+    },
+    {
+      metric: "Order Fill Rate",
+      formula: "(Order Lines Shipped Complete / Total Order Lines) × 100",
+      why: "Measures the percentage of customer orders fulfilled completely on the first shipment. A direct indicator of inventory positioning and availability.",
+      decision: "Pull this when diagnosing service failures — a low fill rate means inventory is either insufficient or in the wrong location, causing partial shipments and customer frustration.",
+      misinterpretations: ["Line fill rate and order fill rate are different — line fill measures individual SKU availability, order fill measures complete orders. Order fill is typically lower.", "Fill rate should be measured at the time of the promise, not at the time of fulfillment — a high fill rate achieved by delaying fulfillment isn't truly high availability."],
+      roles: ["Supply Chain Analyst", "Inventory Analyst", "Logistics Analyst"],
+    },
+    {
+      metric: "Capacity Utilization Rate",
+      formula: "(Actual Output / Maximum Possible Output) × 100",
+      why: "Measures how efficiently production capacity is being used. Too low means excess cost; too high means risk of bottlenecks, quality issues, and inability to surge.",
+      decision: "Pull this when making capital investment decisions about adding capacity, or when production delays suggest a bottleneck — utilization rate by work center identifies the constraint.",
+      misinterpretations: ["100% utilization is not the target — most operations run optimally at 80-85%, reserving capacity for surges and preventing quality degradation from overloading equipment and people.", "Aggregate utilization rate hides bottleneck stations — a plant may average 75% utilization while one critical station runs at 100% and creates a throughput constraint."],
+      roles: ["Operations Analyst", "Manufacturing Analyst", "Industrial Engineer Analyst"],
+    },
+    {
+      metric: "Freight Cost per Unit Shipped",
+      formula: "Total Freight Costs / Units Shipped",
+      why: "Measures the transportation cost efficiency of the supply chain. A key operational cost driver that directly impacts gross margin.",
+      decision: "Pull this when evaluating carrier rate negotiations, modal shift opportunities (air to ocean), or network design decisions — freight cost per unit is the apples-to-apples transportation efficiency metric.",
+      misinterpretations: ["Freight cost per unit varies by weight, dimensions, distance, and mode — comparing across product categories without normalizing for these factors misleads.", "Reducing freight cost per unit by routing slower (ocean vs. air) may create hidden costs through lost sales or higher inventory requirements."],
+      roles: ["Logistics Analyst", "Supply Chain Analyst", "Transportation Analyst"],
+    },
+    {
+      metric: "Warehouse Picking Accuracy",
+      formula: "(Orders Picked Correctly / Total Orders Picked) × 100",
+      why: "Measures fulfillment accuracy at the warehouse level. Picking errors cause returns, customer dissatisfaction, and re-shipping costs that multiply the original error cost.",
+      decision: "Pull this when investigating root causes of return rate increases or when evaluating whether a new warehouse management system (WMS) improved operations.",
+      misinterpretations: ["Picking accuracy above 99.5% is generally considered best-in-class — small improvements at high accuracy levels can be very costly to achieve.", "Accuracy rate hides volume — a 99.5% accuracy rate on 1,000 orders means 5 errors per day; on 100,000 orders it means 500 errors per day."],
+      roles: ["Warehouse Analyst", "Operations Analyst", "Fulfillment Analyst"],
+    },
+    {
+      metric: "Manufacturing Defect Rate (First Pass Yield)",
+      formula: "(Units Produced Without Defect on First Attempt / Total Units Attempted) × 100",
+      why: "Measures production quality at the source. Defects caught early are cheaper to fix; defects that reach the customer are the most expensive.",
+      decision: "Pull this when root cause analysis is needed for a warranty claim spike or customer complaint pattern — first pass yield by work center or product line isolates where quality is breaking down.",
+      misinterpretations: ["First pass yield only captures defects found during production — escaped defects (found by customers) require a separate field quality tracking system.", "Improving first pass yield by tightening quality gates may increase WIP (work-in-process) inventory if rework volume increases."],
+      roles: ["Manufacturing Analyst", "Quality Analyst", "Operations Analyst"],
+    },
+    {
+      metric: "Overall Equipment Effectiveness (OEE)",
+      formula: "Availability × Performance × Quality (expressed as %)",
+      why: "The gold-standard manufacturing efficiency metric. OEE captures the three main sources of production loss: equipment downtime, speed loss, and defects.",
+      decision: "Pull this when identifying where to focus maintenance or process improvement investment — OEE by machine or line tells you whether losses are from breakdowns, underperformance, or quality issues.",
+      misinterpretations: ["World-class OEE is typically 85%+ — most manufacturers run at 40-60%, which means significant opportunity exists. Don't interpret 60% OEE as poor without benchmarking.", "The three components (Availability, Performance, Quality) have very different improvement strategies — always decompose OEE before prescribing a fix."],
+      roles: ["Manufacturing Analyst", "Operations Analyst", "Reliability Analyst"],
+    },
+    {
+      metric: "Lead Time (Order-to-Ship)",
+      formula: "Average days from order receipt to shipment",
+      why: "Measures supply chain responsiveness. Short lead times enable customers to carry less inventory; long lead times create supply chain fragility.",
+      decision: "Pull this when evaluating competitive positioning in markets where delivery speed is a differentiator, or when forecasting safety stock requirements — lead time variability is as important as average lead time.",
+      misinterpretations: ["Lead time and transit time are different — lead time is order-to-ship, while total cycle time includes transit. Customers care about total cycle time.", "Reducing average lead time while increasing variability can make the supply chain harder to plan despite the lower average."],
+      roles: ["Supply Chain Analyst", "Operations Analyst", "Logistics Analyst"],
+    },
+    {
+      metric: "Shrinkage Rate — Operations/Retail",
+      formula: "(Inventory Shrinkage / Total Inventory Value) × 100",
+      why: "Measures inventory loss from theft, damage, administrative error, or supplier fraud. A major profit leak in retail and warehouse operations.",
+      decision: "Pull this when investigating gross margin shortfalls that aren't explained by pricing or cost changes — shrinkage is often a hidden drain that doesn't surface until physical inventory counts.",
+      misinterpretations: ["Shrinkage rate is only as accurate as the cycle counting or physical inventory process — infrequent counts allow shrinkage to accumulate undetected.", "Shrinkage sources (external theft, internal theft, administrative error) require different countermeasures — aggregate shrinkage rate doesn't tell you which intervention to prioritize."],
+      roles: ["Retail Operations Analyst", "Loss Prevention Analyst", "Inventory Analyst"],
+    },
+    {
+      metric: "Forecast Accuracy / Mean Absolute Percentage Error (MAPE)",
+      formula: "Mean of |Actual − Forecast| / Actual × 100",
+      why: "Measures how accurate demand forecasts are. Poor forecast accuracy drives overstock or stockouts — both of which are expensive.",
+      decision: "Pull this when evaluating whether to invest in a new forecasting system or methodology, or when diagnosing the root cause of inventory inefficiencies — MAPE by category reveals where forecasting is systematically failing.",
+      misinterpretations: ["MAPE can be misleadingly large for low-volume SKUs — a 50% error on a product that sells 2 units per week is economically insignificant.", "MAPE penalizes over-forecasting and under-forecasting equally — for seasonal or lumpy demand, asymmetric error metrics (BIAS) may be more meaningful."],
+      roles: ["Demand Planning Analyst", "Supply Chain Analyst", "Forecasting Analyst"],
+    },
+    {
+      metric: "Labor Productivity (Units per Labor Hour)",
+      formula: "Total Units Produced or Processed / Total Labor Hours",
+      why: "Measures workforce efficiency in production or fulfillment operations. Labor is typically the largest variable cost — productivity improvements directly impact margin.",
+      decision: "Pull this when evaluating the ROI of automation investments, scheduling changes, or training programs — labor productivity is the output metric for any workforce efficiency initiative.",
+      misinterpretations: ["Labor productivity measured purely as units per hour can incentivize speed over quality — always track alongside defect rate and accuracy.", "Productivity comparisons across sites require normalization for product mix complexity, facility layout, and equipment age."],
+      roles: ["Operations Analyst", "Manufacturing Analyst", "Workforce Analyst"],
+    },
+    {
+      metric: "Return Rate — Operations Context",
+      formula: "(Units Returned / Units Shipped) × 100",
+      why: "In operations, return rate drives reverse logistics cost, restocking cost, and inventory value recovery. Understanding return root causes is essential for cost control.",
+      decision: "Pull this when freight and fulfillment costs are exceeding budget — returns are often the hidden cost driver that isn't tracked at the same level of rigor as outbound shipments.",
+      misinterpretations: ["Not all returns have the same cost — a return that can be restocked is very different from one that must be destroyed or liquidated. Track return disposition alongside rate.", "Return rate spikes may lag the causal event by weeks — a product quality issue in March may not show up in return data until May if customers delay returns."],
+      roles: ["Logistics Analyst", "Operations Analyst", "Retail Analyst"],
+    },
+    {
+      metric: "Safety Incident Rate (TRIR)",
+      formula: "(Number of Recordable Incidents × 200,000) / Total Hours Worked",
+      why: "Measures workplace safety performance. Total Recordable Incident Rate (TRIR) is the OSHA standard metric used for regulatory reporting, insurance underwriting, and contractor qualification.",
+      decision: "Pull this when evaluating safety program effectiveness, when a contract requires safety performance certification, or when OSHA inspection history needs to be reviewed — TRIR is the universal language of workplace safety.",
+      misinterpretations: ["TRIR measures recordable incidents, not severity — it weights a minor cut requiring a bandage equally with a fracture requiring surgery. Severity-weighted metrics like Days Away Restricted Transfer (DART) provide better risk context.", "Improving TRIR through underreporting is a significant compliance and legal risk — always verify that incident recording culture supports honest reporting."],
+      roles: ["Safety Analyst", "Operations Analyst", "EHS Analyst"],
+    },
+    {
+      metric: "Cost per Order Fulfilled",
+      formula: "Total Fulfillment Costs / Total Orders Fulfilled",
+      why: "Measures the end-to-end operational cost to process and ship one order. The primary efficiency metric for fulfillment center operations.",
+      decision: "Pull this when evaluating whether to in-source or outsource fulfillment, when assessing a 3PL vendor's performance, or when modeling the unit economics of a new product line.",
+      misinterpretations: ["Cost per order varies by order size and product type — a large heavy order costs more to fulfill than a small light order. Always segment by order profile.", "Reducing cost per order by increasing automation may require capital investment that takes years to recover — model the full payback period, not just the operating cost reduction."],
+      roles: ["Fulfillment Analyst", "Operations Analyst", "Supply Chain Analyst"],
+    },
+  ],
+
+  marketing: [
+    {
+      metric: "Return on Ad Spend (ROAS)",
+      formula: "Revenue Generated from Ads / Ad Spend",
+      why: "Measures revenue efficiency of advertising spend. The primary performance metric for paid acquisition channels.",
+      decision: "Pull this when evaluating whether to scale, maintain, or cut a paid channel — ROAS tells you whether each dollar of ad spend is generating enough revenue to justify the investment.",
+      misinterpretations: ["ROAS measures revenue, not profit — a 4× ROAS on a product with 20% gross margin actually loses money. Always compare ROAS to the break-even ROAS for the product's margin.", "ROAS varies by funnel stage — upper-funnel brand awareness campaigns will naturally have lower ROAS than lower-funnel retargeting. Don't evaluate all campaigns with the same ROAS target."],
+      roles: ["Marketing Analyst", "Growth Analyst", "Paid Media Analyst"],
+    },
+    {
+      metric: "Click-Through Rate (CTR)",
+      formula: "(Clicks / Impressions) × 100",
+      why: "Measures how often people who see an ad or email click on it. A diagnostic metric for creative and messaging relevance.",
+      decision: "Pull this when evaluating ad creative performance or email subject line testing — low CTR isolates the problem to the message itself, before the landing page experience.",
+      misinterpretations: ["High CTR does not mean high conversion — a misleading ad can generate clicks from the wrong audience who then don't convert. Track CTR alongside conversion rate.", "CTR benchmarks vary dramatically by channel and format — email CTR of 2-3% may be excellent; display ad CTR of 2% would be exceptional (industry average is ~0.1%)."],
+      roles: ["Marketing Analyst", "Digital Analyst", "Email Marketing Analyst"],
+    },
+    {
+      metric: "Email Open Rate",
+      formula: "(Emails Opened / Emails Delivered) × 100",
+      why: "Measures how many recipients open a marketing email. A proxy for subject line effectiveness and list health.",
+      decision: "Pull this when diagnosing an email campaign's underperformance — a low open rate means the problem is the subject line or sender reputation, not the email body or offer.",
+      misinterpretations: ["Apple's Mail Privacy Protection (MPP) has inflated open rates since 2021 — iOS pre-fetches emails, recording 'opens' even when the email isn't read. Open rates are less reliable than they used to be.", "Open rate is a vanity metric without conversion context — a 40% open rate with 0% click rate means recipients opened but found no compelling reason to act."],
+      roles: ["Email Marketing Analyst", "CRM Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Cost per Lead (CPL)",
+      formula: "Total Marketing Spend / Number of Leads Generated",
+      why: "Measures the efficiency of lead generation programs. Used to compare acquisition efficiency across channels and campaign types.",
+      decision: "Pull this when the sales team complains about lead volume or quality — CPL by channel shows where leads are cheapest, which must then be paired with lead quality data to find the best-value sources.",
+      misinterpretations: ["Low CPL does not mean good leads — a channel that generates cheap leads that never convert is worse than an expensive channel with high close rates. Always pair CPL with lead-to-opportunity conversion rate.", "CPL benchmarks vary enormously by industry and persona — B2B enterprise CPL may be $500+; DTC consumer CPL may be $10-30."],
+      roles: ["Marketing Analyst", "Demand Generation Analyst", "Growth Analyst"],
+    },
+    {
+      metric: "Marketing Qualified Lead (MQL) to SQL Conversion Rate",
+      formula: "(Sales Qualified Leads / Marketing Qualified Leads) × 100",
+      why: "Measures the quality of leads passed from marketing to sales. The primary metric for diagnosing alignment (or misalignment) between marketing and sales teams.",
+      decision: "Pull this when sales is complaining about lead quality or when marketing claims they're hitting lead targets but pipeline isn't growing — it reveals whether MQL definitions match real sales-ready criteria.",
+      misinterpretations: ["A high MQL-to-SQL conversion rate can be achieved by setting very loose MQL criteria, creating the illusion of efficiency without improving pipeline quality.", "This metric requires clear, agreed-upon definitions of MQL and SQL — without consistent definitions, the metric is meaningless."],
+      roles: ["Marketing Analyst", "Revenue Operations Analyst", "Demand Generation Analyst"],
+    },
+    {
+      metric: "Attribution — Multi-Touch Attribution (MTA)",
+      formula: "Credit distributed across all touchpoints in the customer journey based on a chosen attribution model (linear, time-decay, position-based, data-driven)",
+      why: "Determines which marketing touchpoints drove a conversion. Essential for understanding which channels and campaigns are creating pipeline, not just touching customers.",
+      decision: "Pull this when CFO asks which marketing channels are driving actual revenue versus just generating impressions — MTA reveals the full journey, not just the last click.",
+      misinterpretations: ["No attribution model is perfect — last-click undercounts upper-funnel channels, first-click undercounts lower-funnel channels. Data-driven MTA is the gold standard but requires large data volumes.", "Cross-device attribution is still an unsolved problem — a customer who sees an ad on mobile and converts on desktop may appear as an organic conversion."],
+      roles: ["Marketing Analyst", "Growth Analyst", "Digital Analyst"],
+    },
+    {
+      metric: "Social Media Engagement Rate",
+      formula: "(Likes + Comments + Shares + Saves) / Reach × 100",
+      why: "Measures how actively an audience interacts with content. Higher engagement signals content relevance and audience health.",
+      decision: "Pull this when evaluating organic content strategy performance or when deciding which content formats to scale — engagement rate identifies what resonates, which predicts what will convert.",
+      misinterpretations: ["Engagement rate and reach are inversely correlated at scale — large accounts typically have lower engagement rates than small accounts. Benchmark within account-size tiers.", "Engagement can be artificially inflated by controversy or controversy-adjacent content that generates comments without building brand affinity."],
+      roles: ["Social Media Analyst", "Content Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Churn Rate — Marketing/Subscription Context",
+      formula: "(Subscribers Lost in Period / Subscribers at Start of Period) × 100",
+      why: "Measures customer retention in subscription or recurring revenue businesses. In marketing, churn is the metric that retention campaigns are measured against.",
+      decision: "Pull this when evaluating the ROI of retention marketing (win-back emails, loyalty offers, pause options) — churn rate is the outcome metric every retention initiative must move.",
+      misinterpretations: ["Voluntary churn (customer cancels) and involuntary churn (payment failure) have different causes and require different interventions — aggregate churn masks this important distinction.", "Churn rate is a lagging indicator — by the time a customer churns, the reason usually occurred weeks or months earlier. Leading indicators (engagement decline, login frequency) predict churn before it happens."],
+      roles: ["CRM Analyst", "Retention Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Landing Page Conversion Rate",
+      formula: "(Conversions / Total Page Visits) × 100",
+      why: "Measures how effectively a landing page turns visitors into leads or customers. The core metric for conversion rate optimization (CRO).",
+      decision: "Pull this when a paid campaign has good CTR but low conversion — it isolates the problem to the post-click experience rather than the ad itself.",
+      misinterpretations: ["Conversion rate is meaningful only in context of the traffic source — organic traffic typically converts lower than paid retargeting traffic; comparing them directly misleads.", "A high conversion rate on low-quality traffic (wrong audience) produces leads that don't close — always pair with downstream conversion metrics."],
+      roles: ["CRO Analyst", "Digital Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Net Revenue Retention (NRR) — Marketing/SaaS",
+      formula: "(Starting MRR + Expansion MRR − Churned MRR − Contraction MRR) / Starting MRR × 100",
+      why: "Measures whether existing customers are spending more or less over time. NRR above 100% means revenue grows even without new customers — the hallmark of best-in-class SaaS businesses.",
+      decision: "Pull this when evaluating expansion revenue programs (upsell, cross-sell, seat expansion) or when investor relations needs a single metric for customer revenue health — NRR is the metric that determines long-term business viability.",
+      misinterpretations: ["NRR and Gross Revenue Retention (GRR) are different — GRR excludes expansion, showing only what's retained from existing customers without upsell. Both are needed for a complete picture.", "NRR above 130% is considered exceptional (Snowflake, Datadog territory) — don't benchmark against public SaaS leaders without accounting for business model differences."],
+      roles: ["Marketing Analyst", "Revenue Operations Analyst", "Customer Success Analyst"],
+    },
+    {
+      metric: "Share of Voice (SOV)",
+      formula: "(Brand's Impressions / Total Market Impressions) × 100",
+      why: "Measures brand presence relative to competitors in a given market or channel. Brands that outgrow their SOV relative to market share tend to gain market share over time.",
+      decision: "Pull this when setting media budget levels or benchmarking brand health — SOV data justifies budget increases by showing the competitive gap that needs to be closed.",
+      misinterpretations: ["SOV is difficult to measure precisely — paid SOV (ad impressions) is relatively trackable, but organic/earned SOV requires social listening tools with inherent measurement gaps.", "SOV is not the same as brand preference — a high-SOV brand with poor product quality or negative sentiment will not outperform despite high share of voice."],
+      roles: ["Brand Analyst", "Marketing Analyst", "Media Planning Analyst"],
+    },
+    {
+      metric: "Cost per Mille / Cost per Thousand Impressions (CPM)",
+      formula: "(Ad Spend / Impressions) × 1,000",
+      why: "Measures the cost efficiency of reach campaigns. The standard buying metric for display, video, and social awareness advertising.",
+      decision: "Pull this when evaluating media efficiency for brand campaigns where reach and frequency are the goal — CPM tells you how cheaply you can reach your target audience at scale.",
+      misinterpretations: ["Low CPM does not mean efficient advertising — cheap impressions to the wrong audience waste budget. Target CPM (cost to reach your specific audience) is more meaningful than gross CPM.", "CPM comparisons across platforms require viewability normalization — an impression on one platform may be a 2-second in-view video; on another it may be a below-the-fold banner never actually seen."],
+      roles: ["Media Planning Analyst", "Marketing Analyst", "Digital Analyst"],
+    },
+    {
+      metric: "Organic Search Traffic (SEO)",
+      formula: "Total visits / sessions from non-paid search engine results",
+      why: "Measures the volume of traffic generated through SEO. Organic traffic has no direct cost per visit, giving it significantly higher ROI than paid traffic at scale.",
+      decision: "Pull this when building the business case for SEO investment or when evaluating the impact of a content marketing program — organic traffic growth compounds over time in a way that paid traffic does not.",
+      misinterpretations: ["Organic traffic growth doesn't always mean revenue growth — high-volume traffic on informational queries may not convert at the same rate as commercial-intent queries.", "Google algorithm updates can cause sudden drops in organic traffic that are unrelated to any action taken — always check core update timing when diagnosing organic traffic anomalies."],
+      roles: ["SEO Analyst", "Content Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Brand Awareness Lift",
+      formula: "% of Target Audience Aware of Brand After Campaign − % Aware Before Campaign",
+      why: "Measures the incremental increase in brand recognition from a marketing campaign. The primary outcome metric for brand advertising investments.",
+      decision: "Pull this when evaluating the ROI of brand campaigns that don't generate direct conversion — lift studies provide the evidence that brand advertising is working even when clicks and conversions are low.",
+      misinterpretations: ["Brand awareness lift is typically measured through surveys with methodology limitations — sample size, survey design, and control group construction affect reliability.", "Awareness lift doesn't guarantee purchase intent lift — a consumer can become aware of a brand but remain neutral or negative toward it."],
+      roles: ["Brand Analyst", "Marketing Analyst", "Insights Analyst"],
+    },
+    {
+      metric: "Customer Lifetime Value to CAC Ratio (LTV:CAC)",
+      formula: "Customer Lifetime Value / Customer Acquisition Cost",
+      why: "Measures the return on customer acquisition investment. The ratio determines whether the business model is fundamentally sound — acquiring customers is only sensible if their value exceeds the acquisition cost.",
+      decision: "Pull this when evaluating marketing efficiency at the business model level or when investors ask about unit economics — LTV:CAC above 3:1 is generally considered healthy for growth-stage businesses.",
+      misinterpretations: ["LTV:CAC ratio depends heavily on LTV calculation assumptions (margin, churn rate, discount rate) — small changes in LTV inputs change the ratio significantly.", "Payback period (months to recover CAC from gross margin) is often a more actionable companion metric — a business with LTV:CAC of 5:1 but a 36-month payback may still face cash flow challenges."],
+      roles: ["Growth Analyst", "Marketing Analyst", "Revenue Operations Analyst"],
+    },
+    {
+      metric: "A/B Test Statistical Significance",
+      formula: "p-value < 0.05 threshold (or confidence interval that excludes zero)",
+      why: "Determines whether an observed difference between two variants is real or could be due to random chance. The decision gate for all experimentation-based marketing decisions.",
+      decision: "Pull this before declaring any A/B test a winner — shipping a 'winning' variant that isn't statistically significant means you're implementing a random change at scale.",
+      misinterpretations: ["Statistical significance at p<0.05 means there is still a 5% chance the result is random — it does not mean the result is definitely real or practically meaningful.", "Peeking at results before a test reaches its required sample size inflates false positive rates — always calculate required sample size before launching and run until that threshold is hit."],
+      roles: ["Marketing Analyst", "CRO Analyst", "Data Scientist"],
+    },
+    {
+      metric: "Email List Growth Rate",
+      formula: "((New Subscribers − Unsubscribes) / Total List Size) × 100",
+      why: "Measures the health and momentum of an owned marketing channel. Email is the highest-ROI owned channel — a growing, engaged list is a compounding business asset.",
+      decision: "Pull this when evaluating the effectiveness of list-building programs (lead magnets, pop-ups, referral programs) or when planning for future email revenue projections — list growth rate predicts future email channel capacity.",
+      misinterpretations: ["A growing list with declining engagement (open rate, CTR) means list quality is deteriorating even as quantity grows — deliverability and revenue per email will eventually suffer.", "Unsubscribes are healthy — a highly engaged smaller list outperforms a large disengaged list on every revenue metric."],
+      roles: ["Email Marketing Analyst", "CRM Analyst", "Marketing Analyst"],
+    },
+    {
+      metric: "Share of Search",
+      formula: "(Brand Search Volume / Category Search Volume) × 100",
+      why: "Measures the proportion of category-level search intent captured by a brand. Share of search has been shown to be a leading indicator of market share in many categories.",
+      decision: "Pull this when benchmarking brand health without expensive survey research — share of search is a free-to-access proxy for brand preference that updates in near real-time via Google Trends or keyword tools.",
+      misinterpretations: ["Share of search is a correlate of market share, not a proven causal driver — the relationship varies by category and breaks down in markets where search is not the primary discovery mechanism.", "Brand name searches can be inflated by brand advertising spend — a high share of search campaign may reflect media weight, not genuine brand preference."],
+      roles: ["Brand Analyst", "SEO Analyst", "Marketing Analyst"],
+    },
+  ],
+};
+
+// ── KPI LIBRARY MODE COMPONENT ────────────────────────────────────────────────
+
+const KPI_DOMAINS = [
+  { id: "retail",     label: "Retail / E-commerce", color: "#4fc3f7", icon: "🛒" },
+  { id: "healthcare", label: "Healthcare",           color: "#f87171", icon: "🏥" },
+  { id: "finance",    label: "Finance",              color: "#4ade80", icon: "📈" },
+  { id: "operations", label: "Operations / Supply Chain", color: "#fb923c", icon: "⚙️" },
+  { id: "marketing",  label: "Marketing",            color: "#c084fc", icon: "📣" },
+];
+
+function KPILibraryMode({ apiKey, progress, onScore }) {
+  const [activeDomain, setActiveDomain] = useState("retail");
+  const [cardIdx, setCardIdx] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [sessionScores, setSessionScores] = useState({});
+
+  const domain = KPI_DOMAINS.find(d => d.id === activeDomain);
+  const cards = KPI_LIBRARY[activeDomain] || [];
+  const card = cards[cardIdx];
+  const cardKey = `kpi-${activeDomain}:${cardIdx}`;
+  const persistedScore = progress.allTimeScores?.[cardKey];
+  const scoredThisSession = sessionScores[cardIdx];
+
+  const handleDomainChange = (id) => {
+    setActiveDomain(id);
+    setCardIdx(0);
+    setRevealed(false);
+    setSessionScores({});
+  };
+
+  const handleScore = (score) => {
+    setSessionScores(s => ({ ...s, [cardIdx]: score }));
+    onScore(`kpi-${activeDomain}`, cardIdx, score, { q: card.metric });
+  };
+
+  const handleNext = () => {
+    setCardIdx(i => Math.min(i + 1, cards.length - 1));
+    setRevealed(false);
+  };
+
+  const handlePrev = () => {
+    setCardIdx(i => Math.max(i - 1, 0));
+    setRevealed(false);
+  };
+
+  const strong = Object.values(sessionScores).filter(v => v === "strong").length;
+  const partial = Object.values(sessionScores).filter(v => v === "partial").length;
+  const weak = Object.values(sessionScores).filter(v => v === "weak").length;
+
+  return (
+    <div style={{ padding: "0 0 40px 0" }}>
+
+      {/* Domain selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        {KPI_DOMAINS.map(d => (
+          <button
+            key={d.id}
+            onClick={() => handleDomainChange(d.id)}
+            style={{
+              padding: "8px 16px", borderRadius: 8, border: `1.5px solid ${activeDomain === d.id ? d.color : C.border}`,
+              background: activeDomain === d.id ? d.color + "18" : "transparent",
+              color: activeDomain === d.id ? d.color : C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+              transition: "all 0.15s",
+            }}
+          >
+            {d.icon} {d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          {cardIdx + 1} / {cards.length}
+        </span>
+        <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2 }}>
+          <div style={{
+            height: "100%", borderRadius: 2, background: domain.color,
+            width: `${((cardIdx + 1) / cards.length) * 100}%`, transition: "width 0.3s",
+          }} />
+        </div>
+        <span style={{ fontFamily: mono, fontSize: 10, color: C.muted }}>
+          ✓ {strong} · ◑ {partial} · ✗ {weak}
+        </span>
+      </div>
+
+      {/* Card */}
+      {card && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+
+          {/* Card header */}
+          <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+              <div>
+                <div style={{ fontFamily: mono, fontSize: 10, color: domain.color, letterSpacing: "0.12em", marginBottom: 6 }}>
+                  {domain.icon} {domain.label.toUpperCase()} KPI
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                  {card.metric}
+                </div>
+              </div>
+              {persistedScore && (
+                <div style={{
+                  padding: "4px 10px", borderRadius: 6, fontSize: 10, fontFamily: mono, letterSpacing: "0.08em",
+                  background: persistedScore === "strong" ? C.ok + "22" : persistedScore === "partial" ? C.warn + "22" : C.err + "22",
+                  color: persistedScore === "strong" ? C.ok : persistedScore === "partial" ? C.warn : C.err,
+                  border: `1px solid ${persistedScore === "strong" ? C.ok : persistedScore === "partial" ? C.warn : C.err}`,
+                  flexShrink: 0,
+                }}>
+                  {persistedScore}
+                </div>
+              )}
+            </div>
+
+            {/* Formula */}
+            <div style={{ marginTop: 14, padding: "10px 14px", background: C.surface, borderRadius: 8, border: `1px solid ${C.border}` }}>
+              <span style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.1em" }}>FORMULA  </span>
+              <span style={{ fontFamily: mono, fontSize: 12, color: domain.color }}>{card.formula}</span>
+            </div>
+          </div>
+
+          {/* Reveal button / full content */}
+          {!revealed ? (
+            <div style={{ padding: "24px 20px", textAlign: "center" }}>
+              <button
+                onClick={() => setRevealed(true)}
+                style={{
+                  padding: "12px 32px", borderRadius: 8, border: `1.5px solid ${domain.color}`,
+                  background: domain.color + "18", color: domain.color,
+                  fontFamily: mono, fontSize: 12, cursor: "pointer", letterSpacing: "0.08em",
+                }}
+              >
+                Reveal Decision Context
+              </button>
+              <div style={{ marginTop: 12, fontFamily: mono, fontSize: 10, color: C.muted }}>
+                Think about: why does this metric exist? What decision does it inform?
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: "20px 20px 0" }}>
+
+              {/* Why it matters */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>WHY IT MATTERS</div>
+                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7 }}>{card.why}</div>
+              </div>
+
+              {/* Decision context */}
+              <div style={{ marginBottom: 16, padding: "14px 16px", background: domain.color + "0f", borderRadius: 8, borderLeft: `3px solid ${domain.color}` }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: domain.color, letterSpacing: "0.12em", marginBottom: 6 }}>DECISION CONTEXT</div>
+                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7 }}>{card.decision}</div>
+              </div>
+
+              {/* Misinterpretations */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: C.err, letterSpacing: "0.12em", marginBottom: 8 }}>COMMON MISINTERPRETATIONS</div>
+                {card.misinterpretations.map((m, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: C.text, lineHeight: 1.65 }}>
+                    <span style={{ color: C.err, flexShrink: 0 }}>⚠</span>
+                    <span>{m}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Role tags */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 8 }}>COMMON ROLE TITLES</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {card.roles.map((r, i) => (
+                    <span key={i} style={{
+                      padding: "3px 8px", borderRadius: 4, fontSize: 10, fontFamily: mono,
+                      background: C.surface, border: `1px solid ${C.border}`, color: C.muted,
+                    }}>{r}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Score buttons */}
+              {!scoredThisSession && (
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: "16px 0", display: "flex", gap: 8 }}>
+                  <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.08em", alignSelf: "center", marginRight: 4 }}>RATE:</div>
+                  {[
+                    { label: "Strong", score: "strong", color: C.ok },
+                    { label: "Partial", score: "partial", color: C.warn },
+                    { label: "Weak", score: "weak", color: C.err },
+                  ].map(({ label, score, color }) => (
+                    <button
+                      key={score}
+                      onClick={() => handleScore(score)}
+                      style={{
+                        padding: "8px 20px", borderRadius: 6, border: `1.5px solid ${color}`,
+                        background: "transparent", color, fontFamily: mono, fontSize: 11,
+                        cursor: "pointer", letterSpacing: "0.06em",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {scoredThisSession && (
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: "14px 0" }}>
+                  <span style={{ fontFamily: mono, fontSize: 10, color: C.muted }}>
+                    Scored as{" "}
+                    <span style={{
+                      color: scoredThisSession === "strong" ? C.ok : scoredThisSession === "partial" ? C.warn : C.err
+                    }}>
+                      {scoredThisSession}
+                    </span>
+                    {" "}this session
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, gap: 8 }}>
+        <button
+          onClick={handlePrev}
+          disabled={cardIdx === 0}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: `1.5px solid ${C.border}`,
+            background: "transparent", color: cardIdx === 0 ? C.muted : C.text,
+            fontFamily: mono, fontSize: 12, cursor: cardIdx === 0 ? "not-allowed" : "pointer",
+          }}
+        >
+          ← Prev
+        </button>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted, alignSelf: "center" }}>
+          {Object.keys(sessionScores).length} / {cards.length} reviewed
+        </span>
+        <button
+          onClick={handleNext}
+          disabled={cardIdx === cards.length - 1}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: `1.5px solid ${domain.color}`,
+            background: domain.color + "18", color: domain.color,
+            fontFamily: mono, fontSize: 12, cursor: cardIdx === cards.length - 1 ? "not-allowed" : "pointer",
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
 export default function App() {
   const [module, setModule] = useState("sql");
   const [tab, setTab] = useState("flashcards");
@@ -2847,6 +3848,7 @@ export default function App() {
             { id: "interview", label: "🎙 Sim" },
             { id: "sqlprep", label: "📋 SQL Prep" },
             { id: "coach", label: "◈ Coach" },
+            { id: "kpi", label: "📊 Intel" },
             ...(activeDomainPack ? [{ id: "domain", label: `${activeDomainPack.icon} ${activeDomainPack.label}` }] : []),
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -2877,6 +3879,7 @@ export default function App() {
             onSessionDone={handleSessionDone}
           />
         )}
+        {tab === "kpi" && <KPILibraryMode key="kpi" apiKey={apiKey} progress={progress} onScore={handleScore} />}
 
         <div style={{ marginTop: 36, padding: "13px 18px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: mono, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
           <span style={{ color: C.accent }}>TIP: </span>
