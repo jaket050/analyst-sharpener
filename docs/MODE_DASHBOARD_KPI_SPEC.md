@@ -1,6 +1,6 @@
 # Dashboard & KPI Intelligence — Module Spec
 
-**Status:** v1 — locked April 27, 2026
+**Status:** v1 in active build — Session 3 of 4 complete (May 1, 2026)
 **Author:** Jake (Wiks)
 **Repo location:** `analyst-sharpener/docs/MODE_DASHBOARD_KPI_SPEC.md`
 
@@ -43,7 +43,8 @@ Flashcard-style reference covering core KPIs per domain.
 
 Time-pressured visual reading under interview-like conditions.
 
-- 25 drills total: 5 per domain
+- **v1 (shipped May 1, 2026):** 5 drills total — 1 per domain
+- **v2 target:** 25 drills total — 5 per domain (expand each domain by 4)
 - Each drill presents a rendered dashboard (charts + numbers)
 - 60-second timer
 - Three questions per drill:
@@ -137,28 +138,27 @@ KPI definitions and recommendation examples must be grounded in real industry us
 - Vercel deployment with CI/CD via GitHub
 - All 8 existing modes verified in production
 
-### Session 2 (in progress, April 27, 2026)
+### Session 2 (COMPLETE — April 27, 2026)
 
-Tonight's scope:
-- Spec doc (this file) committed to repo
-- Architecture scaffold — new mode tab, state slice, Weak Queue hook
-- Mode 1 (KPI Library) — all 90 cards, all five domains, working end-to-end
+Shipped:
+- Spec doc committed to repo
+- Architecture scaffold — Intel tab, sub-mode wrapper, Weak Queue hook
+- Mode 1 (KPI Library) — 90 cards, 5 domains, working end-to-end
 
-Deferred:
-- Mode 2 (Dashboard Comprehension)
-- Mode 3 (Problem-to-Metric Reasoning)
-- Mode 4 (Insight and Recommendation)
+### Session 3 (COMPLETE — May 1, 2026)
 
-### Session 3 (next deep work day)
+Shipped:
+- Mode 2 (Dashboard Comprehension) v1 — 5 drills, 1 per domain, 60-second timer, AI grading against gold-standard senior answers
+- Mode 3 (Problem-to-Metric Reasoning) v1 — 38 scenarios across 5 domains, ranked KPI input + diagnostic logic, AI grading on coverage/order/reasoning
+- Refactored Intel tab to use IntelMode wrapper with sub-mode selector (📖 Library / 📊 Dashboard / 🧩 Problem)
 
-- Modes 2 and 3
-- Both involve free-text AI grading; share infrastructure
+### Session 4 (next deep work day)
 
-### Session 4 (deep work day after)
-
-- Mode 4 with hybrid structured/free-text grading
+- Mode 4 (Insight & Recommendation) — hybrid structured/free-text grading with VP pitch paragraph
+- Mode 2 v2 — expand to 5 drills per domain (25 total)
 - Full module smoke test in production
 - Resume bullet update to reflect new module
+- README upgrade for the repo
 
 ---
 
