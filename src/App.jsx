@@ -3422,6 +3422,1528 @@ const KPI_DOMAINS = [
   { id: "marketing",  label: "Marketing",            color: "#c084fc", icon: "📣" },
 ];
 
+// ── INTEL MODE WRAPPER + MODES 2/3 ─────────────────────────────────────────
+// IntelMode = parent component with sub-mode selector
+// Sub-modes: KPI Library (existing), Dashboard Drills (Mode 2), Problem-to-Metric (Mode 3)
+// Mode 4 (Insight & Recommendation) deferred to Session 4
+
+// ── DASHBOARD DRILL DATA (Mode 2) ──────────────────────────────────────────
+// 5 drills, 1 per domain. Each drill: scenario, dashboard JSX, 3 questions, gold answers.
+
+const DASHBOARD_DRILLS = [
+  {
+    id: "retail-1",
+    domain: "retail",
+    title: "Weekly E-commerce Performance",
+    subtitle: "Compared to prior 4-week average",
+    scenario: "You are the senior analyst on the e-commerce team at a mid-market apparel brand. Your weekly review meeting starts in 15 minutes. The Head of E-commerce just dropped this dashboard in your inbox with the message: \"What's going on here?\"",
+    kpis: [
+      { label: "SESSIONS", value: "142,580", delta: "▲ 18.2%", up: true },
+      { label: "CONVERSION RATE", value: "1.84%", delta: "▼ 22.4%", up: false },
+      { label: "AOV", value: "$78.40", delta: "▼ 3.1%", up: false },
+      { label: "REVENUE", value: "$205,710", delta: "▼ 9.8%", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "SESSIONS BY TRAFFIC SOURCE — LAST 4 WEEKS",
+        series: [
+          { label: "Organic", color: "#4fc3f7", points: [60, 58, 56, 54] },
+          { label: "Direct/Email", color: "#4ade80", points: [40, 42, 44, 46] },
+          { label: "Paid Social", color: "#fbbf24", points: [10, 12, 15, 78] },
+        ],
+        xLabels: ["Apr 7", "Apr 14", "Apr 21", "Apr 28"],
+        yMax: 80,
+      },
+      {
+        type: "barCategorical",
+        title: "CONVERSION RATE BY SOURCE — THIS WEEK",
+        bars: [
+          { label: "Direct", value: 2.8, color: "#4ade80" },
+          { label: "Email", value: 4.2, color: "#4ade80" },
+          { label: "Organic", value: 2.1, color: "#4fc3f7" },
+          { label: "Paid", value: 0.4, color: "#fbbf24" },
+        ],
+        unit: "%",
+        yMax: 5,
+      },
+      {
+        type: "barHorizontal",
+        title: "TOP 5 PRODUCTS BY UNITS SOLD — WTD",
+        bars: [
+          { label: "$24 Festival Tank", value: 2847, max: 3000 },
+          { label: "$28 Festival Tee", value: 2180, max: 3000 },
+          { label: "$48 Studio Joggers", value: 1205, max: 3000 },
+          { label: "$98 Studio Hoodie", value: 412, max: 3000 },
+          { label: "$148 Statement Coat", value: 168, max: 3000 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Sessions are up but the wrong kind of traffic is driving the lift — paid social brought a 6x volume spike at 0.4% conversion (vs. 4.2% on email), and the products selling are the cheap ones, dragging AOV down. Net result: more visitors, less revenue.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Paid social converts at 0.4% — roughly 1/10th the rate of email and 1/5th the rate of direct. That gap is too large to be normal channel variation; it suggests the campaign is targeting the wrong audience or sending traffic to a misaligned landing page. Also notable: the top 2 SKUs are both under $30, while the $98+ premium SKUs nearly disappeared from the top 5 — a mix shift that compounds the conversion problem.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the 14-day repeat purchase rate for first-time buyers acquired through Paid Social, segmented by what they bought. If those low-AOV festival tank buyers come back and purchase higher-margin items, the campaign is acquiring a real customer pipeline. If they don't, we're paying CAC for one-time discount hunters and the campaign should be cut or restructured.",
+      },
+    ],
+  },
+  {
+    id: "healthcare-1",
+    domain: "healthcare",
+    title: "Q1 Inpatient Performance — Medical Surgical Unit",
+    subtitle: "March 2026 vs. trailing 6-month average",
+    scenario: "You are the analyst supporting the COO of a 280-bed community hospital. The CFO just received the Q1 financial close and is concerned about a margin compression on the Medical/Surgical service line. She's asked you to review this dashboard before tomorrow's executive meeting.",
+    kpis: [
+      { label: "ALOS (DAYS)", value: "5.8", delta: "▲ 0.7", up: false },
+      { label: "READMIT RATE", value: "14.2%", delta: "▲ 2.1pp", up: false },
+      { label: "BED OCCUPANCY", value: "92%", delta: "▲ 7pp", up: true },
+      { label: "COST/DISCHARGE", value: "$11,840", delta: "▲ 9.1%", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "MONTHLY ALOS BY DRG GROUP",
+        series: [
+          { label: "Cardiac", color: "#f87171", points: [42, 44, 43, 45, 48, 52] },
+          { label: "Pulmonary", color: "#fbbf24", points: [38, 39, 38, 40, 41, 42] },
+          { label: "Orthopedic", color: "#4ade80", points: [30, 31, 30, 30, 31, 31] },
+        ],
+        xLabels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 60,
+        yUnit: "× 0.1 days",
+      },
+      {
+        type: "barCategorical",
+        title: "READMIT RATE BY PRIMARY PAYER — Q1",
+        bars: [
+          { label: "Medicare", value: 16.8, color: "#f87171" },
+          { label: "Medicaid", value: 18.2, color: "#f87171" },
+          { label: "Commercial", value: 9.4, color: "#4ade80" },
+          { label: "Self-Pay", value: 12.1, color: "#fbbf24" },
+        ],
+        unit: "%",
+        yMax: 22,
+      },
+      {
+        type: "barHorizontal",
+        title: "TOP 5 READMIT DIAGNOSES — Q1 BY VOLUME",
+        bars: [
+          { label: "CHF (heart failure)", value: 64, max: 80 },
+          { label: "COPD exacerbation", value: 52, max: 80 },
+          { label: "Pneumonia", value: 38, max: 80 },
+          { label: "Sepsis", value: 31, max: 80 },
+          { label: "Post-surgical infection", value: 24, max: 80 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Cardiac patients are staying longer and coming back more often — driving ALOS up, readmit rate up, occupancy near saturation, and cost per discharge up — and it's concentrated in the Medicare/Medicaid CHF/COPD population, which is reimbursed at fixed rates that don't compensate for longer stays.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The cardiac DRG line shows ALOS climbing from 4.2 to 5.2 days over six months — a 24% increase that the orthopedic line doesn't share. Combined with the 16.8% Medicare readmit rate (well above the CMS penalty threshold of ~15%), this isn't normal seasonal variation. The CHF/COPD readmits are the same population driving the cardiac ALOS, suggesting a discharge planning or transitions-of-care problem rather than acuity worsening.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the readmit cohort detail: of the 64 CHF readmits, how many had a documented post-discharge follow-up within 7 days, and how many had medication reconciliation completed at discharge? Both are evidence-based interventions that reduce CHF readmits. If those numbers are low, the fix is operational (care management staffing, follow-up scheduling), not clinical — which changes the recommendation entirely.",
+      },
+    ],
+  },
+  {
+    id: "finance-1",
+    domain: "finance",
+    title: "Quarterly Revenue Review — SaaS Platform",
+    subtitle: "Q1 2026 actuals vs. plan and prior-year",
+    scenario: "You are the FP&A analyst at a B2B SaaS company preparing the board materials for the Q1 review. The CEO wants a one-page narrative on what's driving the gap between plan and actuals. You have 20 minutes before the materials are due.",
+    kpis: [
+      { label: "ARR", value: "$48.2M", delta: "▼ $1.8M vs plan", up: false },
+      { label: "NRR", value: "108%", delta: "▼ 6pp YoY", up: false },
+      { label: "GROSS MARGIN", value: "78%", delta: "▲ 2pp YoY", up: true },
+      { label: "CAC PAYBACK", value: "22 mo", delta: "▲ 4 mo YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "QUARTERLY ARR — PLAN vs ACTUAL",
+        series: [
+          { label: "Plan", color: "#4fc3f7", points: [35, 40, 45, 50] },
+          { label: "Actual", color: "#fbbf24", points: [35, 39, 44, 48.2] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 55,
+        yUnit: "$M",
+      },
+      {
+        type: "barCategorical",
+        title: "ARR MOVEMENT — Q1 26 ($M)",
+        bars: [
+          { label: "New", value: 4.8, color: "#4ade80" },
+          { label: "Expand", value: 2.1, color: "#4ade80" },
+          { label: "Contract", value: 2.9, color: "#f87171" },
+          { label: "Churn", value: 5.8, color: "#f87171" },
+        ],
+        unit: "$M",
+        yMax: 7,
+      },
+      {
+        type: "barHorizontal",
+        title: "CHURN BY CUSTOMER SEGMENT — Q1 26",
+        bars: [
+          { label: "SMB (<50 employees)", value: 52, max: 60 },
+          { label: "Mid-Market (50-500)", value: 28, max: 60 },
+          { label: "Enterprise (500+)", value: 8, max: 60 },
+          { label: "Strategic (Top 20)", value: 2, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The business is healthy at the top of the funnel and in margin, but losing customers faster than it's adding them — specifically in the SMB segment, where churn alone ($5.8M) exceeded all new ARR ($4.8M) this quarter, dragging NRR to 108% and pushing CAC payback to 22 months.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "SMB accounts for 65% of churn (52 of 90 logos) but is unlikely to represent 65% of revenue — meaning the company is losing many small customers cheaply, but the operational drag (support, onboarding cost amortized over short tenure) is real. Also unusual: gross margin actually improved 2pp YoY, ruling out a unit-economics problem in delivery. The issue is acquisition mismatched to retention — we're adding the wrong customers.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull SMB cohort retention curves by acquisition channel for the past 8 quarters, with marketing spend by channel layered in. If SMB customers from one specific channel (e.g., paid search) churn 2-3x faster than SMB customers from another channel (e.g., partner referral), the recommendation writes itself: cut spend on the bad-fit channel and reallocate to mid-market acquisition where retention is durable.",
+      },
+    ],
+  },
+  {
+    id: "operations-1",
+    domain: "operations",
+    title: "Distribution Center Performance — DC West",
+    subtitle: "Week 17 of 2026, vs. trailing 8-week average",
+    scenario: "You are the operations analyst for a national retailer's supply chain team. DC West has been flagged in the weekly ops call for two consecutive weeks. The VP of Distribution wants a root cause analysis before the Friday ops meeting.",
+    kpis: [
+      { label: "ON-TIME DELIVERY", value: "87.4%", delta: "▼ 6.2pp", up: false },
+      { label: "ORDER FILL RATE", value: "94.1%", delta: "▼ 3.8pp", up: false },
+      { label: "PICK ACCURACY", value: "99.1%", delta: "—", up: true },
+      { label: "COST/ORDER", value: "$8.42", delta: "▲ 11.4%", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "WEEKLY OTD% — DC WEST vs NETWORK AVG",
+        series: [
+          { label: "Network Avg", color: "#4ade80", points: [93, 93, 94, 93, 94, 93, 94, 94] },
+          { label: "DC West", color: "#f87171", points: [93, 93, 94, 92, 92, 90, 88, 87] },
+        ],
+        xLabels: ["W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17"],
+        yMax: 100,
+        yUnit: "%",
+      },
+      {
+        type: "barCategorical",
+        title: "DC WEST LATE-DELIVERY ROOT CAUSE — W17",
+        bars: [
+          { label: "Stock-out", value: 42, color: "#f87171" },
+          { label: "Carrier delay", value: 18, color: "#fbbf24" },
+          { label: "Pick error", value: 4, color: "#4ade80" },
+          { label: "System down", value: 36, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 50,
+      },
+      {
+        type: "barHorizontal",
+        title: "TOP 5 STOCK-OUT SKUS — W17 BY UNITS BACKORDERED",
+        bars: [
+          { label: "Cleaning supplies bundle", value: 1840, max: 2000 },
+          { label: "Paper towels case", value: 1520, max: 2000 },
+          { label: "Spring décor set", value: 980, max: 2000 },
+          { label: "Trash bags 200ct", value: 720, max: 2000 },
+          { label: "Air freshener 6pk", value: 510, max: 2000 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "DC West's OTD has decoupled from the network — the gap opened in W14 and is widening, driven primarily by stock-outs on high-velocity household consumables (78% of late deliveries are stock-out or system-related, only 4% are pick errors), suggesting an upstream replenishment or forecasting problem, not a warehouse operations problem.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Pick accuracy is at 99.1% with no degradation — that rules out a labor or training issue at the DC. The problem is upstream: the stock-out and system-down categories together account for 78% of late deliveries, both of which point to inventory positioning or IT, not floor execution. Also notable: every top stock-out SKU is a low-margin, high-velocity household staple — meaning the financial impact is mostly in customer experience and OTD penalty, not lost margin.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the inventory replenishment lead times and reorder point trigger history for the top 5 stock-out SKUs over the past 90 days, segmented by supplier. If lead times have lengthened (supplier issue) or the reorder triggers haven't fired (system issue), the fix is at the planning system or supplier level — both of which are outside the DC's direct control. That changes the meeting from 'what is DC West doing wrong' to 'where in the supply chain is the actual constraint.'",
+      },
+    ],
+  },
+  {
+    id: "marketing-1",
+    domain: "marketing",
+    title: "Q1 Paid Acquisition Performance",
+    subtitle: "Q1 2026 actuals vs. plan",
+    scenario: "You are the marketing analyst at a DTC consumer brand. The new VP of Marketing started two weeks ago and is reviewing channel performance. He's preparing to present a 2026 budget reallocation to the CEO and asked you to walk him through this dashboard before he meets with the agency.",
+    kpis: [
+      { label: "TOTAL SPEND", value: "$2.4M", delta: "▲ 8% vs plan", up: false },
+      { label: "BLENDED ROAS", value: "2.1×", delta: "▼ 0.4× vs plan", up: false },
+      { label: "NEW CUSTOMERS", value: "18,420", delta: "▲ 4% vs plan", up: true },
+      { label: "BLENDED CAC", value: "$130", delta: "▲ $24 vs plan", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "MONTHLY ROAS — Q1 BY CHANNEL",
+        series: [
+          { label: "Email/CRM", color: "#4ade80", points: [80, 82, 78] },
+          { label: "Paid Search", color: "#4fc3f7", points: [50, 48, 44] },
+          { label: "Paid Social", color: "#fbbf24", points: [22, 18, 14] },
+        ],
+        xLabels: ["Jan", "Feb", "Mar"],
+        yMax: 100,
+        yUnit: "× 0.1×",
+      },
+      {
+        type: "barCategorical",
+        title: "Q1 SPEND ALLOCATION BY CHANNEL ($K)",
+        bars: [
+          { label: "Paid Social", value: 1240, color: "#fbbf24" },
+          { label: "Paid Search", value: 720, color: "#4fc3f7" },
+          { label: "Email/CRM", value: 180, color: "#4ade80" },
+          { label: "Influencer", value: 260, color: "#c084fc" },
+        ],
+        unit: "$K",
+        yMax: 1400,
+      },
+      {
+        type: "barHorizontal",
+        title: "Q1 NEW-CUSTOMER LTV (90-DAY) BY CHANNEL",
+        bars: [
+          { label: "Email/CRM", value: 184, max: 200 },
+          { label: "Paid Search", value: 142, max: 200 },
+          { label: "Influencer", value: 128, max: 200 },
+          { label: "Paid Social", value: 62, max: 200 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "More than half the marketing budget is going to the worst-performing channel — Paid Social at $1.24M is 52% of spend, generating 1.4× ROAS and acquiring customers worth less than half the email customers, while Email/CRM with the highest ROAS and highest LTV gets only 8% of the budget.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "ROAS isn't just low on Paid Social — it's deteriorating, dropping from 2.2× to 1.4× over Q1 while every other channel held steady or grew. Combined with the 90-day LTV gap (Email customers worth $184 vs. Paid Social customers worth $62), this is not a campaign optimization issue — it's an audience quality issue. Paid Social is acquiring a structurally different (and worse) customer cohort.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the Paid Social customer cohort breakdown by promo code usage and first-purchase product. The hypothesis: Paid Social is attracting deal-seekers who only buy on a discount and never come back. If 70%+ of Paid Social acquisitions used a promo and bought only the cheapest SKU, the recommendation is to cut Paid Social spend by 50%+ and reallocate to Email/CRM expansion and Paid Search scale, not to optimize the existing Paid Social campaigns.",
+      },
+    ],
+  },
+];
+
+// ── PROBLEM-TO-METRIC SCENARIOS (Mode 3) ───────────────────────────────────
+// 38 scenarios across 5 domains. Each: business problem in plain English,
+// gold-standard list of KPIs in priority order with diagnostic logic.
+
+const PROBLEM_SCENARIOS = [
+  // RETAIL / E-COMMERCE — 8 scenarios
+  {
+    id: "retail-p1", domain: "retail",
+    problem: "Last quarter our DTC website's revenue grew 12%, but the CFO is asking why we're not profitable. What KPIs would you pull to investigate?",
+    goldKPIs: [
+      { kpi: "Gross Margin %", logic: "Revenue growth without margin tracking can hide cost inflation or discount-driven sales. This is the single most important first check." },
+      { kpi: "Customer Acquisition Cost (CAC)", logic: "If CAC has risen faster than revenue grew, paid acquisition is eating the profit." },
+      { kpi: "Return Rate", logic: "Returns hit revenue twice (refund + reverse logistics). High returns destroy reported revenue's profitability." },
+      { kpi: "Discount Rate / Promotional Mix %", logic: "Heavy discounting drives top-line growth but compresses unit economics. A revenue-up margin-down quarter usually has a promo story." },
+      { kpi: "LTV:CAC Ratio", logic: "Even at higher CAC, the business is fine if LTV is keeping pace. This validates whether the growth is sustainable or a sugar high." },
+    ],
+  },
+  {
+    id: "retail-p2", domain: "retail",
+    problem: "Our checkout conversion rate dropped 18% week-over-week with no marketing changes. What do you check first?",
+    goldKPIs: [
+      { kpi: "Checkout Funnel Drop-off Rate by Step", logic: "Isolates whether the drop is at cart-to-checkout, shipping page, payment page, or confirmation. Each step has different root causes." },
+      { kpi: "Site Performance / Page Load Time", logic: "A 1-second delay in checkout can drop conversion 7-10%. Often the silent culprit when nothing else changed." },
+      { kpi: "Conversion Rate by Browser/Device", logic: "A failed JavaScript update or browser-specific bug shows up here as a sudden segment-specific drop." },
+      { kpi: "Payment Method Approval Rate", logic: "If a payment gateway started declining a card type or 3DS challenge increased, conversion drops without traffic-quality changes." },
+      { kpi: "Cart Abandonment Rate", logic: "Tells you if users are getting to cart but bailing during checkout, vs. not even trying — different problem, different fix." },
+    ],
+  },
+  {
+    id: "retail-p3", domain: "retail",
+    problem: "Email revenue is flat YoY despite a 30% larger subscriber list. What's going on?",
+    goldKPIs: [
+      { kpi: "Open Rate Trend", logic: "Inflated by Apple Mail Privacy Protection since 2021, but a falling open rate on a growing list still signals deliverability or list-quality decay." },
+      { kpi: "Click-Through Rate", logic: "More honest signal than open rate — if CTR is falling, the list is bigger but less engaged. Quality is decoupling from quantity." },
+      { kpi: "Email List Engagement Rate by Cohort", logic: "Recent subscribers should outperform older cohorts. If they don't, the list-building program is acquiring weak leads." },
+      { kpi: "Unsubscribe Rate", logic: "A growing unsub rate alongside list growth means the new subscribers aren't a fit — usually from aggressive lead-magnet acquisition." },
+      { kpi: "Revenue per Email Sent", logic: "The bottom-line efficiency metric. If RPS is dropping while list size grows, the channel is becoming less efficient even if total revenue holds." },
+    ],
+  },
+  {
+    id: "retail-p4", domain: "retail",
+    problem: "Returns are up 22% on a single SKU we launched 60 days ago. Diagnose.",
+    goldKPIs: [
+      { kpi: "Return Reason Code Mix", logic: "Differentiates between sizing/fit issues (product page problem), quality defects (sourcing problem), and 'not as described' (photography/copy problem). Each fix is different." },
+      { kpi: "Return Rate by Customer Cohort", logic: "If returns are concentrated in first-time buyers, the product page is overselling. If repeat customers return at the same rate, it's a unit problem." },
+      { kpi: "Customer Reviews Sentiment", logic: "Reviews capture root cause in the customer's own words 2-4 weeks before return rate moves enough to be statistically significant." },
+      { kpi: "Photos vs Product Mismatch Score (qualitative)", logic: "A return spike on a product where the photo doesn't represent the actual item is a content problem, not a product problem." },
+      { kpi: "Sell-Through Rate alongside Return Rate", logic: "High sell-through + high return = strong demand for a flawed product. Low sell-through + high return = weak product-market fit. Different recommendations." },
+    ],
+  },
+  {
+    id: "retail-p5", domain: "retail",
+    problem: "Customer Lifetime Value is flat over 18 months despite multiple retention campaigns. Why?",
+    goldKPIs: [
+      { kpi: "Repeat Purchase Rate by Cohort", logic: "LTV is mostly a function of repeat rate — if it's not moving, retention campaigns aren't actually retaining." },
+      { kpi: "Time-to-Second-Purchase Distribution", logic: "Reveals whether retention is failing at the second purchase (the hardest to win) or later. Different campaigns address different points." },
+      { kpi: "Average Order Frequency", logic: "Customers buying the same number of times means retention isn't degrading, but it isn't growing either. May signal saturation or wrong category." },
+      { kpi: "Cross-Sell Rate / Category Penetration", logic: "If LTV is flat, customers are buying the same things at the same rate. Cross-sell expansion (new categories) is the typical growth lever." },
+      { kpi: "Churn Rate by Cohort", logic: "Even if average LTV is flat, churn moving in opposite directions across cohorts can hide problems — recent cohorts may be churning faster while older cohorts mature." },
+    ],
+  },
+  {
+    id: "retail-p6", domain: "retail",
+    problem: "Inventory carrying costs are up 35% YoY but stockouts are also up. What's broken?",
+    goldKPIs: [
+      { kpi: "Inventory Turnover by SKU", logic: "Identifies which SKUs have grown stale (slow turn = high carrying cost) and which are turning fast (potential stockouts)." },
+      { kpi: "Days of Inventory on Hand", logic: "Days on hand that exceed lead time signals overstock; days on hand below lead time signal stockout risk. Both can rise simultaneously across different SKUs." },
+      { kpi: "Forecast Accuracy (MAPE) by Category", logic: "Both overstock and stockouts trace back to forecast misses in different directions. MAPE shows where forecasts are systematically wrong." },
+      { kpi: "Sell-Through Rate by Receipt Cohort", logic: "Distinguishes new arrivals that aren't moving from base inventory that's accumulated. Different fixes — markdowns vs. SKU rationalization." },
+      { kpi: "Stockout Rate by SKU Velocity Tier", logic: "Stockouts on A-velocity items are more costly than stockouts on C-velocity items. Aggregate stockout rate hides this." },
+    ],
+  },
+  {
+    id: "retail-p7", domain: "retail",
+    problem: "Loyalty program members convert at 4.2% but the program ROI is negative. Explain.",
+    goldKPIs: [
+      { kpi: "Incremental Conversion Lift", logic: "The 4.2% is meaningless without comparing to what loyalty members would have converted at *anyway*. True ROI is the lift, not the absolute rate." },
+      { kpi: "Cost of Loyalty Rewards Earned vs Redeemed", logic: "Earned but unredeemed liability is a balance sheet drag; high redemption is a P&L drag. Both kill ROI." },
+      { kpi: "Discount Burden (% of Loyalty Sales)", logic: "Loyalty programs that rely on discounts compress margin on every loyalty transaction. The conversion gain may not cover the margin loss." },
+      { kpi: "Repeat Purchase Rate: Members vs Non-Members (cohort-matched)", logic: "Apples-to-apples comparison adjusts for the self-selection bias that loyalty members are inherently higher-intent." },
+      { kpi: "Customer Acquisition Cost via Loyalty Referral", logic: "If the program is supposed to reduce CAC through referrals, measure that directly. Otherwise the program is paying for retention twice." },
+    ],
+  },
+  {
+    id: "retail-p8", domain: "retail",
+    problem: "Mobile traffic doubled last year but mobile revenue grew only 30%. What's happening on mobile?",
+    goldKPIs: [
+      { kpi: "Mobile Conversion Rate (vs Desktop)", logic: "Mobile typically converts 40-60% of desktop. If the gap is widening, traffic is lower-intent or the mobile experience is degrading." },
+      { kpi: "Mobile Page Load Time", logic: "Mobile load time is the single biggest mobile conversion killer. A 4-second page on mobile vs 2-second on desktop explains huge conversion gaps." },
+      { kpi: "Mobile Checkout Funnel Drop-off", logic: "Tiny form fields, missing autofill, 3DS challenges all hit mobile harder. Step-by-step drop-off shows where." },
+      { kpi: "Mobile AOV vs Desktop AOV", logic: "Mobile users typically buy fewer items per order. If mobile revenue is lagging traffic, AOV gap is a contributor alongside conversion." },
+      { kpi: "Mobile Bounce Rate by Landing Page", logic: "Identifies which landing pages are mobile-broken or mobile-unfriendly. Often a few specific pages are dragging the average." },
+    ],
+  },
+
+  // HEALTHCARE — 8 scenarios
+  {
+    id: "hc-p1", domain: "healthcare",
+    problem: "Our 30-day readmission rate climbed from 13% to 16% over six months. The CMS penalty risk is now real. Diagnose.",
+    goldKPIs: [
+      { kpi: "Readmission Rate by Primary Diagnosis (DRG)", logic: "Aggregate readmits hide condition-specific patterns. CHF, COPD, and pneumonia are the CMS-targeted conditions and usually drive the spike." },
+      { kpi: "30-Day Post-Discharge Follow-Up Rate", logic: "The single most-evidence-based intervention against readmits. If follow-up rate dropped, readmits rise predictably." },
+      { kpi: "Medication Reconciliation Rate at Discharge", logic: "Medication errors at transitions cause ~30% of preventable readmits. A drop here drives a readmit rise." },
+      { kpi: "Average Length of Stay by DRG", logic: "Falling ALOS without supporting outpatient infrastructure pushes patients out unstable. ALOS-readmit tradeoff must be tracked together." },
+      { kpi: "Discharge Disposition Mix (Home vs SNF vs Home Health)", logic: "If more patients are being discharged home without home health that previously went to SNF, readmits rise. Often a payer-driven change." },
+    ],
+  },
+  {
+    id: "hc-p2", domain: "healthcare",
+    problem: "Days in AR has crept from 38 to 52 days. The CFO needs a root cause this week.",
+    goldKPIs: [
+      { kpi: "Initial Claim Denial Rate", logic: "Denials force resubmission cycles that extend AR days. The most common upstream cause of rising days in AR." },
+      { kpi: "Denial Rate by Payer", logic: "If one payer drives the denial increase, the cause is contract/process, not internal billing. Different fix." },
+      { kpi: "Denial Rate by Reason Code", logic: "Eligibility errors, prior auth missing, and coding errors all need different fixes. Reason code mix tells you which department to fix." },
+      { kpi: "Clean Claim Rate", logic: "The leading indicator — claims submitted clean don't get denied. If clean claim rate dropped, denials and AR days will follow." },
+      { kpi: "AR Aging Bucket Distribution", logic: "Days in AR is an average; aging buckets show whether the problem is more old claims (collection issue) or fewer fast-paid claims (payer slow-pay)." },
+    ],
+  },
+  {
+    id: "hc-p3", domain: "healthcare",
+    problem: "ED door-to-provider time has doubled in three months. Why?",
+    goldKPIs: [
+      { kpi: "ED Volume Trend (visits per day)", logic: "Most basic check. If volume jumped 30%+ without staffing changes, capacity is the cause. Often the answer." },
+      { kpi: "ED Boarding Time / Inpatient Bed Wait", logic: "When inpatient is full, ED becomes a holding tank. This downstream blockage is the most common door-to-provider driver." },
+      { kpi: "Provider Staffing Hours per Patient Volume", logic: "If staffing didn't scale with volume, the metric must move. Compares budgeted to actual provider hours." },
+      { kpi: "Triage Acuity Mix (ESI 1-5)", logic: "More high-acuity patients means longer per-patient time and longer waits for everyone. Acuity drift drives the metric without obvious volume change." },
+      { kpi: "Left Without Being Seen (LWBS) Rate", logic: "When wait gets long enough, patients leave. LWBS rising alongside door-to-provider confirms the wait is past patient tolerance." },
+    ],
+  },
+  {
+    id: "hc-p4", domain: "healthcare",
+    problem: "HCAHPS scores dropped 8 percentile points over two quarters. Where's the problem?",
+    goldKPIs: [
+      { kpi: "HCAHPS Domain-Level Scores", logic: "Composite drop hides the real story — usually 1-2 domains (Communication, Responsiveness, Quietness) drive the move. Domain-level isolates the cause." },
+      { kpi: "Nurse Staffing Ratios", logic: "Communication and Responsiveness scores correlate strongly with nurse-to-patient ratios. A staffing change shows up in HCAHPS within a quarter." },
+      { kpi: "Discharge Education Compliance Rate", logic: "The 'Care Transitions' HCAHPS domain tracks discharge experience. Often the easiest domain to move with a documented intervention." },
+      { kpi: "Voluntary Survey Comments — Word Frequency", logic: "Unstructured feedback often reveals the operational change (new EHR, food vendor switch, parking changes) that quant metrics don't capture." },
+      { kpi: "HCAHPS Response Rate", logic: "If response rate dropped, sample bias may explain the score change rather than actual experience. Methodology check before intervention." },
+    ],
+  },
+  {
+    id: "hc-p5", domain: "healthcare",
+    problem: "Cost per discharge is up 11% year-over-year on the cardiac service line. Investigate.",
+    goldKPIs: [
+      { kpi: "Average Length of Stay (ALOS) — Cardiac", logic: "ALOS is the largest cost driver in inpatient care. A 0.5-day rise translates to a ~10% cost increase, matching the observed change." },
+      { kpi: "Supply Cost per Case (cardiac implants, drugs)", logic: "Cardiac is implant-heavy. A device price increase or shift to higher-cost devices can drive cost per case independent of LOS." },
+      { kpi: "Case-Mix Index (CMI) / Acuity Adjustment", logic: "If sicker patients shifted into the service line, cost rises appropriately. Cost should be evaluated *per CMI-adjusted case*, not raw." },
+      { kpi: "Readmission Rate (cardiac)", logic: "Readmits add cost without DRG payment — the readmitted case is part of the original DRG bundle. Readmit rate increase translates to cost-per-discharge increase." },
+      { kpi: "OR Time per Cardiac Procedure", logic: "Procedure time scales with cost (anesthesia, OR fixed cost). Surgeon-level OR time variation can drive aggregate cost." },
+    ],
+  },
+  {
+    id: "hc-p6", domain: "healthcare",
+    problem: "Our health plan's Medicare Star Rating dropped from 4.0 to 3.5. We have one rating cycle to recover. Where do we focus?",
+    goldKPIs: [
+      { kpi: "HEDIS Measure Performance — Triple-Weighted Measures", logic: "CMS triple-weights certain measures (e.g., medication adherence). Moving these moves the rating most efficiently." },
+      { kpi: "CAHPS Survey Domain Scores", logic: "Patient experience is a significant portion of the rating. CAHPS domains identify which experience improvements matter most." },
+      { kpi: "Closing-Ratio on Care Gaps (HEDIS)", logic: "Members with open care gaps drag scores. Tracking how fast gaps close per outreach attempt shows where care management is or isn't moving the needle." },
+      { kpi: "Medication Adherence (PDC) by Drug Class", logic: "Adherence is one of the highest-impact, most-actionable Star levers. Class-level breakdown identifies where adherence interventions work." },
+      { kpi: "Provider Network Performance Variance", logic: "Some provider groups will be far below network average on quality measures. Targeting outreach to those groups is the highest-leverage action." },
+    ],
+  },
+  {
+    id: "hc-p7", domain: "healthcare",
+    problem: "OR utilization is at 62% — well below the 80% target. The OR director wants to know why.",
+    goldKPIs: [
+      { kpi: "OR Block Utilization by Surgeon", logic: "Reserved blocks that aren't filled drag aggregate utilization. Surgeon-level breakdown shows whose blocks are underutilized." },
+      { kpi: "First-Case On-Time Start Rate", logic: "Late starts cascade through the day, reducing total cases possible. Often the single biggest fixable utilization driver." },
+      { kpi: "OR Turnover Time (case-to-case)", logic: "Long turnovers waste capacity. Each 10 minutes of turnover reduction can add a case per day per OR." },
+      { kpi: "Case Cancellation Rate (and reasons)", logic: "Day-of cancellations leave block time empty. Cancellation reasons identify whether the cause is patient, surgeon, or supply chain (instruments missing)." },
+      { kpi: "Block Release Lead Time", logic: "Blocks released 24+ hours in advance can be filled by other surgeons. Late releases create empty rooms." },
+    ],
+  },
+  {
+    id: "hc-p8", domain: "healthcare",
+    problem: "Total joint replacement margin per case has dropped 15% in 12 months despite stable reimbursement. What's driving cost?",
+    goldKPIs: [
+      { kpi: "Implant Cost per Case", logic: "Implants are 40-60% of total joint case cost. Vendor price increases or surgeon preference shifts toward premium implants drive case cost." },
+      { kpi: "Length of Stay (TKA/THA)", logic: "TJR has been moving from 3 days to outpatient. If your ALOS hasn't moved, you're carrying inpatient cost without reimbursement adjustment." },
+      { kpi: "OR Time per Case (by Surgeon)", logic: "Per-minute OR cost is high. Surgeons with longer OR times drive case cost without proportional outcome benefit." },
+      { kpi: "Readmission/Complication Rate (90-day)", logic: "Under bundled payment, post-discharge complications are absorbed by the hospital. Rising complications destroy margin under BPCI." },
+      { kpi: "Discharge Disposition (Home vs Rehab/SNF)", logic: "Under bundled payment, post-acute care is part of the cost. Sending patients to SNF instead of home adds significant cost without revenue." },
+    ],
+  },
+
+  // FINANCE — 7 scenarios
+  {
+    id: "fin-p1", domain: "finance",
+    problem: "Our SaaS company's NRR dropped from 118% to 104% YoY. Walk me through what you'd investigate.",
+    goldKPIs: [
+      { kpi: "Gross Revenue Retention (GRR)", logic: "Decompose NRR into GRR + expansion. If GRR fell, churn is the issue. If GRR is stable, expansion is the issue. Different remediations." },
+      { kpi: "Churn Rate by Customer Segment", logic: "Aggregate churn hides where the loss is. SMB churn vs enterprise churn require different interventions." },
+      { kpi: "Expansion Revenue per Account", logic: "If existing customers stopped expanding, the upsell motion or product road map is the issue." },
+      { kpi: "Net New ARR by Cohort", logic: "Recent cohorts may behave differently than older cohorts. If new cohorts churn faster or expand less, the sales-fit definition has drifted." },
+      { kpi: "Logo vs Revenue Churn", logic: "Losing many small logos vs losing one big logo are very different stories. Both can produce the same NRR drop." },
+    ],
+  },
+  {
+    id: "fin-p2", domain: "finance",
+    problem: "EPS beat estimates but the stock dropped 8% on earnings. Why might the market be reacting negatively?",
+    goldKPIs: [
+      { kpi: "Revenue Growth Rate", logic: "Beating EPS via cost cuts while missing revenue means unsustainable earnings quality. Markets reward growth quality over earnings beats." },
+      { kpi: "Forward Guidance vs. Consensus", logic: "Past quarter beat is irrelevant if forward guidance is below expectations. Stocks trade on forward, not trailing." },
+      { kpi: "Operating Margin Trend", logic: "Margin expansion via revenue (operating leverage) is good; margin via layoffs is suspect. The composition of the beat matters." },
+      { kpi: "Free Cash Flow vs Net Income", logic: "EPS can be inflated by accruals or working capital changes. FCF divergence from EPS is a quality-of-earnings flag." },
+      { kpi: "Same-Store / Organic Growth Rate", logic: "If the EPS beat came from acquisitions, organic growth may be deteriorating. Markets penalize acquisition-driven earnings." },
+    ],
+  },
+  {
+    id: "fin-p3", domain: "finance",
+    problem: "Working capital has expanded 45% in 18 months while revenue grew 20%. Cash flow is tight. Diagnose.",
+    goldKPIs: [
+      { kpi: "Days Sales Outstanding (DSO)", logic: "If customers pay slower, AR grows faster than revenue. Often the largest single working capital drag." },
+      { kpi: "Days Inventory Outstanding (DIO)", logic: "Inventory growth disproportionate to sales velocity ties up cash. Often a forecasting or sourcing problem." },
+      { kpi: "Days Payable Outstanding (DPO)", logic: "If we're paying suppliers faster while customers pay slower, the cash gap widens. Symmetric movement is needed." },
+      { kpi: "Cash Conversion Cycle (DIO + DSO − DPO)", logic: "The composite metric — captures working capital health in one number. The trend tells you whether it's getting structurally worse." },
+      { kpi: "AR Aging Bucket Distribution", logic: "Average DSO may not show the problem if a few large accounts are aging. The 90+ bucket reveals real collection risk." },
+    ],
+  },
+  {
+    id: "fin-p4", domain: "finance",
+    problem: "Our P/E ratio expanded from 18× to 28× over a year while earnings only grew 5%. What's the market saying?",
+    goldKPIs: [
+      { kpi: "Forward Earnings Estimates Trend", logic: "Multiple expansion usually means analysts are raising forward estimates. The market is paying for expected future earnings, not trailing." },
+      { kpi: "Sector P/E Comparison", logic: "If the whole sector re-rated, our multiple expansion is market-wide, not company-specific. Different story." },
+      { kpi: "Earnings Quality (FCF / Net Income)", logic: "If earnings quality improved (more cash-backed), markets appropriately pay more. Stable ratio means quality didn't change — just sentiment." },
+      { kpi: "Revenue Growth Acceleration", logic: "Markets pay premium multiples for accelerating growth. Even with 5% EPS, accelerating revenue can drive P/E expansion." },
+      { kpi: "Beta and Volatility Trend", logic: "Lower volatility / lower beta companies command higher multiples. A re-rating from cyclical to defensive can drive multiple expansion." },
+    ],
+  },
+  {
+    id: "fin-p5", domain: "finance",
+    problem: "A potential acquisition target has 30% revenue growth and 5% EBITDA margins. The CFO is skeptical. What should you check?",
+    goldKPIs: [
+      { kpi: "Unit Economics (Contribution Margin per Customer)", logic: "Low EBITDA with high growth can be either 'investing in scale' or 'fundamentally unprofitable.' Unit economics distinguishes them." },
+      { kpi: "CAC Payback Period", logic: "If CAC payback exceeds 24 months, the growth requires perpetual capital infusion. A red flag for acquisition targets." },
+      { kpi: "Gross Margin Trend", logic: "Stable gross margin under high growth = scalable model. Compressing gross margin under high growth = price competition." },
+      { kpi: "Working Capital Trend", logic: "High-growth companies often have negative working capital pulls (collecting from customers before paying suppliers) — or the opposite, which signals structural issues." },
+      { kpi: "Revenue Concentration (Top 10 Customers %)", logic: "30% revenue growth on a concentrated customer base is fragile. Loss of one large customer ends the growth story." },
+    ],
+  },
+  {
+    id: "fin-p6", domain: "finance",
+    problem: "Our debt-to-equity ratio doubled in two years while the share price dropped. The board is asking whether we're at risk of distress.",
+    goldKPIs: [
+      { kpi: "Interest Coverage Ratio (EBIT / Interest Expense)", logic: "The most direct measure of debt service capacity. Below 1.5× is dangerous; below 1.0× means we can't cover interest from operations." },
+      { kpi: "Debt Maturity Schedule", logic: "The risk isn't total debt — it's near-term refinancing. A wall of maturities in 18 months is more dangerous than a 10-year amortization." },
+      { kpi: "Free Cash Flow vs. Required Debt Service", logic: "FCF must cover debt service plus minimum reinvestment. If FCF margin shrinks below this floor, distress accelerates." },
+      { kpi: "Liquidity (Cash + Revolver Capacity)", logic: "Even insolvent businesses can survive a long time with liquidity. Liquidity is the bridge to recovery; without it, distress accelerates fast." },
+      { kpi: "Covenant Headroom", logic: "Most leveraged companies fail when debt covenants trip — not when interest goes unpaid. Headroom on leverage and coverage covenants is the early warning." },
+    ],
+  },
+  {
+    id: "fin-p7", domain: "finance",
+    problem: "Cash from operations dropped 25% but net income only dropped 5%. Investors are concerned about earnings quality. Why might this be happening?",
+    goldKPIs: [
+      { kpi: "Working Capital Change Components", logic: "AR growth, inventory growth, or AP shrinkage all consume cash without affecting net income. The largest culprits in CFO/NI gaps." },
+      { kpi: "Days Sales Outstanding Trend", logic: "If DSO is growing, more revenue is being booked but not collected — net income reflects accrual revenue, CFO reflects only cash." },
+      { kpi: "Inventory Buildup vs Sales Trend", logic: "Building inventory without selling it inflates COGS deferral but ties up cash. A common quality-of-earnings issue." },
+      { kpi: "Non-Cash Charges (Stock-Based Comp, Depreciation)", logic: "Higher non-cash charges add to the CFO/NI gap on the cash side, not the negative side. Verifies whether the gap is structural or distortion." },
+      { kpi: "Deferred Revenue Movement", logic: "For subscription businesses, deferred revenue swings move cash without moving income. A drop in new bookings shows in cash before income." },
+    ],
+  },
+
+  // OPERATIONS / SUPPLY CHAIN — 8 scenarios
+  {
+    id: "ops-p1", domain: "operations",
+    problem: "On-time delivery has fallen from 96% to 88% over six months across our network. The CEO is escalating. Diagnose.",
+    goldKPIs: [
+      { kpi: "OTD by Lane / Distribution Center", logic: "Network-aggregate OTD masks where the problem is. One DC or one lane usually drives the metric. Targeting that node is the leverage point." },
+      { kpi: "Late-Delivery Root Cause Mix", logic: "Stockouts, carrier delays, system outages, and labor each have different fixes. Aggregate OTD doesn't tell you which fix to apply." },
+      { kpi: "Order Cycle Time (Order-to-Ship)", logic: "If orders are taking longer to leave the dock, OTD will degrade even if transit times are stable. Internal cycle is often the controllable lever." },
+      { kpi: "Carrier Performance Scorecards", logic: "External carriers may be the actual cause. If transit time variance jumped, the issue isn't your operation." },
+      { kpi: "Forecast Accuracy / Stockout Rate", logic: "Stockouts cause the most unrecoverable late deliveries. If forecast accuracy dropped, the problem is upstream of execution." },
+    ],
+  },
+  {
+    id: "ops-p2", domain: "operations",
+    problem: "Our manufacturing OEE dropped from 75% to 62% on the main production line. What do you check?",
+    goldKPIs: [
+      { kpi: "OEE Component Breakdown (Availability × Performance × Quality)", logic: "OEE drop has three possible causes. Knowing which component fell tells you whether to investigate breakdowns, speed losses, or defects." },
+      { kpi: "Unplanned Downtime by Cause", logic: "If Availability dropped, breakdowns are the cause. Cause codes (mechanical, electrical, supply) point to the right team to involve." },
+      { kpi: "Cycle Time vs Standard", logic: "If Performance dropped, the line is running slower than designed. Causes: untrained operators, material flow issues, maintenance neglect." },
+      { kpi: "First-Pass Yield Trend", logic: "If Quality dropped, defects are eating capacity. Inspection or rework data identifies the failure mode." },
+      { kpi: "Maintenance Schedule Compliance", logic: "Skipped preventive maintenance is the most common slow-burn OEE killer. Compliance trend predicts breakdown rate 2-3 months ahead." },
+    ],
+  },
+  {
+    id: "ops-p3", domain: "operations",
+    problem: "Inventory turnover dropped from 8× to 5× over a year. The CFO is asking why we're holding so much stock.",
+    goldKPIs: [
+      { kpi: "Inventory by Velocity Tier (A/B/C)", logic: "Aggregate turnover can fall because slow-mover (C-velocity) inventory is accumulating while A-items turn fine. Different fix per tier." },
+      { kpi: "Forecast Accuracy (MAPE) by Category", logic: "Bad forecasts produce overstocks. The categories with the largest forecast error usually contribute most to inventory buildup." },
+      { kpi: "Sell-Through Rate by Receipt Cohort", logic: "If recent receipts aren't selling at expected rates, demand assumptions were wrong. Cohort-level data reveals when the demand shift happened." },
+      { kpi: "Aging Inventory %", logic: "Inventory aging past 180 days is essentially dead weight. The accumulation rate predicts future markdowns and write-offs." },
+      { kpi: "Safety Stock Levels vs Demand Variability", logic: "Safety stock tied to old demand variability assumptions can become bloated. Recalibrating to current variability often releases significant cash." },
+    ],
+  },
+  {
+    id: "ops-p4", domain: "operations",
+    problem: "Our recordable incident rate (TRIR) doubled in 12 months. Investigate the safety culture.",
+    goldKPIs: [
+      { kpi: "Incident Rate by Department / Shift", logic: "Aggregate TRIR hides hot spots. One shift, one department, or one supervisor often drives the increase." },
+      { kpi: "Near-Miss Reporting Rate", logic: "If incidents are up but near-miss reporting fell, the safety culture is weakening — people are getting hurt without prior reporting that should have prevented it." },
+      { kpi: "Severity-Weighted Incident Rate (DART)", logic: "TRIR weights all recordables equally. DART tells you whether the increase is in minor or serious incidents — different urgency." },
+      { kpi: "New-Hire Incident Rate", logic: "New employees are 3-5× more likely to have incidents. If hiring grew, baseline incident rate rises mechanically — not a culture problem." },
+      { kpi: "Time Since Last Incident Trends by Crew", logic: "Safety culture metrics deteriorate when crews lose their 'streak.' Tracking by crew identifies which teams need re-engagement." },
+    ],
+  },
+  {
+    id: "ops-p5", domain: "operations",
+    problem: "Supplier on-time delivery from our top supplier dropped from 98% to 84%. They claim it's our forecast. Investigate.",
+    goldKPIs: [
+      { kpi: "Forecast Accuracy / MAPE for Items from This Supplier", logic: "If our forecast variability rose, supplier production planning suffers. Their claim may be valid — verify with our own data." },
+      { kpi: "Order Volume Variance (Actual vs Forecasted)", logic: "Even if MAPE looks normal, large absolute volume swings strain supplier capacity. Variance, not just average error, matters." },
+      { kpi: "Order Lead Time Adherence", logic: "If we shortened lead times without informing the supplier, they can't plan production accordingly. Lead time changes are often the silent cause." },
+      { kpi: "Supplier Capacity Utilization (where visible)", logic: "If the supplier is at 95%+ capacity utilization, they have no buffer for forecast errors. They may be telling the truth that forecasts caused the issue — but capacity is the constraint." },
+      { kpi: "Order Mix Stability (SKU Mix vs Forecast)", logic: "Even with stable total volume, mix shifts to harder-to-produce SKUs reduces effective capacity. Mix variance is often hidden in volume variance analysis." },
+    ],
+  },
+  {
+    id: "ops-p6", domain: "operations",
+    problem: "Cost per order shipped is up 18% YoY. We're losing margin on every transaction. Where do you look?",
+    goldKPIs: [
+      { kpi: "Freight Cost per Order", logic: "Carrier rate increases or modal shifts (more air, less ocean) drive freight cost. Often the largest single component of cost-per-order changes." },
+      { kpi: "Labor Productivity (Units per Labor Hour)", logic: "If productivity fell, labor cost per unit rises. Wage rates can be stable while cost rises through productivity decay." },
+      { kpi: "Order Mix (Units per Order)", logic: "Smaller orders are more expensive per unit. A shift toward smaller order sizes raises cost per order without anything else changing." },
+      { kpi: "Returns Cost (Reverse Logistics)", logic: "Returns are usually accounted for at a higher cost per unit than outbound. Rising return rates inflate effective cost per net order shipped." },
+      { kpi: "Packaging Material Cost per Order", logic: "Packaging is typically 8-15% of fulfillment cost. Material price increases or oversized packaging usage adds up fast." },
+    ],
+  },
+  {
+    id: "ops-p7", domain: "operations",
+    problem: "Forecast accuracy (MAPE) is at 38%. Demand planning leadership wants to know where to invest first to improve.",
+    goldKPIs: [
+      { kpi: "MAPE by Product Velocity Tier (A/B/C)", logic: "C-velocity items will always have high MAPE due to low volume. A-velocity items with high MAPE are the actual problem and the best ROI to fix." },
+      { kpi: "MAPE by Channel", logic: "DTC, wholesale, and B2B forecasts have different drivers. Channel-level MAPE shows which channel's forecasting needs the most work." },
+      { kpi: "Forecast Bias (signed error)", logic: "MAPE is unsigned. Bias tells you whether you systematically over-forecast or under-forecast. Each requires opposite fixes." },
+      { kpi: "Forecast Cycle Length / Frequency", logic: "Monthly forecasts on weekly demand patterns will be wrong. Cycle alignment with the planning horizon matters more than algorithm sophistication." },
+      { kpi: "Promotional Volume Predictability", logic: "Most forecast errors come from promotions — base demand is usually predictable. If promo lift assumptions are off, MAPE spikes during promo periods." },
+    ],
+  },
+  {
+    id: "ops-p8", domain: "operations",
+    problem: "Warehouse productivity (units per labor hour) has been declining for 8 weeks. Throughput is down. Why?",
+    goldKPIs: [
+      { kpi: "Productivity by Shift / Team", logic: "Aggregate productivity hides team-level variance. A new team or shift often drives the average down without affecting others." },
+      { kpi: "Order Mix Profile (Single-Line vs Multi-Line)", logic: "If order profile shifted toward more multi-line orders, picking time per order rises mechanically. Productivity per unit may be fine; productivity per order has dropped." },
+      { kpi: "New-Hire Mix in Workforce", logic: "New hires are 30-50% slower than experienced workers for 60-90 days. Hiring surges drag aggregate productivity for a quarter or more." },
+      { kpi: "Equipment Downtime Rate", logic: "Conveyor or scanner outages cause cascading slowdowns that don't always show as 'downtime' in primary tracking. Side-effect productivity drops are common." },
+      { kpi: "Pick Path Efficiency (Travel Time per Pick)", logic: "Slotting issues — high-velocity items in suboptimal locations — increase travel time per pick. The single most common warehouse productivity killer." },
+    ],
+  },
+
+  // MARKETING — 7 scenarios
+  {
+    id: "mkt-p1", domain: "marketing",
+    problem: "Blended ROAS dropped from 3.2× to 1.9× over the past year despite the same spend mix. Investigate.",
+    goldKPIs: [
+      { kpi: "ROAS by Channel", logic: "Blended ROAS hides channel-level dynamics. One channel deteriorating can drag the whole mix. Channel-level isolates the cause." },
+      { kpi: "CAC by Channel", logic: "If CAC rose without LTV rising, ROAS falls. Channel-level CAC trend reveals which channel is becoming inefficient." },
+      { kpi: "Channel Saturation (Frequency)", logic: "Diminishing returns kick in at high frequency. If a channel scaled up without expanding audience, ROAS naturally decays." },
+      { kpi: "Attribution Model Comparison (Last-Click vs MTA)", logic: "ROAS depends heavily on attribution. If attribution methodology shifted, the metric changed without underlying performance changing." },
+      { kpi: "Conversion Rate by Channel (Post-Click)", logic: "Lower conversion on the same traffic means landing pages or offers are underperforming. Channel-level conversion isolates where the leak is." },
+    ],
+  },
+  {
+    id: "mkt-p2", domain: "marketing",
+    problem: "Email open rates have fallen from 32% to 19% in 18 months. Diagnose.",
+    goldKPIs: [
+      { kpi: "Open Rate by List Cohort / Acquisition Source", logic: "Apple MPP affects all senders equally. Cohort-level analysis isolates list-quality decay from MPP-driven distortion." },
+      { kpi: "Sender Reputation Score", logic: "Domain reputation degradation moves emails to spam folders, dropping opens regardless of subject line. The most common silent cause." },
+      { kpi: "List Hygiene (Hard Bounce Rate, Unengaged Subscribers)", logic: "Stale list segments lower deliverability. Aggressive list growth without sunset policies kills open rates over 12-18 months." },
+      { kpi: "Subject Line Performance Trend", logic: "If subject lines became formulaic or got longer, opens decay. A/B testing data shows whether creative is the issue." },
+      { kpi: "Send Frequency vs Engagement", logic: "Increased send frequency erodes engagement. Frequency-vs-opens curve shows the optimal cadence — past that point, opens drop." },
+    ],
+  },
+  {
+    id: "mkt-p3", domain: "marketing",
+    problem: "Lead volume is up 40% but our sales team says the leads are worse. They're closing fewer. Investigate.",
+    goldKPIs: [
+      { kpi: "MQL-to-SQL Conversion Rate", logic: "If marketing volume grew but sales-qualified rate dropped, MQL definition has drifted or sources changed. The key efficiency metric." },
+      { kpi: "SQL-to-Close Conversion Rate", logic: "Decomposes the funnel further. If MQL-to-SQL is fine but SQL-to-close fell, lead intent is lower even after qualification." },
+      { kpi: "Lead Source Mix", logic: "If new lead sources entered the mix (paid lead gen, content downloads), they often convert lower than referral or demo-request leads." },
+      { kpi: "Average Deal Size by Source", logic: "Even if close rate is lower, higher deal size can compensate. Source-level deal size shows whether quality dropped or just changed shape." },
+      { kpi: "Sales Cycle Length by Source", logic: "If new sources have longer cycles, current quarter close rate can lag without lead quality being worse — just slower." },
+    ],
+  },
+  {
+    id: "mkt-p4", domain: "marketing",
+    problem: "Organic search traffic dropped 30% in 60 days. SEO team is panicking. Where do you start?",
+    goldKPIs: [
+      { kpi: "Traffic by Landing Page (Top 50)", logic: "Aggregate drop hides whether all pages dropped or a few specific pages. Concentrated drops point to specific algorithm signals." },
+      { kpi: "Keyword Ranking Movements", logic: "If specific keywords dropped, the algorithm change targeted those topics. Ranking data identifies what Google deprioritized." },
+      { kpi: "Click-Through Rate from Search Results", logic: "Some traffic drops come from CTR drops, not ranking drops — SERP changes (featured snippets, AI overviews) reduce clicks even at the same rank." },
+      { kpi: "Crawl/Index Coverage (Search Console)", logic: "Technical SEO issues (de-indexing, robots.txt mistakes) cause sudden traffic drops. Always verify the site is being indexed normally." },
+      { kpi: "Content Freshness / Last Update Date", logic: "Algorithm updates often penalize stale content. Pages that haven't been updated in 18+ months are vulnerable in any major update." },
+    ],
+  },
+  {
+    id: "mkt-p5", domain: "marketing",
+    problem: "We launched a brand campaign with a $500K budget. Six months later, ROI is unclear. How would you measure it?",
+    goldKPIs: [
+      { kpi: "Brand Awareness Lift (Survey-Based)", logic: "Brand campaigns are measured on awareness, not direct conversion. Pre/post brand surveys are the gold standard outcome metric." },
+      { kpi: "Branded Search Volume", logic: "When awareness grows, branded searches grow. Trending Google Search Console data is a free, near-real-time proxy for brand impact." },
+      { kpi: "Direct Traffic Trend", logic: "Brand awareness drives direct traffic. A direct traffic lift in the campaign window is supporting evidence." },
+      { kpi: "Share of Voice", logic: "Even if absolute lift is modest, SOV gain vs competitors signals competitive positioning improved. Especially important in commodity categories." },
+      { kpi: "Subsequent Performance Marketing CAC", logic: "Brand campaigns lower CAC for performance channels by warming the audience. Post-campaign CAC reduction is hidden ROI." },
+    ],
+  },
+  {
+    id: "mkt-p6", domain: "marketing",
+    problem: "The CMO wants to know whether to keep, scale, or kill our influencer program. We've spent $300K with 12 creators over 9 months.",
+    goldKPIs: [
+      { kpi: "Direct Attributed Revenue per Creator", logic: "Trackable codes and links give the most defensible direct ROI. The first cut at 'is this campaign even close to break-even.'" },
+      { kpi: "Audience Overlap with Existing Customer Base", logic: "If creator audiences heavily overlap with existing customers, attributed sales are partly cannibalization. Net new is the real metric." },
+      { kpi: "Brand Search Lift in Creator's Audience Geography", logic: "Influencer impact often shows in brand awareness rather than direct conversion. Search lift in their audience geography is a less attribution-dependent signal." },
+      { kpi: "Cost per Engagement (CPE) vs Comparable Channels", logic: "Even without revenue attribution, CPE benchmarks influencer cost against other awareness-driving channels (paid social, display)." },
+      { kpi: "Creator Authenticity Score / Comment Sentiment", logic: "Influencer ROI depends on audience trust. Sentiment analysis on the actual posts predicts whether activations are landing or being ignored." },
+    ],
+  },
+  {
+    id: "mkt-p7", domain: "marketing",
+    problem: "Average customer acquisition cost has risen 60% in 18 months. The CEO wants to know if we should pull back on growth spending.",
+    goldKPIs: [
+      { kpi: "LTV:CAC Ratio Trend", logic: "CAC rising is fine if LTV rose proportionally. A deteriorating ratio is the actual decision metric, not CAC alone." },
+      { kpi: "CAC Payback Period", logic: "If payback period extended significantly, cash flow risk rises even if absolute LTV:CAC looks acceptable. Cash, not just unit profit, drives the decision." },
+      { kpi: "CAC by Channel", logic: "If one channel's CAC drove the average up, the decision isn't 'cut growth' — it's 'cut that channel.' Channel-level isolates the answer." },
+      { kpi: "Marginal CAC at Current Spend Level", logic: "Marginal CAC is what matters at decision-time, not blended. As spend scales, marginal CAC rises faster than blended — and that's the binding constraint." },
+      { kpi: "Organic / Earned Acquisition Trend", logic: "If organic acquisition is still growing healthily, we can afford higher CAC on paid. If organic stalled, paid efficiency becomes the only growth lever." },
+    ],
+  },
+];
+
+// ── INTEL MODE WRAPPER (replaces direct KPILibraryMode call) ───────────────
+// NOTE: KPI_DOMAINS is already defined earlier from Mode 1 insert; do not redeclare.
+
+const INTEL_SUBMODES = [
+  { id: "library",   label: "📖 KPI Library",      description: "Reference cards" },
+  { id: "dashboard", label: "📊 Dashboard Drill", description: "60-sec timed reading" },
+  { id: "problem",   label: "🧩 Problem to Metric", description: "Diagnostic reasoning" },
+];
+
+function IntelMode({ apiKey, progress, onScore }) {
+  const [submode, setSubmode] = useState("library");
+
+  return (
+    <div style={{ padding: "0 0 40px 0" }}>
+      {/* Sub-mode selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${C.border}` }}>
+        {INTEL_SUBMODES.map(m => (
+          <button
+            key={m.id}
+            onClick={() => setSubmode(m.id)}
+            style={{
+              padding: "10px 18px", borderRadius: 8,
+              border: `1.5px solid ${submode === m.id ? C.accent : C.border}`,
+              background: submode === m.id ? C.accent + "18" : "transparent",
+              color: submode === m.id ? C.accent : C.muted,
+              fontFamily: mono, fontSize: 12, cursor: "pointer", letterSpacing: "0.04em",
+              display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2,
+            }}
+          >
+            <span>{m.label}</span>
+            <span style={{ fontSize: 9, opacity: 0.7, letterSpacing: "0.08em" }}>{m.description}</span>
+          </button>
+        ))}
+      </div>
+
+      {submode === "library"   && <KPILibraryMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+      {submode === "dashboard" && <DashboardDrillMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+      {submode === "problem"   && <ProblemMetricMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+    </div>
+  );
+}
+
+// ── MODE 2: DASHBOARD COMPREHENSION DRILL ─────────────────────────────────
+
+function DashboardDrillMode({ apiKey, progress, onScore }) {
+  const [drillIdx, setDrillIdx] = useState(0);
+  const [stage, setStage] = useState("ready");      // ready, active, submitted, graded
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [answers, setAnswers] = useState(["", "", ""]);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const drill = DASHBOARD_DRILLS[drillIdx];
+
+  // Timer
+  useEffect(() => {
+    if (stage !== "active") return;
+    if (timeLeft <= 0) {
+      setStage("submitted");
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [stage, timeLeft]);
+
+  const start = () => {
+    setStage("active");
+    setTimeLeft(60);
+    setAnswers(["", "", ""]);
+    setFeedback(null);
+    setError("");
+  };
+
+  const submit = () => {
+    setStage("submitted");
+  };
+
+  const grade = async () => {
+    if (!apiKey) { setError("Add your Anthropic API key above to grade your answers."); return; }
+    setLoading(true);
+    setError("");
+
+    const prompt = `You are a senior data analyst evaluating a junior analyst's response to a dashboard reading drill.
+
+DRILL CONTEXT:
+${drill.scenario}
+
+DASHBOARD: ${drill.title} — ${drill.subtitle}
+
+The user had 60 seconds to answer three questions. Grade each answer on a 0-3 scale:
+- 0: missed entirely
+- 1: surface-level observation, missed the real story
+- 2: solid analyst answer, captured the main point
+- 3: senior analyst answer, caught nuance and went beyond the obvious
+
+For each question, output:
+- SCORE: [0-3]
+- WHAT_THEY_GOT: [1 sentence]
+- WHAT_THEY_MISSED: [1-2 sentences, drawing from the gold-standard answer]
+- SENIOR_FRAMING: [1 sentence on how a senior would have framed it]
+
+Then output:
+- OVERALL: [strong, partial, or weak]
+- ONE_THING_TO_REMEMBER: [single most important takeaway]
+
+QUESTION 1: ${drill.questions[0].q}
+GOLD ANSWER: ${drill.questions[0].gold}
+USER ANSWER: ${answers[0] || "(no answer)"}
+
+QUESTION 2: ${drill.questions[1].q}
+GOLD ANSWER: ${drill.questions[1].gold}
+USER ANSWER: ${answers[1] || "(no answer)"}
+
+QUESTION 3: ${drill.questions[2].q}
+GOLD ANSWER: ${drill.questions[2].gold}
+USER ANSWER: ${answers[2] || "(no answer)"}
+
+Output structured plain text only, no markdown.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 1500,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      setFeedback(text);
+      setStage("graded");
+
+      // Parse OVERALL for score
+      const overallMatch = text.match(/OVERALL:\s*(strong|partial|weak)/i);
+      if (overallMatch) {
+        const score = overallMatch[1].toLowerCase();
+        onScore(`intel-dash-${drill.domain}`, drillIdx, score, { q: drill.title });
+      }
+    } catch (e) {
+      setError(e.message || "Grading failed");
+    }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setDrillIdx(i => (i + 1) % DASHBOARD_DRILLS.length);
+    setStage("ready");
+    setAnswers(["", "", ""]);
+    setFeedback(null);
+    setTimeLeft(60);
+    setError("");
+  };
+
+  const prev = () => {
+    setDrillIdx(i => (i - 1 + DASHBOARD_DRILLS.length) % DASHBOARD_DRILLS.length);
+    setStage("ready");
+    setAnswers(["", "", ""]);
+    setFeedback(null);
+    setTimeLeft(60);
+    setError("");
+  };
+
+  const domainColor = KPI_DOMAINS.find(d => d.id === drill.domain)?.color || C.accent;
+  const domainLabel = KPI_DOMAINS.find(d => d.id === drill.domain)?.label || drill.domain;
+
+  return (
+    <div>
+      {/* Header bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em" }}>
+            DRILL {drillIdx + 1} / {DASHBOARD_DRILLS.length} · {domainLabel.toUpperCase()}
+          </div>
+          <div style={{ fontFamily: mono, fontSize: 11, color: C.muted, marginTop: 4 }}>
+            60-second timed dashboard reading
+          </div>
+        </div>
+        <div style={{
+          fontFamily: mono, fontSize: 28, fontWeight: 700,
+          color: timeLeft > 20 ? C.ok : timeLeft > 10 ? C.warn : C.err,
+          minWidth: 70, textAlign: "right",
+        }}>
+          0:{String(timeLeft).padStart(2, "0")}
+        </div>
+      </div>
+
+      {/* Scenario */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>SCENARIO</div>
+        <div style={{ fontSize: 13, lineHeight: 1.55, color: C.text }}>{drill.scenario}</div>
+      </div>
+
+      {/* Dashboard */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>{drill.title}</div>
+        <div style={{ fontFamily: mono, fontSize: 11, color: C.muted, marginBottom: 16 }}>{drill.subtitle}</div>
+
+        {/* KPIs */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginBottom: 18 }}>
+          {drill.kpis.map((k, i) => (
+            <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 9, color: C.muted, letterSpacing: "0.12em", marginBottom: 5 }}>{k.label}</div>
+              <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 3 }}>{k.value}</div>
+              <div style={{ fontFamily: mono, fontSize: 10, color: k.up ? C.ok : C.err }}>{k.delta}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+          {drill.charts.slice(0, 2).map((chart, i) => (
+            <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 10 }}>{chart.title}</div>
+              <DrillChart chart={chart} />
+            </div>
+          ))}
+        </div>
+        {drill.charts[2] && (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: 12 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 10 }}>{drill.charts[2].title}</div>
+            <DrillChart chart={drill.charts[2]} />
+          </div>
+        )}
+      </div>
+
+      {/* Answer phase */}
+      {stage === "ready" && (
+        <div style={{ textAlign: "center", padding: 24 }}>
+          <button onClick={start} style={{
+            padding: "14px 40px", borderRadius: 8, border: `1.5px solid ${domainColor}`,
+            background: domainColor + "18", color: domainColor,
+            fontFamily: mono, fontSize: 13, cursor: "pointer", letterSpacing: "0.08em",
+          }}>
+            Start 60-Second Drill
+          </button>
+          <div style={{ marginTop: 12, fontFamily: mono, fontSize: 11, color: C.muted }}>
+            Answer 3 questions about this dashboard. Timer starts on click.
+          </div>
+        </div>
+      )}
+
+      {(stage === "active" || stage === "submitted") && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18 }}>
+          {drill.questions.map((q, i) => (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 4 }}>QUESTION {i + 1} OF 3</div>
+              <div style={{ fontSize: 13, marginBottom: 8, color: C.text }}>{q.q}</div>
+              <textarea
+                value={answers[i]}
+                onChange={e => setAnswers(a => { const n = [...a]; n[i] = e.target.value; return n; })}
+                disabled={stage === "submitted"}
+                placeholder="Your answer..."
+                style={{
+                  width: "100%", minHeight: 60, background: C.surface, border: `1px solid ${C.border}`,
+                  borderRadius: 6, padding: 10, color: C.text, fontSize: 13, resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            {stage === "active" && (
+              <button onClick={submit} style={{
+                padding: "10px 22px", borderRadius: 6, border: `1.5px solid ${C.accent}`,
+                background: C.accent + "18", color: C.accent,
+                fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+              }}>
+                Submit Now
+              </button>
+            )}
+            {stage === "submitted" && (
+              <button onClick={grade} disabled={loading} style={{
+                padding: "10px 22px", borderRadius: 6, border: `1.5px solid ${C.ok}`,
+                background: C.ok + "18", color: C.ok,
+                fontFamily: mono, fontSize: 11, cursor: loading ? "wait" : "pointer", letterSpacing: "0.06em",
+              }}>
+                {loading ? "Grading..." : "Grade with AI"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ background: C.err + "15", border: `1px solid ${C.err}`, borderRadius: 8, padding: "12px 14px", marginTop: 12, color: C.err, fontSize: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {feedback && stage === "graded" && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.ok}`, borderRadius: 12, padding: 18, marginTop: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 10 }}>AI FEEDBACK</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, color: C.text, lineHeight: 1.65, fontFamily: mono, margin: 0 }}>{feedback}</pre>
+
+          {/* Show gold-standard answers */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.accent, letterSpacing: "0.12em", marginBottom: 10 }}>GOLD-STANDARD SENIOR ANSWERS</div>
+            {drill.questions.map((q, i) => (
+              <div key={i} style={{ marginBottom: 12 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>Q{i + 1}</div>
+                <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{q.gold}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, gap: 8 }}>
+        <button onClick={prev} style={{
+          padding: "10px 22px", borderRadius: 8, border: `1.5px solid ${C.border}`,
+          background: "transparent", color: C.text,
+          fontFamily: mono, fontSize: 12, cursor: "pointer",
+        }}>← Prev Drill</button>
+        <button onClick={next} style={{
+          padding: "10px 22px", borderRadius: 8, border: `1.5px solid ${domainColor}`,
+          background: domainColor + "18", color: domainColor,
+          fontFamily: mono, fontSize: 12, cursor: "pointer",
+        }}>Next Drill →</button>
+      </div>
+    </div>
+  );
+}
+
+// ── DRILL CHART RENDERER (inline SVG) ──────────────────────────────────────
+
+function DrillChart({ chart }) {
+  if (chart.type === "lineMulti") {
+    const yMax = chart.yMax || 100;
+    const w = 360, h = 160, padL = 36, padR = 12, padT = 12, padB = 28;
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const xCount = chart.series[0].points.length;
+    const xStep = innerW / (xCount - 1);
+    const yScale = v => padT + (1 - v / yMax) * innerH;
+    const xPos = i => padL + i * xStep;
+
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto" }}>
+        {/* Grid */}
+        {[0.25, 0.5, 0.75].map(t => (
+          <line key={t} x1={padL} y1={padT + t * innerH} x2={w - padR} y2={padT + t * innerH}
+            stroke={C.border} strokeWidth="0.5" strokeDasharray="2,3" opacity="0.4" />
+        ))}
+        {/* Axes */}
+        <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke={C.border} strokeWidth="1" />
+        <line x1={padL} y1={padT + innerH} x2={w - padR} y2={padT + innerH} stroke={C.border} strokeWidth="1" />
+        {/* Y labels */}
+        {[0, 0.5, 1].map(t => (
+          <text key={t} x={padL - 4} y={padT + (1 - t) * innerH + 3} textAnchor="end"
+            fontSize="9" fill={C.muted} fontFamily={mono}>
+            {Math.round(yMax * t)}
+          </text>
+        ))}
+        {/* X labels */}
+        {chart.xLabels.map((lbl, i) => (
+          <text key={i} x={xPos(i)} y={h - 8} textAnchor="middle" fontSize="9" fill={C.muted} fontFamily={mono}>
+            {lbl}
+          </text>
+        ))}
+        {/* Series */}
+        {chart.series.map((s, si) => (
+          <g key={si}>
+            <polyline points={s.points.map((v, i) => `${xPos(i)},${yScale(v)}`).join(" ")}
+              fill="none" stroke={s.color} strokeWidth="2" />
+            {s.points.map((v, i) => (
+              <circle key={i} cx={xPos(i)} cy={yScale(v)} r="2.5" fill={s.color} />
+            ))}
+          </g>
+        ))}
+        {/* Legend */}
+        <g transform={`translate(${padL + 8}, ${padT - 2})`}>
+          {chart.series.map((s, si) => (
+            <g key={si} transform={`translate(${si * 90}, 0)`}>
+              <rect x="0" y="-1" width="10" height="2" fill={s.color} />
+              <text x="14" y="3" fontSize="9" fill={C.muted} fontFamily={mono}>{s.label}</text>
+            </g>
+          ))}
+        </g>
+      </svg>
+    );
+  }
+
+  if (chart.type === "barCategorical") {
+    const yMax = chart.yMax || Math.max(...chart.bars.map(b => b.value));
+    const w = 280, h = 160, padL = 40, padR = 12, padT = 14, padB = 28;
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const barW = innerW / chart.bars.length * 0.6;
+    const gap = innerW / chart.bars.length * 0.4;
+
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto" }}>
+        {[0.25, 0.5, 0.75].map(t => (
+          <line key={t} x1={padL} y1={padT + t * innerH} x2={w - padR} y2={padT + t * innerH}
+            stroke={C.border} strokeWidth="0.5" strokeDasharray="2,3" opacity="0.4" />
+        ))}
+        <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke={C.border} strokeWidth="1" />
+        <line x1={padL} y1={padT + innerH} x2={w - padR} y2={padT + innerH} stroke={C.border} strokeWidth="1" />
+        {[0, 0.5, 1].map(t => (
+          <text key={t} x={padL - 4} y={padT + (1 - t) * innerH + 3} textAnchor="end"
+            fontSize="9" fill={C.muted} fontFamily={mono}>
+            {Math.round(yMax * t)}{chart.unit || ""}
+          </text>
+        ))}
+        {chart.bars.map((b, i) => {
+          const barH = (b.value / yMax) * innerH;
+          const x = padL + gap / 2 + i * (barW + gap);
+          const y = padT + innerH - barH;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={barW} height={barH} fill={b.color} opacity="0.85" />
+              <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize="9" fill={b.color} fontFamily={mono}>
+                {b.value}{chart.unit || ""}
+              </text>
+              <text x={x + barW / 2} y={h - 8} textAnchor="middle" fontSize="9" fill={C.muted} fontFamily={mono}>
+                {b.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  }
+
+  if (chart.type === "barHorizontal") {
+    const w = 540, h = 130;
+    const labelW = 150;
+    const barAreaW = w - labelW - 60;
+    const max = Math.max(...chart.bars.map(b => b.max || b.value));
+    const rowH = 22;
+
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto" }}>
+        {chart.bars.map((b, i) => {
+          const y = i * rowH + 10;
+          const barW = (b.value / max) * barAreaW;
+          return (
+            <g key={i}>
+              <text x="6" y={y + 11} fontSize="10" fill={C.text} fontFamily={mono}>
+                {b.label}
+              </text>
+              <rect x={labelW} y={y} width={barAreaW} height="14" fill={C.surface} stroke={C.border} strokeWidth="0.5" />
+              <rect x={labelW} y={y} width={barW} height="14" fill={C.accent} opacity="0.85" />
+              <text x={labelW + barW + 6} y={y + 11} fontSize="9" fill={C.muted} fontFamily={mono}>
+                {b.value.toLocaleString()}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  }
+
+  return null;
+}
+
+// ── MODE 3: PROBLEM-TO-METRIC REASONING ────────────────────────────────────
+
+function ProblemMetricMode({ apiKey, progress, onScore }) {
+  const [activeDomain, setActiveDomain] = useState("retail");
+  const [scenarioIdx, setScenarioIdx] = useState(0);
+  const [stage, setStage] = useState("input");      // input, submitted, graded
+  const [rankedKPIs, setRankedKPIs] = useState([
+    { kpi: "", logic: "" },
+    { kpi: "", logic: "" },
+    { kpi: "", logic: "" },
+  ]);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const domainScenarios = PROBLEM_SCENARIOS.filter(s => s.domain === activeDomain);
+  const scenario = domainScenarios[scenarioIdx];
+  const domainObj = KPI_DOMAINS.find(d => d.id === activeDomain);
+  const domainColor = domainObj?.color || C.accent;
+
+  const handleDomainChange = (id) => {
+    setActiveDomain(id);
+    setScenarioIdx(0);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setStage("input");
+    setRankedKPIs([
+      { kpi: "", logic: "" },
+      { kpi: "", logic: "" },
+      { kpi: "", logic: "" },
+    ]);
+    setFeedback(null);
+    setError("");
+  };
+
+  const updateKPI = (idx, field, value) => {
+    setRankedKPIs(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+  };
+
+  const addKPISlot = () => {
+    if (rankedKPIs.length < 5) {
+      setRankedKPIs(prev => [...prev, { kpi: "", logic: "" }]);
+    }
+  };
+
+  const removeKPISlot = (idx) => {
+    if (rankedKPIs.length > 3) {
+      setRankedKPIs(prev => prev.filter((_, i) => i !== idx));
+    }
+  };
+
+  const grade = async () => {
+    if (!apiKey) { setError("Add your Anthropic API key above to grade your reasoning."); return; }
+    const filled = rankedKPIs.filter(r => r.kpi.trim());
+    if (filled.length < 3) { setError("Provide at least 3 ranked KPIs."); return; }
+
+    setLoading(true);
+    setError("");
+
+    const userKPIList = rankedKPIs.map((r, i) => `${i + 1}. ${r.kpi || "(empty)"} — Logic: ${r.logic || "(none)"}`).join("\n");
+    const goldKPIList = scenario.goldKPIs.map((g, i) => `${i + 1}. ${g.kpi} — Logic: ${g.logic}`).join("\n");
+
+    const prompt = `You are a senior data analyst evaluating a junior analyst's diagnostic plan.
+
+BUSINESS PROBLEM:
+${scenario.problem}
+
+DOMAIN: ${activeDomain}
+
+The user ranked the KPIs they would investigate, in priority order:
+${userKPIList}
+
+A senior-analyst-level answer would have proposed (in approximate priority order):
+${goldKPIList}
+
+Grade the user on three dimensions (each 0-3):
+- COVERAGE: Did they name the right metrics? (overlap with gold)
+- ORDER: Did they prioritize correctly? (leading indicators before lagging, root-cause-likely before symptoms)
+- REASONING: Does each KPI's logic actually answer the problem?
+
+Output:
+- COVERAGE_SCORE: [0-3]
+- COVERAGE_FEEDBACK: [1-2 sentences on what they got vs missed]
+- ORDER_SCORE: [0-3]
+- ORDER_FEEDBACK: [1-2 sentences on prioritization]
+- REASONING_SCORE: [0-3]
+- REASONING_FEEDBACK: [1-2 sentences on logic quality]
+- OVERALL: [strong, partial, or weak]
+- KEY_TAKEAWAY: [one sentence — the single most important framing they should have used]
+
+Plain text only, no markdown.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 1500,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      setFeedback(text);
+      setStage("graded");
+
+      const overallMatch = text.match(/OVERALL:\s*(strong|partial|weak)/i);
+      if (overallMatch) {
+        const score = overallMatch[1].toLowerCase();
+        onScore(`intel-prob-${activeDomain}`, scenarioIdx, score, { q: scenario.problem.slice(0, 80) });
+      }
+    } catch (e) {
+      setError(e.message || "Grading failed");
+    }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setScenarioIdx(i => (i + 1) % domainScenarios.length);
+    resetForm();
+  };
+
+  const prev = () => {
+    setScenarioIdx(i => (i - 1 + domainScenarios.length) % domainScenarios.length);
+    resetForm();
+  };
+
+  return (
+    <div>
+      {/* Domain selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        {KPI_DOMAINS.map(d => (
+          <button
+            key={d.id}
+            onClick={() => handleDomainChange(d.id)}
+            style={{
+              padding: "7px 14px", borderRadius: 6, border: `1.5px solid ${activeDomain === d.id ? d.color : C.border}`,
+              background: activeDomain === d.id ? d.color + "18" : "transparent",
+              color: activeDomain === d.id ? d.color : C.muted,
+              fontFamily: mono, fontSize: 10, cursor: "pointer", letterSpacing: "0.06em",
+            }}
+          >
+            {d.icon} {d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Scenario nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          Scenario {scenarioIdx + 1} of {domainScenarios.length}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={prev} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>← Prev</button>
+          <button onClick={next} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>Next →</button>
+        </div>
+      </div>
+
+      {/* Problem statement */}
+      <div style={{ background: C.card, border: `1.5px solid ${domainColor}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 8 }}>
+          {domainObj?.icon} BUSINESS PROBLEM
+        </div>
+        <div style={{ fontSize: 14, color: C.text, lineHeight: 1.55 }}>{scenario.problem}</div>
+      </div>
+
+      {/* Ranked KPI input */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 14 }}>
+          YOUR DIAGNOSTIC PLAN — RANK 3-5 KPIS WITH LOGIC
+        </div>
+        {rankedKPIs.map((r, i) => (
+          <div key={i} style={{ marginBottom: 12, display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 14, background: domainColor + "22",
+              border: `1.5px solid ${domainColor}`, color: domainColor,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: mono, fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 4,
+            }}>
+              {i + 1}
+            </div>
+            <div style={{ flex: 1 }}>
+              <input
+                value={r.kpi}
+                onChange={e => updateKPI(i, "kpi", e.target.value)}
+                disabled={stage === "graded"}
+                placeholder="KPI name (e.g., Conversion Rate, Days in AR)"
+                style={{
+                  width: "100%", padding: "8px 10px", marginBottom: 6,
+                  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+                  color: C.text, fontSize: 12, fontFamily: "inherit",
+                }}
+              />
+              <textarea
+                value={r.logic}
+                onChange={e => updateKPI(i, "logic", e.target.value)}
+                disabled={stage === "graded"}
+                placeholder="Diagnostic logic — why this KPI, what it tells you..."
+                style={{
+                  width: "100%", minHeight: 40, padding: "8px 10px",
+                  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+                  color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+                }}
+              />
+            </div>
+            {rankedKPIs.length > 3 && stage === "input" && (
+              <button onClick={() => removeKPISlot(i)} style={{
+                background: "transparent", border: `1px solid ${C.err}`, color: C.err,
+                borderRadius: 4, padding: "4px 8px", fontSize: 10, cursor: "pointer",
+                fontFamily: mono, marginTop: 4,
+              }}>✕</button>
+            )}
+          </div>
+        ))}
+        {rankedKPIs.length < 5 && stage === "input" && (
+          <button onClick={addKPISlot} style={{
+            padding: "8px 14px", borderRadius: 5, border: `1px dashed ${C.muted}`,
+            background: "transparent", color: C.muted,
+            fontFamily: mono, fontSize: 11, cursor: "pointer",
+          }}>+ Add KPI slot</button>
+        )}
+        <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+          {stage === "input" && (
+            <button onClick={grade} disabled={loading} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.ok}`,
+              background: C.ok + "18", color: C.ok,
+              fontFamily: mono, fontSize: 11, cursor: loading ? "wait" : "pointer", letterSpacing: "0.06em",
+            }}>
+              {loading ? "Grading..." : "Grade with AI"}
+            </button>
+          )}
+          {stage === "graded" && (
+            <button onClick={resetForm} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.border}`,
+              background: "transparent", color: C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+            }}>
+              Try Again
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ background: C.err + "15", border: `1px solid ${C.err}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12, color: C.err, fontSize: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {feedback && stage === "graded" && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.ok}`, borderRadius: 12, padding: 18 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 10 }}>AI FEEDBACK</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, color: C.text, lineHeight: 1.65, fontFamily: mono, margin: 0 }}>{feedback}</pre>
+
+          {/* Show gold-standard answer */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.accent, letterSpacing: "0.12em", marginBottom: 12 }}>SENIOR-ANALYST DIAGNOSTIC PLAN</div>
+            {scenario.goldKPIs.map((g, i) => (
+              <div key={i} style={{ marginBottom: 10, paddingLeft: 28, position: "relative" }}>
+                <div style={{
+                  position: "absolute", left: 0, top: 0,
+                  width: 22, height: 22, borderRadius: 11, background: C.accent + "22",
+                  border: `1px solid ${C.accent}`, color: C.accent,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: mono, fontSize: 10, fontWeight: 700,
+                }}>{i + 1}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 3 }}>{g.kpi}</div>
+                <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.55 }}>{g.logic}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function KPILibraryMode({ apiKey, progress, onScore }) {
   const [activeDomain, setActiveDomain] = useState("retail");
   const [cardIdx, setCardIdx] = useState(0);
@@ -3879,7 +5401,7 @@ export default function App() {
             onSessionDone={handleSessionDone}
           />
         )}
-        {tab === "kpi" && <KPILibraryMode key="kpi" apiKey={apiKey} progress={progress} onScore={handleScore} />}
+        {tab === "kpi" && <IntelMode key="kpi" apiKey={apiKey} progress={progress} onScore={handleScore} />}
 
         <div style={{ marginTop: 36, padding: "13px 18px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: mono, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
           <span style={{ color: C.accent }}>TIP: </span>
