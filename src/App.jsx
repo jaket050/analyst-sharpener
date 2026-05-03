@@ -4189,7 +4189,704 @@ const INTEL_SUBMODES = [
   { id: "library",   label: "📖 KPI Library",      description: "Reference cards" },
   { id: "dashboard", label: "📊 Dashboard Drill", description: "60-sec timed reading" },
   { id: "problem",   label: "🧩 Problem to Metric", description: "Diagnostic reasoning" },
+  { id: "insight",   label: "💡 Insight & Rec",    description: "Recommendation framing" },
 ];
+
+// ── MODE 4: INSIGHT & RECOMMENDATION ───────────────────────────────────────
+// 32 scenarios across 5 domains. Hybrid format:
+// 1. Structured fields: insight, recommendation, measurement plan
+// 2. Free-text VP pitch synthesizing the structured analysis into one paragraph
+// AI grading targets four common junior failure modes:
+//   - Stopping at description instead of prescription
+//   - Recommendations that aren't actionable
+//   - Missing the tradeoff or cost
+//   - No measurement plan
+
+const INSIGHT_SCENARIOS = [
+  // RETAIL / E-COMMERCE — 7 scenarios
+  {
+    id: "retail-i1", domain: "retail",
+    finding: "Customers who use the mobile app convert at 2.3× the rate of web-only customers and have 38% higher 90-day LTV. However, only 18% of new signups install the app, and the install rate has been flat for 9 months despite multiple banner campaigns prompting downloads.",
+    context: "DTC apparel brand. App install costs $3.20 via paid social. Average new customer LTV is $142.",
+    goldStandard: {
+      insight: "App-using customers are structurally more valuable, but the conversion path from signup to install is broken. The flat install rate despite multiple banner campaigns indicates the prompts themselves are being ignored — this is a friction problem, not an awareness problem.",
+      recommendation: "Move the install prompt from a passive banner to a contextual moment with a real benefit attached: trigger it post-first-purchase with a 'Track your order in the app + 15% off your next order' CTA. Targets the moment customers are most engaged and ties install to immediate utility.",
+      measurement: "Primary: install conversion rate from prompt impression (target 8-12% vs current ~2%). Secondary: 30-day retention of post-purchase installers vs control. Time horizon: 60 days. Cut criterion: if install rate doesn't double in 30 days, the friction is deeper than the prompt.",
+      pitchAnchor: "We're missing 80% of our highest-LTV customer pathway because the install prompt is invisible. Moving it to post-purchase with a 15% reorder offer should triple install rate within 60 days; if it doesn't, we've ruled out the prompt and need to look at the install flow itself. Cost is one developer week and ~$4 per acquired install vs paid social's $3.20 — but the LTV uplift makes the ROI 3-4x stronger.",
+    },
+  },
+  {
+    id: "retail-i2", domain: "retail",
+    finding: "Cart abandonment rate has held steady at 71% for two years, in line with industry average. However, 34% of abandoners come back within 7 days and complete purchase without a recovery email. The remaining 66% never return.",
+    context: "Mid-market e-commerce, $80M GMV. Recovery email program has been running for 5 years and shows a 12% recapture rate.",
+    goldStandard: {
+      insight: "The 'cart abandonment problem' isn't one problem — it's two. Half the population is browsing-as-shopping behavior that resolves naturally; the other half is genuinely lost. The recovery email is being credited with recapturing customers who would have come back anyway, inflating the program's apparent ROI.",
+      recommendation: "Suppress recovery emails for the first 24 hours after abandonment. The 34% who return naturally don't need the email; sending it cannibalizes attribution and trains them to expect a discount. After 24 hours, send aggressive recovery to the remaining 66% with a different offer (free shipping vs discount) tested by segment.",
+      measurement: "Primary: total purchase recovery rate at the cohort level (24-hr suppressed vs control). Secondary: discount-burden percentage of recovered orders. Time horizon: 6 weeks. Cut criterion: if total recovery rate drops more than 1pp, restore baseline cadence.",
+      pitchAnchor: "Our recovery email program is taking credit for customers who would have come back anyway. Suppressing the first 24 hours of recovery emails will let us see the program's true incrementality and reduce discount burden on naturally-returning customers. Expected outcome: same total recovery, lower margin cost. If recovery drops, we restore — risk-bounded test, no downside.",
+    },
+  },
+  {
+    id: "retail-i3", domain: "retail",
+    finding: "Email subscribers acquired through the homepage 'sign up for 10% off' modal have 41% lower 90-day LTV than subscribers acquired through content downloads (style guides, gift guides). Modal acquisition is 4× cheaper per subscriber.",
+    context: "Apparel DTC, email is 38% of revenue. Modal acquires ~12,000 subscribers per month at $0.40 each; content acquires ~3,000 per month at $1.60 each.",
+    goldStandard: {
+      insight: "We're optimizing email list growth on the wrong metric. The modal cost per subscriber looks better but masks LTV-adjusted CAC; on a true unit economics basis, content subscribers are cheaper per dollar of revenue generated. Scaling the modal is making the list bigger and less valuable.",
+      recommendation: "Cap modal acquisition at current volume; reinvest the savings into expanding content marketing. Specifically, fund 2 new gift/style guides per quarter and promote them via paid social to lookalikes of existing high-LTV subscribers. Test paid distribution of one existing top-performing guide first to validate scale economics.",
+      measurement: "Primary: 90-day LTV per email subscriber acquired in the new mix. Secondary: total email channel revenue (must hold or grow). Cohort comparison at 90 and 180 days. Cut criterion: if total email revenue drops 5%+ over 90 days, modal cap is wrong; restore.",
+      pitchAnchor: "Our cheap email subscribers are also our least valuable. Reallocating modal budget into expanded content marketing should improve LTV per subscriber by ~30% even at higher CAC, because content subscribers stay engaged longer. Total revenue should hold; if it drops, we revert. The hidden tradeoff is shorter-term list growth — content acquires fewer subs at higher value, so list size will grow slower for 60-90 days.",
+    },
+  },
+  {
+    id: "retail-i4", domain: "retail",
+    finding: "First-time buyers who use a discount code have a 19% repeat purchase rate within 90 days. First-time buyers who pay full price have a 34% repeat purchase rate. The gap has widened from 8 percentage points two years ago to 15 today.",
+    context: "DTC home goods brand. Welcome offer (15% off first order) drives 62% of first-time purchases. Margin per order is 47% pre-discount, 38% post-discount.",
+    goldStandard: {
+      insight: "The welcome offer is acquiring two different customer types under the same promo: brand-loyal customers who would have bought anyway (margin loss with no behavior change) and price-sensitive customers who repurchase poorly (acquisition without retention). The widening retention gap suggests we're attracting more of the second type over time.",
+      recommendation: "Replace the universal 15% welcome offer with a tiered approach: offer free shipping (lower margin cost) by default, and reserve the 15% for retargeting visitors who left without buying. This reduces discount on customers who would have bought without it, while preserving the conversion lift for genuinely price-sensitive prospects.",
+      measurement: "Primary: 90-day LTV by acquisition offer cohort, controlled for first-order traffic source. Secondary: first-purchase conversion rate (must not drop more than 2pp). Time horizon: 90 days for full LTV signal. Cut criterion: if first-purchase conversion drops 3pp+ in first 30 days, walk back.",
+      pitchAnchor: "Our 15% welcome offer is teaching customers to expect a discount and acquiring our worst repeat-purchasers. Switching to free shipping as the default offer keeps conversion high while reserving the discount for genuinely price-sensitive segments. Expected: 90-day LTV up 8-12% per first-time buyer. Risk: short-term first-purchase conversion may drop if free shipping doesn't carry the same urgency; we'll know within 30 days.",
+    },
+  },
+  {
+    id: "retail-i5", domain: "retail",
+    finding: "Returns on the women's denim category have risen from 19% to 31% over 18 months. Customer reviews show no decline in satisfaction scores (still 4.3/5), and quality complaints are flat. The increase is concentrated in two of seven SKUs that share a new fabric vendor introduced 14 months ago.",
+    context: "Mid-market denim brand. Average return cost is $14 per unit (reverse logistics + restocking + ~22% markdown on return-to-stock). Affected SKUs represent ~$8M annual revenue.",
+    goldStandard: {
+      insight: "Returns are a fit problem, not a quality problem — 4.3/5 review scores and flat complaints rule out manufacturing defects. The new fabric vendor likely changed stretch or stiffness in ways customers don't articulate but vote on with returns. The two affected SKUs are the canary; expect spread to other SKUs as the vendor's fabric ages further into the line.",
+      recommendation: "Pull a sample of returned items from both vendor cohorts (old and new fabric) and run dimensional + stretch testing against original specifications. If specs drift confirmed, request vendor remediation or switch back. If specs are within tolerance, the issue is sizing communication on the product page (size chart, fit description) — different fix.",
+      measurement: "Primary: return rate by SKU and vendor cohort, weekly. Secondary: total denim category margin (return cost is 4-5% of category revenue today). Action threshold: vendor switch if specs drift, sizing chart update if specs hold. Time horizon: 14 days for testing, 60 days for return rate response.",
+      pitchAnchor: "We're losing $1.1M annually to denim returns and the cause is fabric drift, not quality complaints. Lab testing two return cohorts costs us $3K and 14 days. If specs drifted, we have leverage to demand vendor remediation; if they didn't, we update sizing communication. Either way, we stop the spread before it hits the rest of the denim line.",
+    },
+  },
+  {
+    id: "retail-i6", domain: "retail",
+    finding: "The loyalty program has 340,000 active members. Top-tier members (>$1,000 annual spend) are 4.2% of the program but generate 31% of revenue. However, top-tier promotion-from-mid-tier rate has dropped from 14% to 6% over the past year.",
+    context: "Specialty retail. Loyalty program is 6 years old. Top tier earns 5% back; mid tier earns 2%. Promotion from mid to top requires $1,000+ annual spend.",
+    goldStandard: {
+      insight: "The program's most valuable customers are still valuable, but the pipeline feeding them is collapsing. A drop in promotion rate from 14% to 6% over 12 months means the funnel that converts mid-tier members into top-tier ones is breaking — and since top tier is 31% of revenue, this is a leading indicator of revenue concentration risk and eventual revenue decline as the existing top tier ages out.",
+      recommendation: "Re-examine what differentiated mid-tier members who promoted vs those who didn't last year. Likely candidates: category breadth (multi-category buyers promote at higher rates), engagement frequency (active email opens correlate with annual spend), or specific high-AOV product purchases. Build a targeted promotion campaign for high-promotion-probability mid-tier members in the next quarter to test which lever drives promotion.",
+      measurement: "Primary: promotion rate from mid to top tier among targeted vs control cohort, 90-day window. Secondary: incremental revenue per promoted member. Cut criterion: if targeted promotion campaign doesn't lift the promotion rate by at least 2pp, the lever is wrong; investigate at the cohort level instead.",
+      pitchAnchor: "Our top tier still works, but the pipeline feeding it is closing. If we don't fix the promotion rate, we lose 30% of revenue concentration over 24-36 months as today's top tier churns naturally. The diagnostic costs us one analyst week and a targeted campaign budget; the upside is preserving our most defensible revenue segment. Timeline: 90 days to know whether the lever is reachable or whether we need a deeper structural fix.",
+    },
+  },
+  {
+    id: "retail-i7", domain: "retail",
+    finding: "Site search queries have grown 28% YoY but search-to-purchase conversion has dropped from 8.1% to 5.4%. The top 50 queries account for 62% of search volume, but conversion on those specific queries is only 4.1% — significantly below the average.",
+    context: "Mid-market home goods e-commerce. Site search is responsible for ~22% of all transactions. Search infrastructure is a third-party SaaS tool.",
+    goldStandard: {
+      insight: "The site search problem is concentrated, not diffuse. The fact that the top 50 queries (a focused, addressable list) underperform the search average means the issue is matching specific high-intent queries to inventory, not general algorithm performance. This is a content-and-merchandising problem, not a search-tech replacement problem.",
+      recommendation: "Audit the top 50 queries individually: what results do they return today, what's the conversion gap, and what would a senior merchandiser put on the first page? Then create curated landing pages for the top 25 queries (those alone are ~31% of total search volume). This is a 2-week merchandising sprint, not a platform migration.",
+      measurement: "Primary: conversion rate on top 50 queries (target: lift from 4.1% to baseline 5.4% or above). Secondary: total search-driven revenue. Cut criterion: if curated landing pages don't lift conversion by 1pp+ within 30 days, the issue is deeper (relevance algorithm, not merchandising) and warrants vendor evaluation.",
+      pitchAnchor: "Our site search problem is the top 50 queries — a focused list we can audit and fix in a two-week sprint. We don't need a platform migration; we need merchandising attention on what customers are actually searching for. Lifting these queries to baseline conversion recovers ~$2M in annual revenue. If the fix doesn't work, we've ruled out merchandising and have a clean case for the platform conversation.",
+    },
+  },
+
+  // HEALTHCARE — 7 scenarios
+  {
+    id: "hc-i1", domain: "healthcare",
+    finding: "30-day readmission rate for CHF (heart failure) patients is 22%, well above the 18% national benchmark and triggering CMS penalty risk. However, patients who receive a documented post-discharge phone call within 48 hours have a readmit rate of 11%; those who don't have a 28% rate. Only 47% of CHF discharges currently get the call.",
+    context: "Community hospital, ~280 beds. CHF is the highest-volume readmit-targeted DRG. Each readmit costs ~$11K in unreimbursed care plus reputation/penalty risk.",
+    goldStandard: {
+      insight: "We have an evidence-based intervention with a 17pp readmit reduction (from 28% to 11%), but we're delivering it to fewer than half of eligible patients. The aggregate readmit rate is being dragged up by the unreached half. This isn't a clinical problem — it's a process compliance problem.",
+      recommendation: "Add the 48-hour post-discharge call to the standard CHF discharge order set as a required workflow with explicit ownership (care management RN), tracked daily on the unit dashboard. Audit 4 weeks of pilot data before scaling to other readmit-targeted DRGs (COPD, pneumonia).",
+      measurement: "Primary: 48-hour call completion rate (target 90%+ within 60 days), readmit rate at 30 days. Secondary: care management RN workload (must remain feasible). Cut criterion: if call rate doesn't reach 80% within 8 weeks, the workflow has structural barriers we haven't addressed.",
+      pitchAnchor: "We have the intervention and the evidence — what we don't have is reliable execution. Building the 48-hour CHF call into the discharge workflow with explicit ownership should lift completion from 47% to 90%+ within 60 days. Expected aggregate readmit reduction: 4-6pp, moving us back below the CMS penalty threshold. The cost is one care management FTE realignment, not new headcount; the saved penalty exposure alone justifies the investment.",
+    },
+  },
+  {
+    id: "hc-i2", domain: "healthcare",
+    finding: "Days in AR has risen from 38 to 52 days over six months. Initial denial rate has held steady at 8%. The change is driven entirely by one commercial payer — their average days-to-pay has stretched from 28 days to 67 days.",
+    context: "Multi-specialty physician group, ~$45M annual revenue. The affected payer represents 22% of total revenue. Contract renewal is in 8 months.",
+    goldStandard: {
+      insight: "The AR problem looks like a billing problem on the dashboard but is actually a payer problem. One payer's slow-pay behavior is dragging the average; everyone else is performing normally. This is leverage we're losing in the upcoming contract negotiation if we don't document and address it now.",
+      recommendation: "Document the days-to-pay trend in writing to the payer's provider relations team with specific claim examples. In parallel, model the cash flow impact of the slow-pay on operations and prepare contract amendment language requiring a specific payment timeliness standard (e.g., 30-day clean claim payment). Use this as a non-rate concession in the contract negotiation.",
+      measurement: "Primary: days-to-pay for the affected payer, weekly. Secondary: cash flow impact (carrying cost of extended AR). Decision threshold: if no movement in 60 days, escalate to contract amendment formally. Final outcome: contract renewal includes payment-timeliness language.",
+      pitchAnchor: "Our days-in-AR problem is one payer slow-walking us, not a billing failure. Documenting their behavior now gives us a non-rate concession to demand at contract renewal — payment timeliness in writing. Cash flow impact today is roughly $1.2M tied up; resolved at renewal, we recover that and prevent recurrence. The risk is the payer pushing back, but they have weaker leverage when their slow-pay is documented.",
+    },
+  },
+  {
+    id: "hc-i3", domain: "healthcare",
+    finding: "The hospital's medication adherence rate (Proportion of Days Covered) for diabetic patients is 64%, below the 80% PDC threshold for Star Rating credit. Patients in our embedded pharmacy program (filling Rx on-site) have an adherence rate of 81%; patients filling externally have a rate of 58%.",
+    context: "Health system with ~24,000 attributed Medicare Advantage members. Embedded pharmacy program covers 28% of diabetic patients today. Each Star Rating point is worth ~$2.4M in bonus payments.",
+    goldStandard: {
+      insight: "The pharmacy embedding program works — 23pp lift in adherence — but it covers only 28% of the eligible population. The aggregate metric is being dragged below threshold by the 72% of diabetic patients who fill externally. This is a scale problem with a known-good solution, not an unknown clinical challenge.",
+      recommendation: "Expand embedded pharmacy enrollment to cover 60%+ of diabetic patients within 12 months. Target the highest-risk patients first (recent ED visits, A1C >9.0, multiple comorbidities) using risk stratification. Build proactive enrollment outreach into care management workflow rather than relying on patient opt-in at appointment.",
+      measurement: "Primary: PDC for diabetic patients at the population level. Secondary: enrollment rate in embedded pharmacy program. Time horizon: 12 months for full Star Rating impact. Cut criterion: if 6-month enrollment expansion doesn't lift aggregate PDC by 6pp+, the patient mix entering the program isn't the right one.",
+      pitchAnchor: "We have a 23pp adherence lever proven on 28% of our diabetic patients. Scaling that to 60% within 12 months should move the population PDC from 64% to 75%+, putting the Star Rating point in reach. Each rating point is worth $2.4M in bonuses; the program expansion costs roughly $400K in care management capacity. Even at half the projected lift, the ROI is 3:1.",
+    },
+  },
+  {
+    id: "hc-i4", domain: "healthcare",
+    finding: "The outpatient clinic's no-show rate is 19%, costing approximately $850K in unrealized revenue annually. New-patient appointments have a 28% no-show rate; established patient follow-ups have a 14% rate. Most no-shows happen on Mondays for appointments booked more than 14 days in advance.",
+    context: "Multi-specialty clinic, 8 providers. Current intervention is a 24-hour reminder text; opt-in rate is 71%.",
+    goldStandard: {
+      insight: "The no-show problem is concentrated and predictable: new patients booked more than two weeks ahead, especially for Monday slots. The 24-hour reminder isn't enough for high-risk appointments because by 24 hours out, the cognitive distance from when the patient committed has already faded.",
+      recommendation: "Add a 7-day reminder for new-patient appointments and Monday slots specifically, with an explicit confirm/reschedule call-to-action. Implement a 24-hour cancellation grace window so patients can reschedule without friction (reducing no-shows that happen because rescheduling feels harder than skipping). Hold one new-patient slot per provider per day as a same-day-fill release at 8 AM.",
+      measurement: "Primary: no-show rate by appointment type and lead time. Secondary: same-day fill rate on released slots. Cut criterion: if 7-day reminder doesn't reduce new-patient no-shows by 4pp+ within 60 days, the issue is access not memory; investigate alternative.",
+      pitchAnchor: "We're losing $850K annually to no-shows, concentrated in a predictable segment we can target with a tiered reminder strategy. A 7-day reminder for new patients plus same-day slot release should recover 25-40% of the lost revenue within 90 days. Cost is minimal — workflow change in our scheduling tool, plus front-desk capacity for same-day fill. Risk: the no-show population has structural barriers (transportation, work schedules) that no reminder will fix; the ceiling on improvement is probably 50%.",
+    },
+  },
+  {
+    id: "hc-i5", domain: "healthcare",
+    finding: "Surgical site infection rate after total joint replacement has risen from 1.4% to 2.6% over two years, despite stable case mix and provider team. Pre-operative bathing protocol compliance has dropped from 94% to 71% in the same period.",
+    context: "Hospital orthopedic service line, ~600 TJR cases annually. Each SSI costs approximately $52K in extended length of stay, antibiotic course, and potential revision surgery. Currently exceeds NHSN benchmark.",
+    goldStandard: {
+      insight: "We have a clear correlation between a known-effective intervention (pre-op chlorhexidine bathing) and the rising infection rate. Compliance dropped 23pp; infection rate roughly doubled. The clinical evidence supports causation. This isn't a sterile-technique mystery — it's a documentation and workflow problem at the pre-op step.",
+      recommendation: "Make pre-op bathing a hard-stop checklist item before OR booking is finalized, with electronic verification (patient signs the bathing instruction acknowledgment, OR scheduling can't proceed until check completes). Audit 30 days of compliance, then expand to other SSI-targeted procedures (cardiac, colorectal).",
+      measurement: "Primary: bathing protocol compliance (target 95%+), SSI rate trended monthly. Secondary: OR scheduling delays caused by hard-stop. Cut criterion: if compliance restores to 95%+ but SSI rate doesn't return to 1.4-1.6% within 6 months, there's a different infection vector and we need to broaden the investigation.",
+      pitchAnchor: "We're paying $1.5M annually in additional SSI cost because we stopped enforcing a 5-cent intervention. Restoring pre-op bathing compliance via hard-stop scheduling integration is a 30-day operational fix, not a clinical redesign. Expected outcome: SSI rate returns to baseline within 6 months, recovering most of the $1.5M. The risk is that restored compliance doesn't fully recover the rate, in which case we have a different problem to investigate — but we'll have ruled out the highest-probability cause.",
+    },
+  },
+  {
+    id: "hc-i6", domain: "healthcare",
+    finding: "ED throughput analysis shows that 72% of patients are discharged within 4 hours, but the remaining 28% spend an average of 9.2 hours in the department. This boarding population is driving 84% of LWBS (left-without-being-seen) cases and 91% of patient complaints.",
+    context: "Community hospital ED, 38,000 annual visits. Inpatient bed occupancy averages 88%. The 28% are mostly admitted patients waiting for a floor bed.",
+    goldStandard: {
+      insight: "The ED has two distinct populations and one of them is quietly destroying the experience metrics. The 9.2-hour boarders aren't an ED problem — they're a hospital throughput problem manifesting in the ED. Fixing the average ED length of stay won't help; only inpatient discharge velocity will.",
+      recommendation: "Stop optimizing the ED and start optimizing inpatient discharge timing. Specifically: pull discharge orders from afternoon to morning rounds (target 11 AM discharge, not 4 PM), and create a discharge holding area so the room can turn over for a boarder before the patient physically leaves the building. The bottleneck is 4-6 hours of bed-availability daily, not ED capacity.",
+      measurement: "Primary: median time from discharge order to bed availability for next patient. Secondary: ED boarding hours, LWBS rate. Time horizon: 90 days. Cut criterion: if morning discharge initiative doesn't reduce ED boarding by 25%+ within 90 days, the bottleneck isn't bed availability — it's volume vs capacity, which requires a longer-horizon intervention.",
+      pitchAnchor: "Our ED problem isn't an ED problem — it's an inpatient discharge problem showing up in the wrong department. Shifting discharge timing from afternoon to morning rounds plus creating a discharge holding area can free up 4-6 hours of bed availability daily, which would cut ED boarding hours by ~30% within 90 days. The cost is workflow change across hospital medicine; the savings are reduced LWBS revenue loss (~$400K annually) and the patient experience improvement that goes with it.",
+    },
+  },
+  {
+    id: "hc-i7", domain: "healthcare",
+    finding: "OR utilization is 62%, well below the 80% target. Block utilization data shows that 4 of 14 surgeons account for 73% of unused block time, while the other 10 surgeons fully utilize their blocks and frequently need add-on cases.",
+    context: "Hospital surgical service line, 14 active surgeons, $42M annual surgical revenue. Each empty OR hour costs ~$2,800 in fixed cost without revenue.",
+    goldStandard: {
+      insight: "OR utilization isn't broken at the system level — it's broken at the block-allocation level. We're holding OR capacity for surgeons who don't fill it while denying capacity to surgeons who would. This is allocation inefficiency masquerading as a utilization problem.",
+      recommendation: "Implement a 24-hour automatic block release rule: if a block isn't filled to 80% by 24 hours before, it's released to a network-wide queue. Reallocate underutilized blocks from the 4 low-utilization surgeons to the 10 high-utilization surgeons over the next quarter using utilization data as the allocation criterion.",
+      measurement: "Primary: aggregate OR utilization (target 78%+ within 6 months). Secondary: surgeon-level utilization variance (should compress). Tertiary: cancellation rate (must remain stable; reallocation can sometimes spike late cancels). Cut criterion: if aggregate utilization doesn't lift 8pp within 6 months, allocation isn't the constraint; investigate first-case start times and turnover.",
+      pitchAnchor: "We have $4.5M of unused OR capacity locked up in blocks held for surgeons who don't fill them, while our high-volume surgeons absorb add-on cases inefficiently. A 24-hour automatic block release rule plus quarterly reallocation based on utilization data should lift aggregate utilization 8-12pp within 6 months. The political cost is real — surgeons fight for their blocks — but we have data, not opinion, as the allocation criterion. Lost revenue is the bigger risk than the political pushback.",
+    },
+  },
+
+  // FINANCE — 6 scenarios
+  {
+    id: "fin-i1", domain: "finance",
+    finding: "Net Revenue Retention has dropped from 118% to 104% over the past year. Decomposed, Gross Revenue Retention is stable at 91% but expansion revenue per account has fallen 38%. Customer success team headcount has been flat, but their account load has grown 24%.",
+    context: "B2B SaaS, $48M ARR. Average annual contract value is $42K. Expansion is primarily seat-based and usage-based growth in existing accounts.",
+    goldStandard: {
+      insight: "The retention numbers are deceiving. GRR is fine — we're not losing customers faster. What's broken is expansion: existing customers stopped growing in our product. CS reps are stretched 24% thinner without headcount, which means the 'expansion conversation' that used to happen in QBRs isn't happening, and seat growth that used to be facilitated has gone unattended.",
+      recommendation: "Add 4 CS hires (matching the 24% account-load growth) and explicitly redefine the CS role to include quarterly expansion planning conversations as a metric. This isn't 'more hands' — it's reclaiming the strategic conversations CS used to drive that have lapsed under load.",
+      measurement: "Primary: expansion revenue per account, monthly cohort. Secondary: NRR. Cut criterion: if expansion ARR per account doesn't lift 15%+ within 6 months of the hires, the issue isn't bandwidth; the product expansion path itself has weakened.",
+      pitchAnchor: "Our retention numbers hide that we stopped expanding. Customer success has 24% more accounts with the same headcount, and the expansion conversations that used to drive seat growth have lapsed. Adding 4 CS hires costs ~$600K and should restore expansion ARR by $4-6M within 6 months — a 7-10x ROI. If it doesn't, the expansion path itself has broken and we have a product problem to confront, but bandwidth is the highest-probability cause and the cheapest fix.",
+    },
+  },
+  {
+    id: "fin-i2", domain: "finance",
+    finding: "Days Sales Outstanding has expanded from 41 to 58 days over 18 months. The expansion is concentrated in our top 5 customers, who together represent 38% of revenue. Their average DSO has grown from 35 to 79 days. None have triggered formal collection escalation.",
+    context: "B2B services firm, $32M annual revenue. Working capital line is at 70% utilization. Top 5 customers are strategic relationships with multi-year history.",
+    goldStandard: {
+      insight: "Our biggest customers are using us as a credit line, and we let them because they're 'strategic.' The DSO expansion isn't a collection failure — it's an unenforced policy with our most leveraged customer relationships. The strategic value is real, but so is the working capital cost, and we're absorbing it without acknowledgment.",
+      recommendation: "Quantify the working capital cost (tied-up cash × cost of capital) and present it to each top-5 customer as an invoice for early-payment-discount or late-payment-fee. Frame this as a policy normalization, not a punitive measure. Pair with offering 1.5%/10 net 30 early payment discount to give them an upgrade path.",
+      measurement: "Primary: weighted-average DSO for top 5 customers. Secondary: days from invoice to collection by customer, monthly. Cut criterion: if no movement after 90 days, escalate to contract review or factor selectively.",
+      pitchAnchor: "We're carrying $1.8M of working capital cost so our top customers don't have to. Quantifying that cost and presenting it to them — alongside an early-pay discount option — normalizes the relationship without breaking it. Even partial movement (DSO from 79 to 50 days) would free up $1.1M and reduce credit line draws. The risk is relationship friction with strategic accounts, but we're already paying the price; making it visible is the first step to negotiating it.",
+    },
+  },
+  {
+    id: "fin-i3", domain: "finance",
+    finding: "Operating margin has compressed from 18% to 11% over two years, while revenue has grown 42%. The compression is driven primarily by SG&A growing 67% in the same period — specifically, headcount growth across non-revenue-generating functions (HR, Finance, IT) has outpaced revenue growth by 20pp.",
+    context: "Mid-market technology company, $180M revenue. Recent IPO has created scrutiny on operating leverage. Stock has traded down 28% on margin compression.",
+    goldStandard: {
+      insight: "We're hiring like a startup but pretending to be a public company. The 67% SG&A growth means we built infrastructure ahead of revenue scale — appropriate when capital is cheap and growth is the only metric, but punishing now that the market is pricing operating leverage. Each function has plausible justifications individually, but the aggregate signals organizational drift, not strategic investment.",
+      recommendation: "Implement a hiring freeze on non-revenue functions for two quarters and require a CFO sign-off on any backfill. In parallel, identify three SG&A functions that are over-resourced relative to peer companies of our size (likely candidates: HR ratio, Finance team size, IT support breadth) and reduce headcount by attrition rather than RIF.",
+      measurement: "Primary: operating margin trajectory by quarter. Secondary: SG&A % of revenue (target return to 28-30% from current 36%). Cut criterion: if margin doesn't recover to 14%+ within 4 quarters, the cost structure has structural commitments (multi-year leases, tooling contracts) that need separate intervention.",
+      pitchAnchor: "We over-built infrastructure on the way up and the market is punishing us for it. A two-quarter hiring freeze on non-revenue functions plus targeted attrition in over-resourced areas should restore margin to 14% by year-end — short of the 18% historical, but enough to break the compression narrative. The cost is friction with function leaders who built their teams in good faith, but the alternative is accepting the lower multiple permanently.",
+    },
+  },
+  {
+    id: "fin-i4", domain: "finance",
+    finding: "Free cash flow has dropped 31% YoY despite 8% revenue growth and stable EBITDA margins. Working capital absorbed $42M, primarily inventory ($28M) and accounts receivable ($14M).",
+    context: "Manufacturing company, $480M revenue. Inventory build was a deliberate response to supply chain volatility 18 months ago. Most concerning: inventory has stayed elevated even as supply chain normalized.",
+    goldStandard: {
+      insight: "The inventory build was a rational response to supply chain shocks — but it's become structural. We added safety stock when we needed it; we never removed it when conditions normalized. That's $28M of trapped cash earning the company nothing while costing the company storage, obsolescence risk, and working capital interest.",
+      recommendation: "Recalibrate safety stock levels based on current (not 2023) supply chain variability. Categorize inventory by demand stability and lead-time risk; reduce safety stock 30-40% on stable, short-lead-time SKUs. Pair with selling-down aged inventory through end-of-life promotions to free cash before fiscal year-end.",
+      measurement: "Primary: inventory days on hand by SKU velocity tier. Secondary: free cash flow conversion ratio (target return to 85%+ from current 60%). Cut criterion: if inventory reduction triggers stockouts that exceed 1% of revenue, the recalibration was too aggressive; restore selectively.",
+      pitchAnchor: "We built a $28M inventory buffer for supply chain shocks that are no longer happening, and we've kept it. Recalibrating safety stock to current variability levels can release $15-18M of trapped cash within 6 months without meaningful stockout risk. The CFO conversation here is straightforward — this is balance sheet hygiene, not operational risk-taking. The bigger conversation is making sure our planning systems automatically recalibrate as conditions change, so this doesn't recur.",
+    },
+  },
+  {
+    id: "fin-i5", domain: "finance",
+    finding: "EBITDA grew 15% YoY but stock-based compensation rose 38% in the same period. Adjusted (ex-SBC) operating margin is up 1.2pp; GAAP operating margin is down 2.4pp. Investor commentary increasingly focuses on the gap.",
+    context: "Public technology company, $620M revenue. Equity comp policy was set 3 years ago in a different rate environment. Compensation expense reform has been raised by two activist investors.",
+    goldStandard: {
+      insight: "The accounting story (adjusted EBITDA grew nicely) hides an economic story (we're paying more for the same outcomes via stock dilution). When SBC was 'cheap' in a high-multiple environment, the dilution was tolerable. In today's lower-multiple environment, the dilution costs shareholders real value, and the activist commentary reflects that reality.",
+      recommendation: "Conduct a comprehensive review of the equity comp framework, comparing dilution rates and grant philosophies to comparable peer companies. Specifically examine whether refresh grant cadence (every 2-3 years) and grant sizing have drifted upward as the stock declined — a common mechanic that creates compounding dilution. Bring updated framework to the Compensation Committee within one quarter.",
+      measurement: "Primary: SBC as % of revenue (target reduction toward peer median over 4-6 quarters). Secondary: dilution rate per share (target return to 2-3% annual from current 5-6%). Cut criterion: if peer benchmarking reveals our framework is in line with peers, the issue is rate environment; communicate that more clearly to investors rather than restructuring.",
+      pitchAnchor: "Our adjusted EBITDA story is good, but our GAAP story is getting harder to defend with shareholders watching SBC closely. A comprehensive equity comp review with peer benchmarking lets us either correct over-grants (most likely outcome) or defend our framework with data (less likely but credible). The Comp Committee discussion is sensitive but necessary. Cost: Comp Committee bandwidth and possibly some employee retention friction if grants reduce. Benefit: removing the activist-driven discount on the stock and restoring credibility on operating leverage.",
+    },
+  },
+  {
+    id: "fin-i6", domain: "finance",
+    finding: "Customer Acquisition Cost has risen 60% over 18 months, from $215 to $344. LTV has grown only 12% in the same period (from $890 to $997). LTV:CAC has fallen from 4.1 to 2.9. CFO is questioning whether to continue funding growth investment at current levels.",
+    context: "DTC consumer brand, $85M annual revenue. Marketing spend is 22% of revenue. Recent shift to performance-marketing-heavy mix (paid social grew from 30% to 55% of marketing budget).",
+    goldStandard: {
+      insight: "The unit economics narrative is real but mis-attributed. CAC didn't rise because acquisition got harder broadly — it rose because the channel mix shifted toward paid social, which has a lower LTV per acquired customer. The same dollar spent on email or referral generates different value than on paid social. Treating CAC as one number hides this.",
+      recommendation: "Decompose CAC and LTV by channel and rebalance spend toward channels where LTV:CAC remains above 3:1. Specifically: cap paid social at current spend (don't cut yet) and reinvest incremental marketing into email, organic content, and referral programs that historically drive higher-LTV customers. Reset performance review to channel-level LTV:CAC, not blended.",
+      measurement: "Primary: blended LTV:CAC ratio (target return to 3.5+). Secondary: channel-level LTV:CAC, monthly. Cut criterion: if blended ratio doesn't recover within 6 months, the issue is broader CAC inflation across all channels (market saturation), not mix; revisit overall growth investment level.",
+      pitchAnchor: "Our CAC isn't broken at the company level — it's broken at the channel level. Paid social dragged the blended CAC up because we scaled spend without scaling LTV per customer. Capping paid social and reinvesting in higher-LTV channels (email, referral) should restore LTV:CAC to 3.5+ within 6 months without cutting growth investment. The harder conversation is with the marketing team that scaled paid social — they did what they were measured on; the measurement was wrong.",
+    },
+  },
+
+  // OPERATIONS / SUPPLY CHAIN — 6 scenarios
+  {
+    id: "ops-i1", domain: "operations",
+    finding: "On-time delivery has fallen from 96% to 88% over six months. Root cause analysis shows that 78% of late deliveries are stockouts, not transit delays. Forecast accuracy has held steady at 82% (within historical norms), but actual demand for the affected SKUs has trended 15-20% above forecast for 12 weeks.",
+    context: "Mid-market consumer goods supplier serving major retail customers. Stockouts trigger contractual OTD penalties of 2-4% of order value plus reputational risk with key accounts.",
+    goldStandard: {
+      insight: "Forecast accuracy is fine on average — we're missing on a specific category that the forecasting model didn't see coming. 12 weeks of consistent over-forecast on the same SKUs is no longer noise; it's a structural demand shift the model hasn't adapted to. The OTD problem is downstream of the planning blind spot.",
+      recommendation: "Override the forecast on the affected SKUs with a 15-20% upward adjustment for the next 12 weeks while we investigate the underlying demand driver. In parallel, add a forecast bias monitor that flags any SKU running >10% in the same direction for 6+ weeks for human review. This isn't a forecast accuracy problem — it's a forecast adaptiveness problem.",
+      measurement: "Primary: stockout rate on affected SKUs, weekly. Secondary: aggregate OTD rate. Cut criterion: if the upward adjustment overshoots and creates excess inventory, recalibrate to a lower buffer; the goal is matching the trend, not over-stocking.",
+      pitchAnchor: "Our OTD failure is a planning blind spot, not an execution problem. The forecast is right on average and wrong in a specific, persistent way that the model hasn't learned. A manual override plus a bias-monitoring rule restores OTD within 30 days and prevents this from recurring on a different SKU set. The cost is some inventory carrying risk if the demand trend reverses; the benefit is stopping the OTD penalty bleed and the customer-relationship damage.",
+    },
+  },
+  {
+    id: "ops-i2", domain: "operations",
+    finding: "Manufacturing OEE has dropped from 76% to 61% on the main production line over 8 months. Decomposed, Availability fell from 92% to 78% (the dominant driver), Performance is stable, and Quality is up slightly.",
+    context: "Manufacturing plant, single critical line. Each percentage point of OEE represents ~$340K in annual contribution margin. Maintenance budget was cut 18% two years ago.",
+    goldStandard: {
+      insight: "We're paying for the maintenance cuts of two years ago in unplanned downtime today. Availability dropped 14pp while Performance and Quality held — that's the textbook signature of equipment reliability degrading from deferred maintenance, not a process or training failure. The lag from cause to effect is real and predictable.",
+      recommendation: "Restore the maintenance budget plus add a 'catch-up' allocation for the next 12 months to address the deferred work that accumulated. Pair with predictive maintenance instrumentation (vibration, temperature, current sensors) on the critical line to prevent recurrence. This is a $2-3M one-time investment to recover $5-6M annual contribution margin.",
+      measurement: "Primary: Availability component of OEE, monthly. Secondary: unplanned downtime hours by failure mode. Cut criterion: if Availability doesn't recover within 6 months of restored maintenance, the equipment may be at end of life; capital replacement decision required.",
+      pitchAnchor: "We saved $2M in maintenance budget over two years and we're losing $5M annually in OEE to show for it. Restoring the budget plus a catch-up allocation, paired with predictive maintenance instrumentation, should recover Availability within 6 months and prevent the next round of this. The harder conversation is whether the original budget cut was wrong; data here suggests yes, but the alternative is accepting the OEE level as the new normal.",
+    },
+  },
+  {
+    id: "ops-i3", domain: "operations",
+    finding: "Cost per order shipped has risen 18% YoY, from $7.15 to $8.42. Decomposition shows that freight cost per order rose 24% (the largest driver), driven by a shift from ground to expedited shipping for 35% of orders to meet faster delivery promises.",
+    context: "DTC fulfillment, 250K orders/month. Customer-facing delivery promise was tightened 14 months ago (from '5-7 days' to '3-5 days') as a competitive response.",
+    goldStandard: {
+      insight: "The cost increase isn't a freight rate problem — it's a product promise problem. We tightened the delivery window without rebuilding the network to support it, so we're paying expedited rates to compensate for a network that was designed for the old promise. We made a marketing decision and let it become an unbudgeted operational expense.",
+      recommendation: "Either invest in network expansion (add 2-3 fulfillment nodes to make ground shipping reach 3-5 days for >85% of orders) or relax the delivery promise back toward 4-6 days for non-Premium orders, reserving the 3-5 day promise as a Premium-tier benefit. Don't keep the promise without paying for the network.",
+      measurement: "Primary: freight cost per order. Secondary: customer satisfaction and conversion impact on relaxed-promise scenarios. Cut criterion: if expanded network doesn't reduce freight cost per order by 12-15% within 18 months, the network design itself is suboptimal; revisit node selection.",
+      pitchAnchor: "We're paying $4M annually in unbudgeted expedited freight because we changed our delivery promise without changing the network. Two paths: invest $8-12M in fulfillment nodes to make the promise affordable, or relax the promise selectively and recover the cost. Either way, the current state isn't sustainable. The recommendation depends on whether the tightened promise actually drove conversion lift; if marketing data shows it did, expansion pays back; if not, relaxation is the right move.",
+    },
+  },
+  {
+    id: "ops-i4", domain: "operations",
+    finding: "Recordable incident rate (TRIR) has doubled in 12 months, from 1.8 to 3.6. The increase is concentrated on second shift (6pm-2am), which has 40% new hires (vs. 12% on first shift). Severity-weighted incidents (DART) rose only 22%, indicating most new incidents are minor.",
+    context: "Distribution center, 600 associates total. Hiring surge of 240 new associates over 14 months to support volume growth. New hires receive a 3-day safety orientation before floor work.",
+    goldStandard: {
+      insight: "The incident rate doubled because we doubled new-hire density without scaling safety mentorship. New employees are 3-5× more likely to have incidents in their first 90 days; concentrating them on a single shift with thin onboarding is a known recipe for the rate we're seeing. The severity gap (DART up 22%, TRIR up 100%) tells us most incidents are minor — confirming inexperience, not negligence.",
+      recommendation: "Restructure second-shift onboarding: pair every new hire with a designated mentor (existing associate, not just a supervisor) for the first 30 days, with explicit safety check-ins at days 7, 14, and 30. Cap second-shift new-hire density at 25% of headcount during the rebalancing period — backfill via internal first-shift transfers.",
+      measurement: "Primary: incident rate by shift, weekly. Secondary: 90-day incident rate for new hires (target: drop from current trend). Cut criterion: if rate doesn't fall within 60 days of mentorship rollout, the issue is procedural (e.g., equipment, layout, work design) rather than experience-driven.",
+      pitchAnchor: "Our safety incident rate doubled because we created a high-density new-hire environment on second shift without the mentorship infrastructure to support it. Pairing every new hire with a mentor and capping new-hire density at 25% per shift should bring TRIR back below 2.5 within 90 days. The cost is mentorship pay incentive (~$120K annually); the benefit is reduced workers' comp exposure plus the cultural value of treating safety as a leading indicator, not just a lagging metric.",
+    },
+  },
+  {
+    id: "ops-i5", domain: "operations",
+    finding: "Inventory turnover dropped from 8× to 5× over 12 months despite stable revenue. ABC analysis shows that A-velocity items (top 20% of SKUs by sales) are still turning at 12×, but C-velocity items (bottom 50% of SKUs) have dropped from 4× to 1.8×.",
+    context: "Specialty retail with seasonal product cycles. Total inventory $48M, of which C-velocity items now represent $19M (up from $11M a year ago). Storage and obsolescence cost ~14% of inventory value annually.",
+    goldStandard: {
+      insight: "The inventory bloat is concentrated in low-velocity SKUs that are accumulating without selling — we're hoarding our slowest movers. A-velocity is healthy; C-velocity has become a graveyard. Each $1M of stale C-inventory costs us $140K annually in carrying cost, plus eventual markdown losses. The aggregate turnover number masks where the actual problem lives.",
+      recommendation: "Implement a quarterly C-velocity review: any SKU below 2× turnover for 2 consecutive quarters gets a markdown, liquidation, or discontinuation decision. Reduce C-velocity SKU count by 30% over 18 months, redirecting that working capital to expanding A-velocity depth and breadth.",
+      measurement: "Primary: C-velocity inventory value. Secondary: total inventory turnover, gross margin (markdowns will pressure short-term). Cut criterion: if C-velocity reduction triggers customer complaints about assortment depth in specific categories, the cuts were too deep there; recalibrate by category.",
+      pitchAnchor: "We have $19M sitting in C-velocity inventory generating $2.7M annual carrying cost without proportional revenue. A quarterly velocity review with explicit thresholds for markdown or discontinuation can free $5-7M of working capital within 18 months and reduce ongoing carrying cost by ~$1M annually. The harder conversation is with merchants who advocate for assortment breadth; the data shows breadth has crossed into clutter for half the catalog.",
+    },
+  },
+  {
+    id: "ops-i6", domain: "operations",
+    finding: "Supplier on-time delivery from our top supplier dropped from 98% to 84% over six months. The supplier attributes this to our forecast volatility. Our forecast MAPE for items from this supplier has risen from 18% to 31%, but is unchanged for other suppliers serving the same product categories.",
+    context: "Manufacturing supply chain. Top supplier represents 35% of input materials by spend. Switching cost is high (qualification cycle is 9-12 months).",
+    goldStandard: {
+      insight: "The supplier's complaint about our forecast volatility is real — but it's a problem we created and only experience with this supplier. Same categories, other suppliers, same forecast-driven environment, no MAPE issue. Something specific about our forecasting or order pattern with this supplier has changed in a way that didn't change elsewhere. We don't know the cause yet.",
+      recommendation: "Audit the planning workflow specific to this supplier: are orders being placed at different lead times than other suppliers? Has the SKU mix shifted toward higher-variability items? Have we added emergency expedites that distort the steady-state pattern? Investigate before committing to a fix; the supplier may be partly right and partly using our forecast as cover for their own capacity issues.",
+      measurement: "Primary: forecast MAPE by supplier, weekly. Secondary: supplier OTD by supplier, weekly. Investigation milestone: 4-week diagnostic before deciding on countermeasures. Cut criterion: if forecast pattern changes don't explain the MAPE divergence, supplier capacity is the real issue and contract conversation is needed.",
+      pitchAnchor: "Our supplier is partly right and we don't know how much. Forecast MAPE specifically for their items has doubled while staying stable elsewhere — that's not random noise, it's something we changed in our planning process for them. A 4-week diagnostic of the planning workflow specific to this supplier costs us one analyst's time and gives us either a fix or a clean basis to push back. Going into contract conversations without this diagnostic means we accept their narrative; doing the work first means we either fix our problem or have data to renegotiate from.",
+    },
+  },
+
+  // MARKETING — 6 scenarios
+  {
+    id: "mkt-i1", domain: "marketing",
+    finding: "Blended ROAS dropped from 3.2× to 1.9× over the past year. Channel-level decomposition shows email/CRM ROAS held at 8×, paid search dropped from 4× to 2.5×, and paid social collapsed from 2.5× to 0.8×. Paid social spend is 52% of total marketing budget.",
+    context: "DTC consumer brand, $24M annual marketing spend. Performance-marketing-heavy mix. Customer LTV stable at $142.",
+    goldStandard: {
+      insight: "Our blended ROAS isn't broken — paid social is broken, and it's 52% of the budget, so it drags everything down. Email and paid search are healthy. Continuing to fund paid social at current levels means accepting structural unprofitability per dollar spent there. This isn't optimization territory; it's allocation territory.",
+      recommendation: "Cut paid social budget by 50% immediately and reinvest into email/CRM expansion (proven 8× ROAS) and paid search scale. Don't try to optimize paid social at current spend; the channel may have audience saturation or platform-level efficiency decay we can't fix at this scale. Test smaller paid social experiments (~10% of original budget) to determine if the channel works at any volume.",
+      measurement: "Primary: blended ROAS (target return to 2.8+). Secondary: channel-level ROAS, monthly. Cut criterion: if blended ROAS doesn't recover within 6 months, the issue is broader than paid social mix.",
+      pitchAnchor: "Half our marketing budget is going to a 0.8× ROAS channel and we're calling it growth investment. Cutting paid social 50% and reinvesting into email and search should restore blended ROAS to ~2.8 within 60 days. Risk: short-term volume of new customer acquisition will drop while reallocation happens; the LTV-quality of customers should improve. The political conversation is with the agency that built the paid social program, but the data is unambiguous.",
+    },
+  },
+  {
+    id: "mkt-i2", domain: "marketing",
+    finding: "Email open rates have fallen from 32% to 19% over 18 months. Sender reputation score is at 89 (above Gmail's 80 threshold but below the 95+ historical level). The drop accelerated after we expanded the list 40% via aggressive lead-magnet acquisition.",
+    context: "DTC apparel brand. Email is 38% of revenue. List size is 1.4M.",
+    goldStandard: {
+      insight: "We grew the list and degraded its quality, and our email reputation is paying the price. The lead-magnet subscribers are likely opening less, marking more as spam, and pulling down sender reputation — which then suppresses delivery to our engaged subscribers. We're harming the asset that generates 38% of revenue to feed the asset that doesn't yet.",
+      recommendation: "Implement an aggressive list hygiene program: any subscriber with zero opens in 90 days enters a re-engagement sequence; failure to re-engage within 30 days = removal. Set a sunset policy of 6 months of inactivity = automatic removal. Pause lead-magnet-only acquisition until reputation recovers; require minimum demonstrated intent (e.g., browsed product page) before adding to active sends.",
+      measurement: "Primary: open rate trend, sender reputation score. Secondary: total email revenue (must hold or grow despite list shrinkage). Cut criterion: if list shrinkage of 30%+ doesn't recover open rate within 90 days, the issue is content/cadence, not deliverability.",
+      pitchAnchor: "We grew our list by 40% and broke the channel that generates 38% of revenue. Aggressive list hygiene plus tighter acquisition criteria should shrink the list 25-30% but recover open rate to 28%+ within 90 days. Total revenue should hold because we're cutting subscribers who weren't generating revenue anyway. The harder conversation is with the team that built the lead-magnet program — they were measured on list growth, and they delivered; the metric was wrong.",
+    },
+  },
+  {
+    id: "mkt-i3", domain: "marketing",
+    finding: "Lead volume from paid search is up 40% YoY but sales-qualified rate dropped from 22% to 14%. Sales team complaints about lead quality have increased significantly. The volume increase is driven by expansion into broader keyword categories.",
+    context: "B2B SaaS, $32M ARR. Sales cycle averages 90 days. Average deal size $48K.",
+    goldStandard: {
+      insight: "We optimized for lead volume and got it; we didn't optimize for lead quality and lost it. The keyword expansion brought top-of-funnel intent (researching, exploring) instead of buying intent. Marketing hit its volume target while making sales' job harder, and the actual outcome — sales-qualified leads — went down despite more total leads.",
+      recommendation: "Refocus paid search on bottom-funnel keywords (high commercial intent: 'pricing,' 'demo,' 'compare X vs Y'). Reduce or eliminate spend on top-funnel research keywords. Add lead scoring at the form-fill level so sales can prioritize, but the upstream fix is the keyword mix. Realign marketing's measurement to SQLs delivered, not leads generated.",
+      measurement: "Primary: SQL volume per dollar of paid search spend. Secondary: total lead volume (will drop; that's expected). Cut criterion: if SQL volume drops more than 15% in the first 60 days, the bottom-funnel keyword space is too thin to support our spend; revisit channel allocation.",
+      pitchAnchor: "We hit our lead volume target by chasing the wrong leads. Refocusing paid search on bottom-funnel keywords reduces volume but should increase SQL volume by 25-35% within 90 days. Sales team velocity recovers because they spend less time on bad-fit leads. The KPI conversation is the harder part: marketing has been measured on leads, not SQLs, and that has to change for the fix to stick.",
+    },
+  },
+  {
+    id: "mkt-i4", domain: "marketing",
+    finding: "Organic search traffic dropped 35% over 60 days. Affected pages are concentrated in informational/blog content (down 52%); commercial pages are down only 8%. The drop coincides with a Google AI Overviews expansion in the brand's category.",
+    context: "DTC home goods brand. Organic search drives 28% of total traffic and ~$8M annual revenue. Content marketing has been a major investment area.",
+    goldStandard: {
+      insight: "We're not penalized — we're being disintermediated. Google's AI Overviews are answering informational queries directly in the search results, so users no longer click through to our blog content. Commercial pages are mostly fine because AI Overviews can't fulfill purchase intent. The traffic loss is structural, not algorithmic, and won't be solved by SEO optimization on existing content.",
+      recommendation: "Pivot content strategy from 'win the click' to 'be cited in the AI Overview.' Restructure top-performing informational content into clear, citable answers with explicit data and source attribution. In parallel, accept that informational content will generate less direct traffic and reweight investment toward commercial-intent content where AI Overviews don't compete.",
+      measurement: "Primary: cited mentions in AI Overviews for target queries (use SERP monitoring tools). Secondary: brand search volume (a leading indicator of brand awareness even when click-through suffers). Cut criterion: if AI citation volume doesn't grow within 6 months, the disintermediation is permanent at our content quality level.",
+      pitchAnchor: "Our organic traffic problem isn't a Google algorithm problem — it's a Google product change. AI Overviews are stealing clicks from informational queries, and our content investment was concentrated there. Reweighting toward citation-friendly formats and commercial-intent content can recover some of the loss, but the bigger truth is that organic search ROI has structurally decreased for content brands. The strategic conversation is whether to keep investing in content at the same level given lower direct traffic capture.",
+    },
+  },
+  {
+    id: "mkt-i5", domain: "marketing",
+    finding: "Brand campaign with $500K budget has been running for 6 months. Direct attributed revenue is $180K (negative ROI by direct measurement). However, branded search volume is up 47%, direct traffic is up 22%, and post-campaign performance marketing CAC has declined 18%.",
+    context: "DTC fashion brand, $32M annual revenue. CMO needs to justify continued brand investment to a CFO who skeptically views the brand budget as 'unprovable spend.'",
+    goldStandard: {
+      insight: "Brand campaigns don't show ROI through direct attribution and never will — that's not how they work. The proof is in the secondary metrics: branded search up 47% means people are seeking us out; direct traffic up 22% means awareness translated to behavior; performance marketing CAC down 18% means brand work warmed audiences for paid acquisition. The 'negative ROI' framing measures the wrong thing.",
+      recommendation: "Build a brand campaign measurement framework that explicitly tracks the secondary indicators alongside direct attribution: branded search lift, direct traffic lift, performance CAC reduction, and survey-based brand awareness lift. Calculate combined ROI as direct attribution + downstream CAC savings + estimated value of branded search/direct traffic increases. This produces a positive ROI story rooted in defensible mechanics.",
+      measurement: "Primary: composite brand impact score (the framework above). Secondary: continued direct attributed revenue trend. Time horizon: every quarter, with annual cumulative review. Cut criterion: if the composite score doesn't show value within 12 months, brand investment is genuinely not paying back at this level; reduce.",
+      pitchAnchor: "Our brand campaign is 'losing money' by direct attribution and 'making money' by every other metric — branded search up 47%, performance CAC down 18%, direct traffic up 22%. The CFO conversation isn't 'is brand worth it'; it's 'how do we measure brand correctly.' A composite measurement framework that captures all the indirect lift produces an ROI story we can defend. Without that framework, brand will always look like a loss because we're measuring it on a metric it's not designed to move.",
+    },
+  },
+  {
+    id: "mkt-i6", domain: "marketing",
+    finding: "Influencer marketing program has spent $300K with 12 creators over 9 months. Direct attributed revenue (via tracked codes/links) is $95K. However, brand mentions in user-generated content have grown 220%, and engagement on owned social channels has tripled.",
+    context: "DTC beauty brand. Marketing leadership is debating whether to scale, maintain, or kill the influencer program. Customer LTV averages $180.",
+    goldStandard: {
+      insight: "Direct attribution shows a 0.32× return — bad. Indirect signals (UGC up 220%, owned engagement 3×) show real cultural penetration that direct attribution can't capture. The same problem as brand campaigns: we're measuring what we can attribute, not what's actually happening. The question is whether the indirect lift produces revenue that's worth the spend, even if we can't link it 1:1.",
+      recommendation: "Don't scale or kill yet — first build measurement that captures indirect lift. Survey new customers acquired in the campaign window for 'how did you first hear about us'; the share attributing influencers (vs paid social, vs friend/family) gives a more accurate picture. Add a brand awareness lift study comparing audiences exposed to influencer content vs control. Make the scale/maintain/kill decision after one more quarter with that data.",
+      measurement: "Primary: % of new customers attributing influencer awareness in survey. Secondary: brand awareness lift among targeted demographics. Decision threshold: if direct attribution + survey-attributed share approaches break-even (1.0× combined), maintain at current level; if exceeds 1.5×, scale; if below 0.7×, kill.",
+      pitchAnchor: "We can't tell if our influencer program is working because we're only measuring direct attribution. UGC up 220% and engagement tripled are real signals, but they don't translate directly to revenue we can credit. One more quarter of investment plus a measurement upgrade (survey + brand lift study) gets us a defensible scale/kill decision. Cost: one more quarter of program budget plus a $25K research investment. Benefit: stop debating the program and have data to act on.",
+    },
+  },
+];
+
+// ── MODE 4 COMPONENT ───────────────────────────────────────────────────────
+
+function InsightRecMode({ apiKey, progress, onScore }) {
+  const [activeDomain, setActiveDomain] = useState("retail");
+  const [scenarioIdx, setScenarioIdx] = useState(0);
+  const [stage, setStage] = useState("input");      // input, submitted, graded
+  const [insight, setInsight] = useState("");
+  const [recommendation, setRecommendation] = useState("");
+  const [measurement, setMeasurement] = useState("");
+  const [pitch, setPitch] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const domainScenarios = INSIGHT_SCENARIOS.filter(s => s.domain === activeDomain);
+  const scenario = domainScenarios[scenarioIdx];
+  const domainObj = KPI_DOMAINS.find(d => d.id === activeDomain);
+  const domainColor = domainObj?.color || C.accent;
+
+  const handleDomainChange = (id) => {
+    setActiveDomain(id);
+    setScenarioIdx(0);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setStage("input");
+    setInsight("");
+    setRecommendation("");
+    setMeasurement("");
+    setPitch("");
+    setFeedback(null);
+    setError("");
+  };
+
+  const grade = async () => {
+    if (!apiKey) { setError("Add your Anthropic API key above to grade your reasoning."); return; }
+    if (!insight.trim() || !recommendation.trim() || !measurement.trim() || !pitch.trim()) {
+      setError("Fill in all four fields before grading.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const prompt = `You are a senior data analyst evaluating a junior analyst's insight, recommendation, and pitch on a business finding.
+
+DOMAIN: ${activeDomain}
+
+THE FINDING:
+${scenario.finding}
+
+CONTEXT:
+${scenario.context}
+
+GOLD-STANDARD ANSWERS (what a senior analyst would say):
+INSIGHT: ${scenario.goldStandard.insight}
+RECOMMENDATION: ${scenario.goldStandard.recommendation}
+MEASUREMENT: ${scenario.goldStandard.measurement}
+VP PITCH: ${scenario.goldStandard.pitchAnchor}
+
+USER'S ANSWERS:
+INSIGHT: ${insight}
+RECOMMENDATION: ${recommendation}
+MEASUREMENT: ${measurement}
+VP PITCH: ${pitch}
+
+Grade the user against these four common junior-analyst failure modes:
+1. Stopping at description instead of prescription (insight stays observational, doesn't connect to action)
+2. Recommendations that aren't actionable (vague, generic, no specific intervention)
+3. Missing the tradeoff or cost (no acknowledgment that every recommendation has a downside or cost)
+4. No measurement plan (can't articulate how to know if it worked, or measurement is generic)
+
+Output structured plain text in this exact format:
+
+INSIGHT_SCORE: [0-3]
+INSIGHT_FEEDBACK: [1-2 sentences on whether they translated data to business meaning]
+
+RECOMMENDATION_SCORE: [0-3]
+RECOMMENDATION_FEEDBACK: [1-2 sentences on actionability and specificity]
+
+MEASUREMENT_SCORE: [0-3]
+MEASUREMENT_FEEDBACK: [1-2 sentences on how well they defined success/failure criteria]
+
+PITCH_SCORE: [0-3]
+PITCH_FEEDBACK: [1-2 sentences on whether the pitch synthesizes the analysis with executive framing — concise, named tradeoffs, time horizon]
+
+OVERALL: [strong, partial, or weak]
+KEY_TAKEAWAY: [one sentence — the single most important framing they should have used]
+
+Plain text only, no markdown. Be honest and discriminating — don't grade leniently. A "strong" rating should be reserved for senior-analyst-quality work; "partial" is the realistic ceiling for most junior responses.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 2000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      setFeedback(text);
+      setStage("graded");
+
+      const overallMatch = text.match(/OVERALL:\s*(strong|partial|weak)/i);
+      if (overallMatch) {
+        const score = overallMatch[1].toLowerCase();
+        onScore(`intel-insight-${activeDomain}`, scenarioIdx, score, { q: scenario.finding.slice(0, 80) });
+      }
+    } catch (e) {
+      setError(e.message || "Grading failed");
+    }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setScenarioIdx(i => (i + 1) % domainScenarios.length);
+    resetForm();
+  };
+
+  const prev = () => {
+    setScenarioIdx(i => (i - 1 + domainScenarios.length) % domainScenarios.length);
+    resetForm();
+  };
+
+  return (
+    <div>
+      {/* Domain selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        {KPI_DOMAINS.map(d => (
+          <button
+            key={d.id}
+            onClick={() => handleDomainChange(d.id)}
+            style={{
+              padding: "7px 14px", borderRadius: 6, border: `1.5px solid ${activeDomain === d.id ? d.color : C.border}`,
+              background: activeDomain === d.id ? d.color + "18" : "transparent",
+              color: activeDomain === d.id ? d.color : C.muted,
+              fontFamily: mono, fontSize: 10, cursor: "pointer", letterSpacing: "0.06em",
+            }}
+          >
+            {d.icon} {d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Scenario nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          Scenario {scenarioIdx + 1} of {domainScenarios.length}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={prev} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>← Prev</button>
+          <button onClick={next} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>Next →</button>
+        </div>
+      </div>
+
+      {/* Finding */}
+      <div style={{ background: C.card, border: `1.5px solid ${domainColor}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 8 }}>
+          {domainObj?.icon} THE FINDING
+        </div>
+        <div style={{ fontSize: 14, color: C.text, lineHeight: 1.6, marginBottom: 12 }}>{scenario.finding}</div>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>CONTEXT</div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>{scenario.context}</div>
+      </div>
+
+      {/* Structured input fields */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 14 }}>
+          STEP 1 — STRUCTURED ANALYSIS
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            INSIGHT — what does this finding mean in business terms?
+          </div>
+          <textarea
+            value={insight}
+            onChange={e => setInsight(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Translate the data into business meaning. Don't just describe — interpret."
+            style={{
+              width: "100%", minHeight: 60, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            RECOMMENDATION — what specific action with rationale?
+          </div>
+          <textarea
+            value={recommendation}
+            onChange={e => setRecommendation(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Be specific. 'Improve X' is not actionable. Name the actual intervention."
+            style={{
+              width: "100%", minHeight: 70, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            MEASUREMENT — how will you know if it worked?
+          </div>
+          <textarea
+            value={measurement}
+            onChange={e => setMeasurement(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Primary metric, secondary metrics, time horizon, cut criterion."
+            style={{
+              width: "100%", minHeight: 70, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Pitch field */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 14 }}>
+          STEP 2 — SYNTHESIS
+        </div>
+        <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+          PITCH IT TO THE VP IN ONE PARAGRAPH
+        </div>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 8, fontStyle: "italic" }}>
+          Synthesize your analysis into a single paragraph an executive would actually act on. Name the tradeoff. Name the timeline. Name what success looks like.
+        </div>
+        <textarea
+          value={pitch}
+          onChange={e => setPitch(e.target.value)}
+          disabled={stage === "graded"}
+          placeholder="One paragraph. The thing you'd actually say in the meeting."
+          style={{
+            width: "100%", minHeight: 100, padding: "10px 12px",
+            background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+            color: C.text, fontSize: 13, fontFamily: "inherit", resize: "vertical",
+          }}
+        />
+
+        <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+          {stage === "input" && (
+            <button onClick={grade} disabled={loading} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.ok}`,
+              background: C.ok + "18", color: C.ok,
+              fontFamily: mono, fontSize: 11, cursor: loading ? "wait" : "pointer", letterSpacing: "0.06em",
+            }}>
+              {loading ? "Grading (this may take 15-30 sec)..." : "Grade with AI"}
+            </button>
+          )}
+          {stage === "graded" && (
+            <button onClick={resetForm} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.border}`,
+              background: "transparent", color: C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+            }}>
+              Try Again
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ background: C.err + "15", border: `1px solid ${C.err}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12, color: C.err, fontSize: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {feedback && stage === "graded" && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.ok}`, borderRadius: 12, padding: 18 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 10 }}>AI FEEDBACK</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, color: C.text, lineHeight: 1.65, fontFamily: mono, margin: 0 }}>{feedback}</pre>
+
+          {/* Show gold-standard answers */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.accent, letterSpacing: "0.12em", marginBottom: 12 }}>SENIOR-ANALYST GOLD STANDARD</div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>INSIGHT</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.insight}</div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>RECOMMENDATION</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.recommendation}</div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>MEASUREMENT</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.measurement}</div>
+            </div>
+
+            <div>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>VP PITCH</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, fontStyle: "italic" }}>{scenario.goldStandard.pitchAnchor}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function IntelMode({ apiKey, progress, onScore }) {
   const [submode, setSubmode] = useState("library");
@@ -4220,6 +4917,7 @@ function IntelMode({ apiKey, progress, onScore }) {
       {submode === "library"   && <KPILibraryMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "dashboard" && <DashboardDrillMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "problem"   && <ProblemMetricMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+      {submode === "insight"   && <InsightRecMode apiKey={apiKey} progress={progress} onScore={onScore} />}
     </div>
   );
 }
