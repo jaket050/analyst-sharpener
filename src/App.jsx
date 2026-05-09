@@ -3410,6 +3410,152 @@ const KPI_LIBRARY = {
       roles: ["Brand Analyst", "SEO Analyst", "Marketing Analyst"],
     },
   ],
+  product: [
+  {
+    metric: "Daily Active Users (DAU)",
+    formula: "Count of unique users who complete a defined 'active' action in a 24-hour period",
+    why: "The heartbeat metric of a consumer product. DAU tells you whether your product is part of users' daily routines — which is the primary driver of LTV, monetization, and defensibility.",
+    decision: "Pull this when leadership asks whether a product change improved engagement, or when investors want to understand user traction. DAU is the first number every product lead should know cold.",
+    misinterpretations: ["'Active' must be defined — a user who opens an app but does nothing meaningful should not count the same as one who completes a core action. Definition drift inflates DAU without reflecting real engagement.", "DAU can grow while the product is declining if your definition of 'active' is loose. Always pair with session depth or core action completion rate."],
+    roles: ["Product Analyst", "Growth Analyst", "Data Analyst (Consumer Tech)"],
+  },
+  {
+    metric: "Monthly Active Users (MAU)",
+    formula: "Count of unique users who complete a defined 'active' action in a rolling 30-day period",
+    why: "Measures the breadth of your engaged user base over a longer window. MAU is the denominator in stickiness (DAU/MAU) and the primary metric for tracking overall platform scale.",
+    decision: "Pull this when evaluating market penetration, investor reporting, or comparing growth rates across time periods. MAU smooths out weekly noise and reveals longer-term trajectory.",
+    misinterpretations: ["MAU growth from a marketing campaign can inflate the number without improving product quality — always segment MAU by cohort and source to understand who is driving growth.", "MAU that grows while DAU stays flat means new users are not retained into daily habits — a warning sign that acquisition is masking a retention problem."],
+    roles: ["Product Analyst", "Growth Analyst", "Business Analyst (Tech)"],
+  },
+  {
+    metric: "DAU/MAU Ratio (Stickiness)",
+    formula: "(DAU / MAU) × 100",
+    why: "Measures how frequently your monthly users engage daily. The single best proxy for whether your product has become a habit. Industry benchmarks: 50%+ for social/messaging, 20-40% for gaming/news, 13% average for SaaS, 10-25% for fintech.",
+    decision: "Pull this when evaluating whether a new feature or notification strategy is changing user habits, or when benchmarking against competitors. Stickiness predicts LTV better than MAU alone.",
+    misinterpretations: ["Stickiness benchmarks vary enormously by product type — a 15% ratio is excellent for a tax prep app (monthly usage pattern) and alarming for a messaging app (should be daily). Always benchmark within category.", "Improving stickiness by narrowing the 'active' definition artificially is gaming the metric — the ratio improves but real engagement hasn't."],
+    roles: ["Product Analyst", "Growth Analyst", "Product Manager supporting analytics"],
+  },
+  {
+    metric: "D1 / D7 / D30 Retention Rate",
+    formula: "(Users who return on Day N after signup / Users who signed up on Day 0) × 100",
+    why: "Measures whether new users come back after their first experience. Retention curves define the long-term health of a product — a product that retains at D30 has proven stickiness; one that loses 90% by D7 has a fundamental value problem.",
+    decision: "Pull this when evaluating the impact of onboarding changes, push notification strategies, or new feature releases on new user behavior. D1 is the onboarding signal; D7 is the habit signal; D30 is the product-market fit signal.",
+    misinterpretations: ["D30 retention of 25% can be excellent (social app) or catastrophic (SaaS product where users should be daily). Always define what 'good' looks like for your specific product before interpreting retention curves.", "Retention curves that flatten after D7 (even at a low absolute rate) are actually a positive signal — it means the remaining users are habituated and likely long-term retained."],
+    roles: ["Product Analyst", "Growth Analyst", "Mobile Analyst"],
+  },
+  {
+    metric: "Feature Adoption Rate",
+    formula: "(Users who have used the feature at least once / Total eligible users) × 100",
+    why: "Measures how widely a new feature has penetrated the user base. Low adoption after 60+ days signals a discoverability problem, a value problem, or a user-fit problem — each requiring a different fix.",
+    decision: "Pull this when a product team asks whether their shipped feature is being used, or when deciding whether to invest further in a feature vs. deprecate it. Feature adoption is the input metric for the ship/iterate/kill decision.",
+    misinterpretations: ["Adoption rate measures breadth (tried it once), not depth (uses it regularly). A feature with 40% adoption but 5% weekly usage is not working — measure both adoption and retention within the feature.", "Adoption rates below 10% after 90 days usually indicate a discoverability problem, not a value problem — check the entry point before concluding users don't want the feature."],
+    roles: ["Product Analyst", "Growth Analyst", "Feature Analytics Lead"],
+  },
+  {
+    metric: "User Activation Rate",
+    formula: "(New users who complete the defined activation milestone / Total new signups) × 100",
+    why: "Measures whether new users reach their first 'aha moment' — the point where they experience the product's core value. Activation is the most important leading indicator of long-term retention.",
+    decision: "Pull this when diagnosing why retention is poor despite healthy acquisition, or when evaluating onboarding flow changes. If activation rate is low, no amount of retention marketing will fix the problem — fix the onboarding first.",
+    misinterpretations: ["The activation milestone must be defined carefully — logging in is not activation. The milestone should be the first action that predicts long-term retention in your cohort analysis.", "A high activation rate with low D7 retention means users completed the onboarding but didn't find ongoing value — the activation milestone was too shallow."],
+    roles: ["Product Analyst", "Growth Analyst", "Onboarding Analyst"],
+  },
+  {
+    metric: "Time to Value (TTV)",
+    formula: "Average time from signup to first completion of the activation milestone (minutes, hours, or days)",
+    why: "Measures how quickly new users experience the product's core value. Shorter TTV correlates strongly with higher D1 and D7 retention — users who take too long to reach the 'aha moment' churn before getting there.",
+    decision: "Pull this when evaluating onboarding flow changes or signup-to-activation funnel optimization. TTV is the operational metric for the activation improvement roadmap.",
+    misinterpretations: ["TTV should be measured in the appropriate unit for your product — 5 minutes is an appropriate TTV target for a messaging app, 2 days might be appropriate for a project management tool.", "Reducing TTV by removing steps can actually reduce activation quality — always pair TTV reduction with activation rate and D7 retention to confirm quality held."],
+    roles: ["Product Analyst", "Growth Analyst", "Onboarding Analyst"],
+  },
+  {
+    metric: "Session Length",
+    formula: "Average time between the first and last event of a user session (in minutes)",
+    why: "Measures how deeply users engage when they do use the product. Longer sessions generally indicate higher engagement, though the interpretation depends heavily on the product type.",
+    decision: "Pull this when evaluating whether a new feature increased user engagement depth, or when diagnosing why ARPU (average revenue per user) is declining despite stable DAU.",
+    misinterpretations: ["Longer session length is not always better — in a fintech app, shorter sessions with task completion are ideal. In a social app, longer sessions indicate engagement. Context defines the benchmark.", "Average session length masks bimodal distributions — power users having 60-minute sessions and casual users having 30-second sessions can produce a misleading average of 5 minutes."],
+    roles: ["Product Analyst", "Mobile Analyst", "Engagement Analyst"],
+  },
+  {
+    metric: "Session Frequency",
+    formula: "Average number of sessions per active user per week (or day)",
+    why: "Measures how often users return within a given period. Complements DAU/MAU by showing not just whether users return, but how often they do when they are active.",
+    decision: "Pull this when designing push notification strategies, evaluating re-engagement campaign effectiveness, or understanding whether a feature change deepened habitual use.",
+    misinterpretations: ["Session frequency must be evaluated in the context of the product's expected usage pattern. Weekly usage of a budgeting app is appropriate; weekly usage of a messaging app is churn-risk behavior.", "Increasing session frequency through aggressive notifications can inflate the metric while degrading user satisfaction — always track alongside NPS and notification opt-out rate."],
+    roles: ["Product Analyst", "Engagement Analyst", "Mobile Analyst"],
+  },
+  {
+    metric: "Core Action Completion Rate",
+    formula: "(Users who completed the defined core action in a period / Total active users in that period) × 100",
+    why: "Measures engagement with the single action that defines your product's value — sending a message, completing a workout, making a payment, posting content. This is the most product-specific and often most predictive metric.",
+    decision: "Pull this when evaluating whether a UI change improved the primary user behavior, or when identifying users at risk of churn (users who stop completing the core action before they cancel).",
+    misinterpretations: ["The core action must be defined specifically enough to be meaningful — 'using the app' is not a core action. The action should be the behavior that, if stopped, signals the user is no longer getting value.", "Core action completion rate can decline as the user base grows (more casual users lower the average) even as total core actions increase — normalize by cohort or user segment for a cleaner signal."],
+    roles: ["Product Analyst", "Engagement Analyst", "Feature Analytics Lead"],
+  },
+  {
+    metric: "Notification Opt-in Rate",
+    formula: "(Users who have opted in to push notifications / Total eligible users) × 100",
+    why: "Measures the health of your re-engagement channel. Push notifications are the most direct way to drive return visits — users who opt in have dramatically higher D30 retention than those who don't.",
+    decision: "Pull this when evaluating the ROI of notification-driven re-engagement, or when deciding whether to prompt for notification permission earlier or later in onboarding.",
+    misinterpretations: ["Opt-in rate varies dramatically by platform — iOS requires explicit permission (opt-in rates typically 40-60%), Android historically defaulted to on (opt-in rates 90%+). Compare within platform.", "High opt-in rate means nothing if notification click-through rate is low — users may have opted in but be ignoring your messages, which will eventually lead to opt-out."],
+    roles: ["Product Analyst", "Mobile Analyst", "Growth Analyst"],
+  },
+  {
+    metric: "K-Factor (Virality Coefficient)",
+    formula: "K = (Average invitations sent per user) × (Conversion rate of invitations to signups)",
+    why: "Measures organic growth from existing users. K > 1 means the user base grows exponentially without paid acquisition; K < 1 means the product has some viral component but requires external input to sustain growth.",
+    decision: "Pull this when evaluating the ROI of referral programs, or when the growth team is deciding whether to invest in viral mechanics vs. paid acquisition. K-factor determines whether viral investment compounds.",
+    misinterpretations: ["K > 1 is rarely sustained — products that achieve viral growth typically see K decay as the addressable network saturates. Use K-factor as a directional signal, not a permanent growth assumption.", "K-factor can be gamed by incentivizing invitations artificially — referred users who converted for the incentive rather than the product value will have lower retention, dragging down LTV even as K looks healthy."],
+    roles: ["Growth Analyst", "Product Analyst", "Marketing Analyst"],
+  },
+  {
+    metric: "Churn Rate (Product Context)",
+    formula: "(Users who were active in period N-1 but not in period N / Users active in period N-1) × 100",
+    why: "Measures the rate at which previously active users stop engaging. Product churn is a leading indicator of revenue churn in subscription businesses and a direct signal of product-market fit degradation.",
+    decision: "Pull this when a cohort analysis shows a steeper-than-expected retention curve, or when DAU is declining despite stable new user acquisition. Churn tells you whether you have a retention problem or a growth problem.",
+    misinterpretations: ["Product churn and revenue churn are different — a user can churn from daily usage while still paying for the subscription, especially in SaaS. Both should be tracked independently.", "Churn rate measured over too short a window (weekly) is noisy; measured over too long a window (annual) it lags. Monthly is typically the right interval for most consumer products."],
+    roles: ["Product Analyst", "Retention Analyst", "Growth Analyst"],
+  },
+  {
+    metric: "Monthly Active Creator Rate",
+    formula: "(Users who created content in the past 30 days / Total MAU) × 100",
+    why: "In content platforms (social, UGC, marketplaces), creation is the highest-engagement behavior and the behavior that generates supply for other users. Creator retention predicts platform health better than consumer retention.",
+    decision: "Pull this when evaluating the health of a two-sided platform or content marketplace. If creator rate declines, content supply thins, which reduces consumer engagement — a flywheel problem that compounds.",
+    misinterpretations: ["The ratio of creators to consumers varies naturally by platform type — Twitter historically had ~10% creator rate; YouTube has ~1%. Benchmark within content category.", "Creator rate can decline as a platform scales if new users skew more toward consumption. Segment by cohort to understand whether the platform is becoming more consumer-oriented or whether creators are churning."],
+    roles: ["Product Analyst", "Platform Analyst", "Content Analyst"],
+  },
+  {
+    metric: "User Activation Funnel Drop-off Rate",
+    formula: "(Users who exited at step N / Users who entered step N) × 100 — across each onboarding step",
+    why: "Maps where in the onboarding flow new users abandon before reaching activation. The most actionable diagnostic for improving activation rate — each step has a different cause and fix.",
+    decision: "Pull this when activation rate is below target and you need to identify the specific step to fix. Drop-off at the permission request is different from drop-off at the first core action — completely different engineering and design interventions.",
+    misinterpretations: ["Funnel drop-off rates look alarming in aggregate but are often concentrated at 1-2 specific steps. Fix the highest-drop-off step first before addressing later steps — later steps may self-correct once earlier friction is removed.", "Drop-off rates vary by acquisition channel — paid social users drop off at higher rates than organic users in almost every funnel. Always segment by acquisition source before concluding the product is broken."],
+    roles: ["Product Analyst", "Growth Analyst", "Onboarding Analyst"],
+  },
+  {
+    metric: "Support Ticket Rate",
+    formula: "(Support tickets submitted / Active users) × 1,000 (tickets per 1K users)",
+    why: "A leading indicator of product friction and quality issues. Spikes in support ticket rate before they appear in retention or DAU metrics — giving teams an early warning signal to investigate.",
+    decision: "Pull this after a major product release or infrastructure change to detect issues before they become retention problems. Also useful for identifying which features generate the most confusion.",
+    misinterpretations: ["Low ticket rate doesn't always mean the product is frictionless — users who give up without contacting support are invisible. Pair with session recordings and rage-click data for a complete picture.", "Support ticket rate should be normalized by active users, not total users — a product with more engagement will naturally generate more tickets in absolute terms even if per-user friction is constant."],
+    roles: ["Product Analyst", "CX Analyst", "Quality Analyst"],
+  },
+  {
+    metric: "Power User Concentration (Top Decile Share)",
+    formula: "(Core actions completed by top 10% of users / Total core actions by all users) × 100",
+    why: "Measures how dependent the product's engagement is on a small segment of highly active users. High concentration (top 10% driving 60%+ of actions) signals fragility — losing power users would devastate engagement metrics.",
+    decision: "Pull this when evaluating the diversity of the user engagement base, or when a large customer or power user churns and the impact on aggregate metrics seems disproportionately large.",
+    misinterpretations: ["Some power user concentration is healthy and expected — it does not mean the product is failing. The risk is when concentration is so high that product metrics are essentially tracking a handful of users rather than the population.", "Power user concentration often increases as a product matures and casual users churn. A rising concentration trend over time signals retention is improving at the top while casual users are leaving — which may or may not be a problem depending on the business model."],
+    roles: ["Product Analyst", "Engagement Analyst", "Data Scientist"],
+  },
+  {
+    metric: "Net Promoter Score — Product Context (pNPS)",
+    formula: "% of users rating 9-10 (Promoters) − % rating 0-6 (Detractors), asked about product experience specifically",
+    why: "In product analytics, NPS is used to track sentiment change after feature releases, redesigns, or UX changes. Product NPS distinguishes the product experience from the overall brand/support experience.",
+    decision: "Pull this when evaluating whether a major product change improved or degraded user sentiment, or when trying to identify which user segments are most and least satisfied with the current product direction.",
+    misinterpretations: ["Product NPS and relationship NPS are different — product NPS asks about a specific experience or feature; relationship NPS asks about the overall brand. Conflating them produces misleading signals.", "NPS surveys suffer from response bias — dissatisfied users are more likely to respond than neutral users, which means raw NPS often skews negative. Segment by tenure, usage level, and acquisition source for a cleaner read."],
+    roles: ["Product Analyst", "UX Researcher", "Customer Insights Analyst"],
+  },
+  ],
 };
 
 // ── KPI LIBRARY MODE COMPONENT ────────────────────────────────────────────────
@@ -3420,6 +3566,7 @@ const KPI_DOMAINS = [
   { id: "finance",    label: "Finance",              color: "#4ade80", icon: "📈" },
   { id: "operations", label: "Operations / Supply Chain", color: "#fb923c", icon: "⚙️" },
   { id: "marketing",  label: "Marketing",            color: "#c084fc", icon: "📣" },
+  { id: "product", label: "Product Analytics", color: "#a78bfa", icon: "📱" },
 ];
 
 // ── INTEL MODE WRAPPER + MODES 2/3 ─────────────────────────────────────────
@@ -5046,6 +5193,320 @@ const DASHBOARD_DRILLS = [
       },
     ],
   },
+  {
+    id: "product-1",
+    domain: "product",
+    title: "Product Health Dashboard — Mobile Consumer App",
+    subtitle: "Week of May 4, 2026 vs trailing 4-week average",
+    scenario: "You are the product analyst at a consumer mobile app (daily habit product — think journaling, fitness tracking, or language learning). The Head of Product just messaged: 'Our weekly metrics dropped and I need to understand why before the all-hands tomorrow.' You have 15 minutes.",
+    kpis: [
+      { label: "DAU", value: "284,210", delta: "▼ 18.4%", up: false },
+      { label: "DAU/MAU (STICKINESS)", value: "31%", delta: "▼ 8pp vs avg", up: false },
+      { label: "D7 RETENTION (NEW USERS)", value: "22%", delta: "▼ 9pp vs avg", up: false },
+      { label: "CORE ACTION COMPLETION", value: "58%", delta: "▼ 14pp vs avg", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "DAU BY PLATFORM — LAST 6 WEEKS",
+        series: [
+          { label: "iOS", color: "#f87171", points: [142, 144, 140, 141, 88, 84] },
+          { label: "Android", color: "#4ade80", points: [138, 140, 142, 139, 141, 140] },
+          { label: "Web", color: "#4fc3f7", points: [22, 23, 22, 24, 23, 22] },
+        ],
+        xLabels: ["W1", "W2", "W3", "W4", "W5", "W6"],
+        yMax: 160,
+        yUnit: "K",
+      },
+      {
+        type: "barCategorical",
+        title: "CORE ACTION COMPLETION BY PLATFORM — THIS WEEK",
+        bars: [
+          { label: "Android", value: 71, color: "#4ade80" },
+          { label: "Web", value: 68, color: "#4fc3f7" },
+          { label: "iOS", value: 32, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 85,
+      },
+      {
+        type: "barHorizontal",
+        title: "D7 RETENTION BY ACQUISITION COHORT — NEW USERS THIS WEEK",
+        bars: [
+          { label: "Android — organic", value: 34, max: 40 },
+          { label: "Android — paid", value: 28, max: 40 },
+          { label: "iOS — organic", value: 21, max: 40 },
+          { label: "iOS — paid", value: 18, max: 40 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The DAU drop and core action completion decline are iOS-only problems — Android and Web are stable — which means this is almost certainly a platform-specific bug introduced by an iOS release, not a product-wide engagement issue.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Android core action completion at 71% is within normal range and DAU is flat, while iOS completion dropped to 32% (less than half of Android) and iOS DAU dropped 38% week-over-week. The magnitude and platform-specificity of the iOS drop is too sharp and too concentrated to be behavioral — a product release, App Store change, or iOS-specific bug is the overwhelmingly likely cause. D7 retention for iOS new users (18-21%) is also below Android (28-34%), suggesting the iOS experience has been worse for longer than just this week.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the iOS app version distribution this week vs last week and map it against the DAU drop timing. If a new iOS build shipped mid-week and the drop correlates precisely with the rollout timing, we have a confirmed bug. The fix recommendation is an immediate rollback or hotfix, not a product strategy conversation — and the all-hands narrative changes from 'our metrics are down' to 'we caught an iOS bug and here's the remediation plan.'",
+      },
+    ],
+  },
+  {
+    id: "product-2",
+    domain: "product",
+    title: "Feature Launch Dashboard — Search v2.0",
+    subtitle: "30-day post-launch analysis",
+    scenario: "You are the product analyst at a SaaS platform. The Search v2.0 feature launched 30 days ago after 4 months of development. The product team is in the ship/iterate/kill decision meeting and needs your analysis to make the call.",
+    kpis: [
+      { label: "FEATURE ADOPTION RATE", value: "28%", delta: "Target was 40% at Day 30", up: false },
+      { label: "WEEKLY ACTIVE USERS (FEATURE)", value: "61%", delta: "Of adopters", up: true },
+      { label: "TIME SPENT IN SEARCH (AVG)", value: "4.2 min/session", delta: "▲ 1.8 min vs v1", up: true },
+      { label: "SUPPORT TICKETS (SEARCH)", value: "2.8 per 1K users", delta: "▼ 1.2 vs v1 launch", up: true },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "SEARCH v2 ADOPTION CURVE — DAILY (% OF ELIGIBLE USERS)",
+        series: [
+          { label: "Target curve", color: "#4fc3f7", points: [5, 10, 15, 20, 25, 30, 34, 38, 40] },
+          { label: "Actual adoption", color: "#fbbf24", points: [4, 8, 12, 16, 18, 20, 22, 24, 28] },
+        ],
+        xLabels: ["D3", "D7", "D10", "D14", "D17", "D21", "D24", "D28", "D30"],
+        yMax: 45,
+        yUnit: "%",
+      },
+      {
+        type: "barCategorical",
+        title: "ADOPTION RATE BY USER SEGMENT — DAY 30",
+        bars: [
+          { label: "Power users (top 10%)", value: 68, color: "#4ade80" },
+          { label: "Regular users", value: 31, color: "#4fc3f7" },
+          { label: "Casual users (bottom 40%)", value: 8, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 80,
+      },
+      {
+        type: "barHorizontal",
+        title: "ADOPTION ENTRY POINT — HOW USERS DISCOVERED SEARCH v2",
+        bars: [
+          { label: "In-product tooltip", value: 48, max: 60 },
+          { label: "Email announcement", value: 28, max: 60 },
+          { label: "Organic discovery", value: 16, max: 60 },
+          { label: "Help center article", value: 8, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Search v2 missed its 30-day adoption target by 12pp but the quality signals are strong — adopters use it weekly at 61%, spend significantly more time in search, and generate fewer support tickets — which means the problem is discoverability, not product value.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Power user adoption at 68% is more than double casual user adoption at 8% — an unusually large gap that suggests the feature's value proposition resonates strongly with heavy users who are actively looking for better search, while casual users who might benefit from search improvement aren't finding or using it. Combined with 48% of discovery happening via tooltip (an active, in-product prompt) vs. 16% via organic discovery, the feature clearly needs better passive discoverability. Users who encounter it are using it — users who haven't encountered it aren't looking.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the retention-within-feature metric: of the 28% who adopted Search v2, what percentage used it in week 4 vs. week 1. If week 4 usage is 80%+ of week 1 adopters (high feature retention), the product is working and adoption just needs discoverability investment. If week 4 usage is 40% of week 1 adopters, users tried it and reverted to v1 behavior — the adoption number is inflating what's actually a value problem. That distinction changes the ship/iterate recommendation entirely.",
+      },
+    ],
+  },
+  {
+    id: "product-3",
+    domain: "product",
+    title: "Retention Cohort Analysis Dashboard",
+    subtitle: "Q1 2026 acquisition cohorts, 90-day view",
+    scenario: "You are the growth analyst at a B2C subscription app. The CEO has called an emergency meeting after seeing that the latest user cohorts are retaining worse than previous cohorts. He's worried the product has peaked. You have 20 minutes to prep your read.",
+    kpis: [
+      { label: "D30 RETENTION (Q1 COHORTS)", value: "34%", delta: "▼ 8pp vs Q3 2025 cohorts", up: false },
+      { label: "D7 RETENTION (Q1 COHORTS)", value: "48%", delta: "▼ 5pp vs Q3 2025 cohorts", up: false },
+      { label: "NEW USER VOLUME (Q1)", value: "142K", delta: "▲ 38% vs Q3 2025", up: true },
+      { label: "PAID ACQUISITION MIX (Q1)", value: "71%", delta: "▲ 28pp vs Q3 2025", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "D30 RETENTION BY ACQUISITION COHORT — QUARTERLY",
+        series: [
+          { label: "Q1 2025 cohort", color: "#4ade80", points: [100, 62, 48, 42] },
+          { label: "Q3 2025 cohort", color: "#4fc3f7", points: [100, 58, 44, 42] },
+          { label: "Q1 2026 cohort", color: "#f87171", points: [100, 48, 34, null] },
+        ],
+        xLabels: ["D0", "D7", "D30", "D90"],
+        yMax: 100,
+        yUnit: "% retained",
+      },
+      {
+        type: "barCategorical",
+        title: "D30 RETENTION BY ACQUISITION SOURCE — Q1 2026",
+        bars: [
+          { label: "Organic/SEO", value: 51, color: "#4ade80" },
+          { label: "Referral", value: 48, color: "#4ade80" },
+          { label: "App Store", value: 42, color: "#4fc3f7" },
+          { label: "Paid Social", value: 28, color: "#f87171" },
+          { label: "Influencer", value: 22, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 60,
+      },
+      {
+        type: "barHorizontal",
+        title: "Q1 2026 USER ACQUISITION CHANNEL MIX (%)",
+        bars: [
+          { label: "Paid Social", value: 48, max: 60 },
+          { label: "Influencer", value: 23, max: 60 },
+          { label: "App Store (organic)", value: 18, max: 60 },
+          { label: "Referral", value: 7, max: 60 },
+          { label: "SEO/Direct", value: 4, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Q1 retention looks worse than prior cohorts, but it's almost entirely explained by the channel mix shift — paid social and influencer acquisition grew from 43% to 71% of new users, and those channels have structurally lower retention (22-28%) compared to organic and referral (48-51%), dragging the blended average down without the product itself having changed.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Organic/SEO and referral retention in Q1 (51% and 48%) is actually slightly above prior cohorts — the product itself is retaining slightly better for users who come through high-intent channels. The retention decline is 100% a channel-mix artifact. This is a critical distinction: the CEO's concern ('the product has peaked') is wrong — the growth team's channel strategy is importing structurally lower-quality users. The narrative for the CEO meeting should not be 'the product has a retention problem' but 'our acquisition channel mix has changed and here's what it's costing us.'",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the LTV projection for paid social and influencer cohorts vs. organic cohorts, and compare it to the CAC for each channel. If paid social CAC is $18 and 30-day LTV is $12 (negative payback at that retention rate), the channel is destroying value. If organic CAC is $4 and 30-day LTV is $24, the growth team should be asked why 71% of Q1 budget went to the worst-performing channel rather than scaling the best-performing one. That's the CEO conversation that matters.",
+      },
+    ],
+  },
+  {
+    id: "product-4",
+    domain: "product",
+    title: "Growth Accounting Dashboard",
+    subtitle: "Monthly user base decomposition — Q1 2026",
+    scenario: "You are the product analytics lead at a consumer tech company. The CFO wants to understand the 'quality' of DAU growth — whether the active user base is built on healthy retention or churn-and-replace dynamics. This dashboard decomposes the user base using growth accounting methodology.",
+    kpis: [
+      { label: "END OF PERIOD MAU", value: "2.84M", delta: "▲ 12% vs start of Q1", up: true },
+      { label: "NEW USERS (Q1)", value: "840K", delta: "Strong acquisition", up: true },
+      { label: "CHURNED USERS (Q1)", value: "720K", delta: "25% of starting MAU", up: false },
+      { label: "RESURRECTED USERS (Q1)", value: "180K", delta: "Re-engaged churned users", up: true },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "GROWTH ACCOUNTING — MONTHLY BREAKDOWN (K USERS)",
+        bars: [
+          { label: "New (acquired)", value: 840, color: "#4ade80" },
+          { label: "Retained (kept)", value: 2160, color: "#4fc3f7" },
+          { label: "Resurrected (returned)", value: 180, color: "#fbbf24" },
+          { label: "Churned (lost)", value: 720, color: "#f87171" },
+        ],
+        unit: "K",
+        yMax: 2400,
+      },
+      {
+        type: "lineMulti",
+        title: "MONTHLY CHURN RATE — ROLLING 6 MONTHS (%)",
+        series: [
+          { label: "Churn Rate", color: "#f87171", points: [18, 20, 21, 22, 24, 25] },
+          { label: "New User Rate", color: "#4ade80", points: [22, 24, 26, 28, 28, 29] },
+        ],
+        xLabels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 35,
+        yUnit: "% of MAU",
+      },
+      {
+        type: "barHorizontal",
+        title: "CHURNED USER TENURE DISTRIBUTION",
+        bars: [
+          { label: "< 30 days tenure", value: 48, max: 60 },
+          { label: "30-90 days tenure", value: 28, max: 60 },
+          { label: "90-180 days tenure", value: 14, max: 60 },
+          { label: "> 180 days tenure", value: 10, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "MAU is growing, but the growth is hiding a deteriorating retention problem — churn has climbed from 18% to 25% of MAU over 6 months while new user acquisition keeps the headline number rising, meaning the platform is running faster on an acquisition treadmill while the bucket leaks more every month.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "48% of churned users had less than 30 days of tenure — meaning nearly half the churn is early-lifecycle users who never found lasting value. This is an onboarding and activation problem, not a long-term engagement problem. Long-tenured users (>180 days) represent only 10% of churn, which means the product retains well once users are habituated — but it's failing at the onboarding stage where most users are being lost. The acquisition rate growing to 29% of MAU while churn hits 25% means the platform is barely staying ahead of the leak — a marginal acquisition slowdown would put MAU into decline.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the activation rate for the cohorts with the highest early churn (< 30 days). Specifically: what percentage of new users complete the defined activation milestone (first core action) before churning? If 70% of early churners never completed activation, the fix is onboarding — getting users to the 'aha moment' faster. If activation rates are healthy but early churn is still high, the product is delivering initial value but not creating a habit — a different problem entirely. This diagnosis determines whether the investment goes to onboarding UX or to habit-formation mechanics.",
+      },
+    ],
+  },
+  {
+    id: "product-5",
+    domain: "product",
+    title: "Notification & Re-engagement Performance Dashboard",
+    subtitle: "Q1 2026 push notification program analysis",
+    scenario: "You are the growth analyst at a mobile app. The Head of Growth wants to evaluate the push notification program before the Q2 budget cycle. Notifications are the primary retention tool but there are concerns they may be doing more harm than good.",
+    kpis: [
+      { label: "PUSH NOTIFICATION CTR", value: "3.8%", delta: "▼ 2.1pp vs Q1 2025", up: false },
+      { label: "OPT-OUT RATE (QTD)", value: "8.2%", delta: "▲ 3.4pp vs Q1 2025", up: false },
+      { label: "7-DAY RE-ENGAGEMENT", value: "28%", delta: "Notif → session within 7 days", up: true },
+      { label: "SESSION DEPTH (POST-NOTIF)", value: "1.4 actions", delta: "▼ 0.8 vs organic sessions", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "PUSH CTR vs OPT-OUT RATE — MONTHLY",
+        series: [
+          { label: "CTR (%)", color: "#4fc3f7", points: [5.8, 5.4, 5.1, 4.8, 4.2, 3.8] },
+          { label: "Opt-out Rate (%)", color: "#f87171", points: [4.8, 5.2, 5.8, 6.4, 7.2, 8.2] },
+        ],
+        xLabels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 12,
+        yUnit: "%",
+      },
+      {
+        type: "barCategorical",
+        title: "CTR BY NOTIFICATION TYPE — Q1 2026",
+        bars: [
+          { label: "Personalized trigger", value: 8.4, color: "#4ade80" },
+          { label: "Friend activity", value: 6.2, color: "#4ade80" },
+          { label: "Achievement/milestone", value: 5.1, color: "#4fc3f7" },
+          { label: "Daily reminder (generic)", value: 1.4, color: "#f87171" },
+          { label: "Promotional", value: 0.8, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 10,
+      },
+      {
+        type: "barHorizontal",
+        title: "NOTIFICATION VOLUME BY TYPE — Q1 2026 (% of sends)",
+        bars: [
+          { label: "Daily reminder (generic)", value: 52, max: 60 },
+          { label: "Promotional", value: 24, max: 60 },
+          { label: "Achievement/milestone", value: 12, max: 60 },
+          { label: "Friend activity", value: 8, max: 60 },
+          { label: "Personalized trigger", value: 4, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "76% of notifications are the lowest-performing types (generic daily reminders at 1.4% CTR and promotional at 0.8%), while the highest-performing types (personalized triggers at 8.4% CTR and friend activity at 6.2%) get only 12% of sends — the notification program is burning user patience on ineffective messages while underusing the mechanics that actually drive engagement.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The inverse relationship between CTR and opt-out rate over 6 months is the most important signal: as CTR declines, opt-out accelerates — not at the same rate, but faster. This is the signature of notification fatigue: users who were mildly annoyed by notifications now actively removing them. Once a user opts out, they cannot be re-engaged via push. The program is not just underperforming, it's actively destroying a future re-engagement channel. Session depth post-notification at 1.4 actions vs 2.2 for organic sessions also means that even the 3.8% who click are doing almost nothing — the notifications are driving low-intent visits, not meaningful engagement.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the opt-out rate segmented by user tenure and notification type received in the 7 days before opt-out. If users who received 5+ generic daily reminders in a week opt out at 3× the rate of users who received 1-2 personalized triggers, the data makes a clear case: reduce generic reminder volume by 80%, reallocate those sends to personalized trigger logic, and monitor opt-out rate over 30 days. That's a Q2 experiment with a defensible hypothesis, not a budget conversation about cutting the whole program.",
+      },
+    ],
+  },
 ];
 
 // ── PROBLEM-TO-METRIC SCENARIOS (Mode 3) ───────────────────────────────────
@@ -5480,6 +5941,94 @@ const PROBLEM_SCENARIOS = [
       { kpi: "Organic / Earned Acquisition Trend", logic: "If organic acquisition is still growing healthily, we can afford higher CAC on paid. If organic stalled, paid efficiency becomes the only growth lever." },
     ],
   },
+  {
+    id: "prod-p1", domain: "product",
+    problem: "DAU dropped 15% last Tuesday with no marketing changes or known outages. Engineering says nothing shipped. How do you investigate?",
+    goldKPIs: [
+      { kpi: "DAU by Platform (iOS, Android, Web)", logic: "Platform segmentation isolates whether the drop is universal or platform-specific. A platform-specific drop almost always points to a technical issue (OS update, app store change, build rollout) rather than a product or market issue." },
+      { kpi: "Core Action Completion Rate", logic: "If DAU fell but core action completion rate among remaining users held, users who stayed are engaging normally — the problem is acquisition or re-engagement. If completion also dropped, the product itself is broken for active users." },
+      { kpi: "Notification Opt-in Rate and CTR", logic: "A sudden drop in notification delivery (carrier issue, OS permission change) can cause a DAU drop because push-driven return visits disappear." },
+      { kpi: "App Version Distribution", logic: "If a new build shipped Tuesday (even internally, even to a small rollout), version distribution will show the new version and DAU can be mapped against adoption timing to confirm causation." },
+      { kpi: "External Signals (App Store Reviews, Social Mentions)", logic: "A sudden DAU drop sometimes precedes an engineering team's awareness — user-reported bugs on App Store reviews or Twitter/Reddit surface the issue faster than internal monitoring." },
+    ],
+  },
+  {
+    id: "prod-p2", domain: "product",
+    problem: "A new feature launched 60 days ago and adoption is at 12% against a 35% target. The PM says users don't know about it. The designer says users don't want it. Who is right, and what data resolves it?",
+    goldKPIs: [
+      { kpi: "Feature Discovery Rate by Entry Point", logic: "Measures what percentage of users who encounter the feature's entry point (button, tooltip, menu item) actually click into it. High discovery rate = users see it and try it = PM is wrong. Low discovery rate = users aren't finding it = PM may be right." },
+      { kpi: "Feature Adoption Rate Among Users Who Discovered It", logic: "Of users who actually saw and clicked the feature, what percentage adopted it? Low adoption among discoverers = value problem = designer may be right. High adoption among discoverers = discoverability problem = PM is right." },
+      { kpi: "Feature Retention Rate (D7 and D30 Within Feature)", logic: "Of the 12% who adopted, what percentage are still using the feature at D7 and D30? High feature retention = users who find it love it = discoverability problem. Low feature retention = users try it and abandon = value problem." },
+      { kpi: "Qualitative Exit Survey on Feature Exit", logic: "When users exit the feature without completing the core action, do they respond to a 'what went wrong' prompt? Text analysis of responses distinguishes 'couldn't find what I needed' (discoverability) from 'this wasn't useful' (value)." },
+      { kpi: "Time Spent in Feature Per Session", logic: "Users who spend < 30 seconds in a feature and leave are bouncing — a value signal. Users who spend 3+ minutes and complete an action are succeeding — a retention/habit signal." },
+    ],
+  },
+  {
+    id: "prod-p3", domain: "product",
+    problem: "D7 retention dropped 8 percentage points in the cohort that signed up two weeks after a major app redesign. What do you investigate?",
+    goldKPIs: [
+      { kpi: "Onboarding Funnel Drop-off Rate by Step", logic: "The redesign likely changed the onboarding flow. Step-level drop-off shows which new step (or removed step) is causing users to abandon before experiencing core value." },
+      { kpi: "Time to First Core Action (TTV) Pre vs Post Redesign", logic: "If the redesign made users work harder to reach the core value, TTV increased and early retention dropped. TTV is the most direct causal link between a redesign and a retention change." },
+      { kpi: "App Store Reviews Sentiment (Post-Redesign)", logic: "Redesigns that confuse users generate negative reviews with specific UI complaints. Review text in the 2 weeks post-launch identifies the specific element that degraded the experience." },
+      { kpi: "Core Action Completion Rate for New vs Returning Users Post-Redesign", logic: "If returning users (who know the product) are completing the core action at normal rates but new users aren't, the redesign introduced new-user-specific friction, not broad degradation." },
+      { kpi: "Session Depth (Actions per Session) for New User Cohorts", logic: "Fewer actions per session in the post-redesign cohort signals users are getting stuck or confused before completing their intended task — a navigation or UX problem, not a value problem." },
+    ],
+  },
+  {
+    id: "prod-p4", domain: "product",
+    problem: "Push notification opt-out rate has increased 40% over 3 months. Engineering hasn't changed notification logic. What do you investigate?",
+    goldKPIs: [
+      { kpi: "Notification Send Frequency Per User", logic: "If average sends per user per week increased (even from upstream logic changes like more users qualifying for triggers), higher frequency is the most common driver of opt-out spikes." },
+      { kpi: "Notification CTR Trend by Notification Type", logic: "Declining CTR predicts opt-out — users who stop finding notifications valuable opt out rather than continuing to ignore them. Segmenting by type identifies which notification category users are rejecting." },
+      { kpi: "Opt-out Rate by User Tenure Cohort", logic: "If opt-outs are concentrated among new users (< 30 days), the onboarding notification sequence is too aggressive. If concentrated among older users, a specific campaign or frequency change triggered fatigue in the retained base." },
+      { kpi: "iOS vs Android Opt-out Rate", logic: "iOS 15+ introduced new notification management tools that made it easier to opt out. If the spike is iOS-specific, an OS update may have surfaced notification settings to users who previously didn't know how to opt out." },
+      { kpi: "Revenue or DAU Impact of Lost Opt-ins", logic: "Not a diagnostic metric but a priority metric — quantifying the DAU impact of users who opted out and then churned establishes urgency for the fix and frames the business case for reducing notification volume." },
+    ],
+  },
+  {
+    id: "prod-p5", domain: "product",
+    problem: "You are expanding into a new international market. What metrics would you track in the first 90 days to know if the expansion is working?",
+    goldKPIs: [
+      { kpi: "User Activation Rate (Market-Specific)", logic: "The first question in any new market is whether the product's core value translates. Activation rate tells you if new market users are reaching the 'aha moment' at comparable rates to your home market." },
+      { kpi: "D7 and D30 Retention by Acquisition Cohort", logic: "Retention curves in the new market tell you whether initial activation translates to habit formation. Low D7 retention despite high activation means the product solves a problem users have once but not repeatedly — a market-fit signal." },
+      { kpi: "Core Action Completion Rate", logic: "Even if users sign up and activate, the specific core action completion rate reveals whether the product's primary value is culturally or contextually appropriate in the new market." },
+      { kpi: "Support Ticket Rate and Topic Distribution", logic: "New market support tickets reveal localization gaps — missing language, payment method issues, or cultural features that don't work — before they become churn drivers." },
+      { kpi: "CAC vs LTV (Market-Specific, 90-Day)", logic: "The expansion is only viable if the unit economics hold in the new market. CAC varies by market; LTV depends on local retention and monetization. Comparing market-specific LTV:CAC by day 90 determines whether to scale or reassess." },
+    ],
+  },
+  {
+    id: "prod-p6", domain: "product",
+    problem: "DAU is growing but DAU/MAU stickiness ratio is declining. What does this mean and what do you investigate?",
+    goldKPIs: [
+      { kpi: "New User Acquisition Volume vs Existing User DAU", logic: "If new users are flooding in (inflating MAU) but converting to daily users at a lower rate than prior cohorts, MAU grows faster than DAU. Decomposing DAU into 'new vs existing users' tells you whether growth is diluting stickiness." },
+      { kpi: "Stickiness by User Tenure Cohort", logic: "Calculate DAU/MAU separately for users by tenure (0-30 days, 31-90 days, 90+ days). If long-tenured user stickiness is stable but new user stickiness is low, the retention flywheel is intact but onboarding isn't building habits fast enough." },
+      { kpi: "Core Action Completion Rate Trend", logic: "Stickiness declines when users open the app less frequently. Core action completion rate declining suggests users are finding less value per session — the product's core use case may be weakening." },
+      { kpi: "Session Frequency Distribution (Power vs Casual)", logic: "If the user base is bifurcating — a core of daily users and a growing tail of weekly or monthly users — aggregate stickiness will decline even if the core is healthy. Understanding the distribution matters more than the average." },
+      { kpi: "Notification Opt-in Rate and CTR", logic: "Push notifications are a primary driver of return visits. If opt-in rate is declining or CTR is falling, fewer users are being successfully reminded to return — a notification program problem that manifests as a stickiness problem." },
+    ],
+  },
+  {
+    id: "prod-p7", domain: "product",
+    problem: "The top 10% of users generate 65% of all core actions. Leadership is concerned the product is too dependent on power users. Is this a problem?",
+    goldKPIs: [
+      { kpi: "Power User Churn Rate vs. Casual User Churn Rate", logic: "If power users churn at low rates (< 5% monthly) and casual users churn at high rates (> 30% monthly), the concentration is a structural feature of the user base, not a fragility risk. The business is actually more stable than it looks." },
+      { kpi: "Power User LTV vs. Casual User LTV", logic: "The business question isn't engagement concentration but revenue concentration. If power users monetize at 10× casual users, losing them would be catastrophic. If monetization is flat per user, the concentration is analytically interesting but financially less concerning." },
+      { kpi: "Power User Growth Rate", logic: "If the power user cohort is growing steadily, the product is successfully converting casual users into power users over time. If the power user count is flat or declining, the concentration is increasing because casual users are churning — a different and more serious problem." },
+      { kpi: "Feature Adoption Rate Among Casual Users", logic: "Casual users who adopt more features typically move up the engagement curve. Feature adoption rate for the bottom 50% of users identifies which product investments would broaden the engaged base." },
+      { kpi: "Cohort Retention Curve Shape for New Users", logic: "If new user cohorts show a flattening retention curve (even at a low absolute level), the product is successfully creating habituated users over time. The power user concentration may just be the natural outcome of a long retention cycle." },
+    ],
+  },
+  {
+    id: "prod-p8", domain: "product",
+    problem: "K-factor has dropped from 0.8 to 0.3 over the past two quarters. The virality engine is breaking. Where do you look?",
+    goldKPIs: [
+      { kpi: "Invitation Send Rate (Invites Per Active User)", logic: "K-factor = invite rate × conversion rate. If invite rate dropped, users are sending fewer invitations. This happens when the referral incentive changes, the share UI is harder to find, or the product moment that triggers sharing has weakened." },
+      { kpi: "Invitation Conversion Rate (Invites to Signups)", logic: "If invite rate held but conversion rate dropped, the invitations are landing but not convincing people to sign up. This is a landing page, onboarding, or product value proposition problem — invited users aren't seeing enough value to sign up." },
+      { kpi: "Viral Loop Touchpoints (Where Users Share)", logic: "Map every point in the product where users can share or invite. If a UI redesign moved the share button, changed the copy, or removed a natural sharing moment, invite rates will drop without any intentional change to the referral program." },
+      { kpi: "Referral Quality (D30 Retention of Referred vs Organic Users)", logic: "Even if K-factor recovers, poor referral quality (low-retention invited users) means the viral loop is importing the wrong users. Quality of referred users is as important as quantity." },
+      { kpi: "Incentive ROI (Cost per Referred User vs LTV of Referred User)", logic: "If the referral incentive changed in cost or type, the economics may have shifted. Mapping incentive spend against referred user LTV determines whether the viral loop is still worth investing in at all." },
+    ],
+  },
 ];
 
 // ── INTEL MODE WRAPPER (replaces direct KPILibraryMode call) ───────────────
@@ -5504,6 +6053,7 @@ const INTEL_SUBMODES = [
 
 const INSIGHT_SCENARIOS = [
   // RETAIL / E-COMMERCE — 7 scenarios
+  
   {
     id: "retail-i1", domain: "retail",
     finding: "Customers who use the mobile app convert at 2.3× the rate of web-only customers and have 38% higher 90-day LTV. However, only 18% of new signups install the app, and the install rate has been flat for 9 months despite multiple banner campaigns prompting downloads.",
@@ -5863,7 +6413,84 @@ const INSIGHT_SCENARIOS = [
       measurement: "Primary: % of new customers attributing influencer awareness in survey. Secondary: brand awareness lift among targeted demographics. Decision threshold: if direct attribution + survey-attributed share approaches break-even (1.0× combined), maintain at current level; if exceeds 1.5×, scale; if below 0.7×, kill.",
       pitchAnchor: "We can't tell if our influencer program is working because we're only measuring direct attribution. UGC up 220% and engagement tripled are real signals, but they don't translate directly to revenue we can credit. One more quarter of investment plus a measurement upgrade (survey + brand lift study) gets us a defensible scale/kill decision. Cost: one more quarter of program budget plus a $25K research investment. Benefit: stop debating the program and have data to act on.",
     },
+  },  {
+    id: "prod-i1", domain: "product",
+    finding: "Feature adoption is at 12% after 60 days against a 35% target. However, users who did adopt the feature have a D30 retention rate of 71% — compared to 42% for non-adopters. The feature has been in the product for 60 days with a single in-product tooltip as the only promotion.",
+    context: "B2C mobile app, 2.4M MAU. Feature is a social sharing mechanic. Tooltip appeared on day 3 of the feature launch and is no longer showing to new users.",
+    goldStandard: {
+      insight: "The 12% adoption number is misleading — the feature is not underperforming on value, it's underperforming on discoverability. The 71% vs 42% D30 retention gap (29pp) is one of the largest feature-lift signals in the dataset and is almost certainly causal, not correlational: users who engage with the social feature form habits. The business is leaving a significant retention intervention on the table by not driving adoption.",
+      recommendation: "Run a 30-day discoverability campaign: surface the feature at three additional moments (post-core-action completion, on the user's 7th session, and via a push notification for users who have not discovered it). A/B test contextual prompts vs. control to measure incrementally-driven adoption. Target 40% adoption within 60 days of the campaign.",
+      measurement: "Primary: feature adoption rate (target 40% within 60 days of campaign). Secondary: D30 retention for campaign-driven adopters vs organic adopters (verify the retention lift holds for non-self-selected users). Cut criterion: if campaign-driven adoption shows D30 retention below 60% (vs organic adopter 71%), the lift is partly self-selection and the adoption push has lower value than the organic data suggests.",
+      pitchAnchor: "We have a 29pp retention advantage sitting at 12% adoption because users aren't finding the feature. A targeted discoverability campaign surfacing the feature at three contextual moments should triple adoption within 60 days; if the retention lift holds for campaign-driven adopters, we're looking at a measurable impact on overall platform D30 retention. The only cost is engineering time for the entry points and campaign logic — no new feature investment required.",
+    },
   },
+  {
+    id: "prod-i2", domain: "product",
+    finding: "D7 retention dropped 8 percentage points (from 48% to 40%) in the two cohorts that signed up after a major navigation redesign. D30 retention for pre-redesign cohorts is holding stable at 38%. App Store reviews in the 30 days post-redesign show 'can't find X' and 'where did Y go' mentions increasing 4× over baseline.",
+    context: "Consumer productivity app, 800K MAU. Navigation redesign was driven by a design refresh, not user feedback. The previous nav has been archived but not deleted from the codebase.",
+    goldStandard: {
+      insight: "The redesign introduced new-user-specific navigation friction that is costing 8pp of D7 retention — but because long-tenured users have already learned the product, their retention is unaffected. The 'can't find X' review spike is the causal evidence: new users are abandoning before learning the new navigation, not because the product's core value changed.",
+      recommendation: "Roll back the navigation for new users only (using a feature flag) while maintaining the redesign for existing users, then measure whether new user D7 retention recovers. In parallel, redesign the new-user navigation with contextual onboarding overlays that explicitly map 'where things moved.' Do not roll back for existing users — the redesign is working for them.",
+      measurement: "Primary: D7 retention for new user cohorts on rolled-back navigation vs current redesign (expect 5-8pp recovery). Secondary: App Store review sentiment. Time horizon: 4-week cohort comparison. Cut criterion: if rollback doesn't recover D7 retention by at least 4pp, the navigation isn't the primary driver and a deeper onboarding investigation is needed.",
+      pitchAnchor: "We dropped 8pp of D7 retention because new users can't find features they're looking for in the new navigation. Rolling back for new users while keeping the redesign for existing users — a feature flag, not a re-build — costs one engineering sprint and tests the hypothesis directly. If D7 retention recovers, we have a clear diagnosis and a focused fix. If it doesn't, we've ruled out navigation and can investigate onboarding content instead. The cost of not acting is approximately 8pp of retention per new user cohort, compounding monthly.",
+    },
+  },
+  {
+    id: "prod-i3", domain: "product",
+    finding: "DAU has grown 22% over the past 6 months. However, DAU/MAU stickiness has declined from 38% to 29% in the same period. New user acquisition is up 45% driven by a paid social campaign. Organic acquisition has held flat.",
+    context: "Consumer social app. Paid social campaign launched 6 months ago and is the primary driver of new user growth. Paid social users have D30 retention of 28% vs organic users at 51%.",
+    goldStandard: {
+      insight: "DAU growth is real but the stickiness decline reveals it's built on a leaky foundation. The paid social campaign is flooding the top of the funnel with users who retain at 28% — less than half the rate of organic users — and their presence in MAU is diluting the stickiness ratio. The headline DAU number is growing while the underlying product health is deteriorating.",
+      recommendation: "Cap paid social spend at current levels and redirect new budget toward channels with proven retention (referral program expansion, SEO/content, community-driven acquisition). Set a stickiness recovery target of 34%+ within 3 months as the primary success metric for the acquisition strategy change. Maintain total DAU targets — just shift how they're achieved.",
+      measurement: "Primary: DAU/MAU stickiness ratio (target 34%+ within 90 days). Secondary: blended D30 retention by cohort (must trend toward 40%+). Cut criterion: if stickiness doesn't recover within 60 days of channel shift, the organic channel cannot supply enough volume at the new budget level; revisit the mix at 45% paid social rather than cutting to current levels.",
+      pitchAnchor: "Our DAU growth is masking a retention problem — we're acquiring users at 3× the normal rate who churn at 2× the normal rate, and the stickiness ratio tells that story. Shifting budget from paid social to referral and organic acquisition will slow DAU growth in the short term but rebuild the user base quality that drives LTV and monetization. The tradeoff is 2-3 months of slower headline growth for a durable stickiness recovery. That's the right trade given where we are.",
+    },
+  },
+  {
+    id: "prod-i4", domain: "product",
+    finding: "New user activation rate (first core action completion within 7 days of signup) is 34% — below the 50% target. Users who don't activate by Day 3 have a 4% probability of ever activating. Users who activate by Day 1 have D30 retention of 58%; users who activate on Day 7 have D30 retention of 31%.",
+    context: "B2B SaaS product, onboarding is self-serve. The core action is 'completing the first workflow.' Median time to first workflow completion is 4.2 days for those who eventually complete it.",
+    goldStandard: {
+      insight: "Activation timing is as important as activation itself — a Day 1 completer has 87% higher D30 retention than a Day 7 completer. Combined with the fact that users who don't activate by Day 3 have essentially zero probability of ever doing so, we have a 72-hour window to drive first core action completion, and most users are currently outside that window at 4.2-day median TTV.",
+      recommendation: "Redesign the onboarding flow to drive first workflow completion within 24 hours of signup. Specifically: reduce the steps between signup and first workflow to 3 or fewer, pre-populate a sample workflow users can complete in one click, and send a 'complete your first workflow' email at the 4-hour mark for users who haven't started. Target Day 1 activation rate of 40%.",
+      measurement: "Primary: Day 1 activation rate (target 40% vs current ~18%). Secondary: D30 retention for new cohorts (should shift toward 58% as Day 1 activations grow). Cut criterion: if onboarding redesign doesn't lift Day 1 activation by 10pp within 30 days, the barrier is not UX friction but user intent — the signup flow is attracting users who aren't ready to use the product, which requires a different fix.",
+      pitchAnchor: "We have a 72-hour window to activate new users and we're currently missing it at 4.2-day median TTV. Every day we add to TTV costs us roughly 4pp of D30 retention. Redesigning onboarding to drive Day 1 completion — pre-populated workflow, fewer steps, 4-hour email trigger — is a 3-sprint investment that should lift D30 retention by 8-12pp across all new cohorts. That's the highest-ROI product investment available right now.",
+    },
+  },
+  {
+    id: "prod-i5", domain: "product",
+    finding: "The top 10% of users (by core action frequency) generate 72% of all core actions and have a D365 retention rate of 84%. The bottom 50% of users generate 8% of core actions and have a D365 retention rate of 12%. The product monetizes via a flat subscription fee regardless of usage level.",
+    context: "Consumer productivity app, $9.99/month subscription. 480K paying subscribers. Revenue is flat despite DAU growth because churn is offsetting new subscriptions.",
+    goldStandard: {
+      insight: "The flat subscription model is misaligned with the usage distribution. Power users who generate 72% of value are paying the same as casual users who barely use the product — and casual users are churning at high rates because they can't justify $9.99 for low perceived value. The business is subsidizing a power user base while failing to monetize the high-value segment and churning the low-value segment.",
+      recommendation: "Test a usage-tiered pricing model: a free or lower-cost tier for low-frequency users and a premium tier for power users with additional features (advanced analytics, priority support, API access). Power users who generate 72% of engagement will likely accept premium pricing; casual users on a free/lower tier will have less reason to churn. This both reduces churn and opens a revenue upside with power users.",
+      measurement: "Primary: overall subscriber churn rate (target reduction from current level by 4pp within 6 months). Secondary: ARPU (Average Revenue Per User — should increase as power users move to premium). Cut criterion: if power user upgrade rate to premium is below 30%, the pricing differential isn't compelling enough; adjust the premium feature set before scaling the rollout.",
+      pitchAnchor: "We have 84%-retained power users paying the same $9.99 as 12%-retained casual users. Tiered pricing fixes both problems simultaneously: casual users get a lower-cost tier that reduces churn from 'can't justify the price,' and power users get a premium tier that captures revenue proportional to the value they're extracting. The risk is some power users downgrade instead of upgrading — we mitigate that by making the premium tier genuinely valuable for their use case. Revenue impact depends on the split, but even a 25% power user upgrade rate at $19.99 is meaningfully accretive.",
+    },
+  },
+  {
+    id: "prod-i6", domain: "product",
+    finding: "Push notification CTR has declined from 6.2% to 3.1% over 8 months. During the same period, notification send volume per user increased 2.4× as the team added new notification types. Opt-out rate has increased from 3.8% to 7.4% per month.",
+    context: "Consumer mobile app, 1.8M MAU. Push notifications drive approximately 28% of daily sessions. Current notification strategy: 6-8 notifications per user per week across 4 notification types.",
+    goldStandard: {
+      insight: "The notification program is in a death spiral: higher send volume drove lower CTR (notification fatigue), which drove higher opt-out rates, which will reduce DAU as opted-out users lose their primary re-engagement trigger. At 7.4% monthly opt-out, the opted-in user base will shrink 55% in 12 months if the trend continues — representing a structural threat to DAU.",
+      recommendation: "Implement a notification frequency cap of 3 per user per week and a relevance filter that only sends notifications with predicted CTR above 4% (based on user behavior and notification type). Retire the two lowest-CTR notification types entirely. Monitor opt-out rate weekly as the primary success metric — it should recover within 4-6 weeks of volume reduction.",
+      measurement: "Primary: monthly opt-out rate (target return to 4% within 60 days). Secondary: DAU from notification-driven sessions (must not decline more than 10% — frequency reduction will reduce absolute sessions but should improve per-notification CTR enough to partially offset). Cut criterion: if opt-out rate doesn't respond to volume reduction within 30 days, the problem is notification content quality, not volume.",
+      pitchAnchor: "We doubled notification volume and halved CTR — the data shows exactly the elasticity point where more became less. At current opt-out rates, half our notification audience is gone in 12 months and we lose 28% of daily sessions with them. Cutting volume by 60% and retiring the lowest-CTR types will reduce absolute notification sessions in the short term but stabilize the opt-in base that drives long-term DAU. The tradeoff is accepting a 10-15% short-term DAU dip to prevent a 25-30% structural decline. That's not a hard tradeoff.",
+    },
+  },
+  {
+    id: "prod-i7", domain: "product",
+    finding: "K-factor has declined from 0.7 to 0.2 over two quarters. Decomposed: invitation send rate per active user dropped from 0.9 invitations per week to 0.3, while invitation-to-signup conversion rate held stable at 22%. A referral incentive change (from $20 cash to a 1-month free subscription) was made at the start of the decline period.",
+    context: "B2C subscription app, $14.99/month. Referral program previously contributed 18% of new user acquisition.",
+    goldStandard: {
+      insight: "The K-factor decline is entirely driven by the incentive change — conversion rate held, which rules out a landing page or product value problem. Changing the incentive from $20 cash (universally valuable) to a 1-month subscription (valuable only to users who plan to stay) reduced invitation send rate by 67%. The incentive change implicitly selected for a different type of referrer: users who are confident they'll keep the subscription, rather than all users who want $20.",
+      recommendation: "Restore a cash incentive option ($15-20) as the primary referral reward, or test a hybrid: users can choose between $15 cash or 2 months free (to capture both preferences). A/B test the hybrid vs cash-only against the current subscription-only incentive, measuring both send rate and referred user LTV (cash-incentivized referrers may import lower-quality users who wanted the cash, not the product).",
+      measurement: "Primary: K-factor (target recovery to 0.6+ within 60 days of incentive change). Secondary: D30 retention of referred users per incentive type (cash vs subscription incentive — verify quality holds with cash incentive). Cut criterion: if referred user D30 retention drops below 35% with cash incentive (vs the stable 22% conversion rate suggesting solid intent), the cash incentive is importing poor-quality users; keep subscription incentive but add a free trial extension as the cash alternative.",
+      pitchAnchor: "We cut K-factor by 70% with an incentive change that saved roughly $2 per referred user in incentive cost while costing us 15% of new acquisition volume. The math doesn't work. Restoring a cash equivalent incentive should recover K-factor within 60 days; if referred user quality holds, the acquisition cost savings from viral growth far exceed the incentive cost increase. The only question we need to answer is whether cash-incentivized referrers bring lower-quality users — that's a 30-day A/B test, not a debate.",
+    },
+  },
+
 ];
 
 // ── MODE 4 COMPONENT ───────────────────────────────────────────────────────
