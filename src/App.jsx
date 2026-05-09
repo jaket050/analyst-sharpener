@@ -6039,6 +6039,7 @@ const INTEL_SUBMODES = [
   { id: "dashboard", label: "📊 Dashboard Drill", description: "60-sec timed reading" },
   { id: "problem",   label: "🧩 Problem to Metric", description: "Diagnostic reasoning" },
   { id: "insight",   label: "💡 Insight & Rec",    description: "Recommendation framing" },
+  { id: "abtest",    label: "🧪 A/B Test",          description: "Experiment analysis" },
 ];
 
 // ── MODE 4: INSIGHT & RECOMMENDATION ───────────────────────────────────────
@@ -6815,6 +6816,793 @@ Plain text only, no markdown. Be honest and discriminating — don't grade lenie
   );
 }
 
+// ── SESSION 7: A/B TESTING & EXPERIMENTATION MODE ─────────────────────────
+// New sub-mode under Intel. Format: experiment results presented → user makes
+// ship/no-ship decision with structured reasoning. AI grades on 5 dimensions:
+//   1. Statistical validity (significance, sample size, power)
+//   2. Practical significance (effect size meaningful?)
+//   3. Segment analysis (heterogeneous treatment effects?)
+//   4. Threat identification (SRM, novelty, peeking, network effects)
+//   5. Ship recommendation quality (clear, actionable, names tradeoffs)
+
+const AB_TEST_SCENARIOS = [
+  // RETAIL / E-COMMERCE — 3 scenarios
+  {
+    id: "ab-retail-1", domain: "retail",
+    hypothesis: "Adding a 'free shipping at $75' progress bar in the cart will increase Average Order Value by motivating customers to add more items.",
+    setup: "DTC apparel brand, 14-day test on desktop and mobile cart pages. Treatment shows progress bar; control shows current cart UI.",
+    metrics: {
+      treatment: { users: 48420, conversion: "3.8%", aov: "$84.20", revenue_per_user: "$3.20" },
+      control:   { users: 48180, conversion: "3.6%", aov: "$72.10", revenue_per_user: "$2.60" },
+    },
+    results: "Conversion rate: +0.2pp (p=0.18, not significant). AOV: +$12.10 (p<0.001). Revenue per user: +$0.60 (p<0.001). 95% CI on revenue per user lift: [+$0.42, +$0.78].",
+    segments: "Mobile users: +$0.85 lift (p<0.001). Desktop users: +$0.21 lift (p=0.12). New customers: +$1.20 lift. Returning customers: +$0.32 lift.",
+    redFlags: "Test ran during a 14-day window that included a promotional weekend (BOGO sale on accessories). Sample sizes balanced across treatment and control.",
+    goldStandard: {
+      validity: "Statistically valid on the primary metric (revenue per user, p<0.001 with tight CI). Conversion rate is not significant but that's not the primary metric. Sample sizes are balanced. The 14-day duration is adequate for AOV measurement.",
+      practical: "Practically significant — $0.60 incremental revenue per user across the user base translates to substantial annual revenue. The AOV lift of $12.10 (+17%) is meaningful for a free shipping intervention.",
+      segmentation: "Heterogeneous treatment effects are present: mobile users drive most of the lift, desktop users show no significant effect. This suggests the progress bar is more visible/impactful on mobile screens. Ship decision should account for this — possibly mobile-only rollout while we investigate desktop UX.",
+      threats: "The promotional weekend (BOGO accessories) is a confound that may have inflated AOV in both treatment and control. Verify the AOV lift is not driven by promotional purchases by re-running analysis with promo orders excluded. Also verify Sample Ratio Match (SRM) is healthy — a 0.5% SRM difference at this sample size warrants a check.",
+      shipDecision: "Ship for mobile users with a follow-up test on desktop using a more prominent visual treatment. Validate AOV lift holds when promo orders are excluded. Set guardrail metric: customer return rate (free shipping incentivizes ordering items customers may return).",
+    },
+  },
+  {
+    id: "ab-retail-2", domain: "retail",
+    hypothesis: "Replacing the 'Sign up for 10% off' homepage modal with a 'Sign up to track your order' modal will increase email capture rate without harming conversion.",
+    setup: "DTC home goods, 21-day test on homepage. Treatment: order-tracking modal. Control: existing 10%-off modal. Both modals exit-intent triggered.",
+    metrics: {
+      treatment: { users: 142000, email_signup: "12.4%", purchase_conversion: "2.1%", revenue_per_session: "$1.42" },
+      control:   { users: 141200, email_signup: "18.2%", purchase_conversion: "2.6%", revenue_per_session: "$1.78" },
+    },
+    results: "Email signup: -5.8pp (p<0.001). Purchase conversion: -0.5pp (p<0.001). Revenue per session: -$0.36 (p<0.001). 95% CI on revenue per session: [-$0.48, -$0.24].",
+    segments: "All segments showed negative effects. Magnitude consistent across new vs returning visitors and across desktop vs mobile.",
+    redFlags: "Treatment showed expected behavior (lower signup, lower conversion) consistent with removing the discount incentive. No SRM issues. No anomalous segment patterns.",
+    goldStandard: {
+      validity: "Statistically valid. Sample sizes adequate, p-values strong, confidence intervals tight. The negative effect is real and measurable across all primary metrics.",
+      practical: "Practically significant in the wrong direction. A $0.36 revenue per session decline at this traffic volume translates to substantial revenue loss. Email signup dropping nearly 6pp eliminates a major top-of-funnel input.",
+      segmentation: "No heterogeneous treatment effects — every segment performed worse with the order-tracking modal. This is consistent with the discount being the primary driver of value perception, not the modal copy itself.",
+      threats: "No methodological threats identified. Test was clean. The hypothesis was simply wrong.",
+      shipDecision: "Do not ship. The order-tracking modal underperforms the discount modal on every metric. The hypothesis (that order-tracking utility would replace discount appeal) is rejected. Consider a different test: a hybrid modal offering both (10% off + order tracking) to see if utility adds incremental value on top of the discount.",
+    },
+  },
+  {
+    id: "ab-retail-3", domain: "retail",
+    hypothesis: "Adding social proof badges ('Bestseller', 'Trending Now') to product tiles will increase click-through rate from category pages.",
+    setup: "Specialty retail, 30-day test on category pages. Treatment: top 25% of products by sales velocity show badges. Control: no badges.",
+    metrics: {
+      treatment: { users: 86200, ctr: "11.2%", purchase_conversion: "2.8%", revenue_per_user: "$4.20" },
+      control:   { users: 85900, ctr: "9.8%", purchase_conversion: "2.4%", revenue_per_user: "$3.60" },
+    },
+    results: "CTR: +1.4pp (p<0.001). Purchase conversion: +0.4pp (p<0.001). Revenue per user: +$0.60 (p<0.001). Effect appeared to grow over the 30-day window — early results showed +0.8pp CTR, late results showed +1.8pp.",
+    segments: "All segments showed positive effects. Effect was largest for users on first session (no prior history). Returning users with purchase history showed smaller (but still positive) effect.",
+    redFlags: "Effect magnitude grew across the 30-day window from +0.8pp to +1.8pp. The badges were applied to top-velocity products, but velocity itself shifts as the badges drive more clicks (feedback loop).",
+    goldStandard: {
+      validity: "Statistically valid on the primary metrics. Sample sizes adequate. However, the growing effect over time is a methodological flag.",
+      practical: "Practically significant lift across all primary metrics. CTR up 14% relative, revenue per user up 17%. These are meaningful gains.",
+      segmentation: "The largest effect is on first-session users, which is consistent with social proof being most impactful when users have no other signal. Returning users have their own purchase history and rely less on badges. This is a reasonable and expected pattern.",
+      threats: "The growing effect over time is the key threat. As badges drive more clicks to badged products, those products' velocity increases further, reinforcing the badge selection. This is a positive feedback loop, not a stable treatment effect. The 'real' steady-state lift may be lower than the late-test measurement suggests. Also: novelty effect could be inflating early clicks (users investigating something new in the UI).",
+      shipDecision: "Ship, but recalibrate the velocity calculation to lag the test period (use velocity from 30 days BEFORE the test to assign badges, then re-evaluate after 60 days). Set guardrail metric: long-tail product visibility — if all clicks concentrate on the top 25%, the bottom 75% may suffer revenue declines that offset the headline lift.",
+    },
+  },
+
+  // HEALTHCARE — 3 scenarios
+  {
+    id: "ab-hc-1", domain: "healthcare",
+    hypothesis: "Sending appointment reminders 7 days before AND 24 hours before (vs 24 hours only) will reduce no-show rate for new-patient appointments.",
+    setup: "Multi-specialty clinic, 60-day test on new-patient appointments booked 14+ days in advance. Treatment: 7-day + 24-hour reminders. Control: 24-hour only.",
+    metrics: {
+      treatment: { appointments: 4280, no_shows: "21.4%", on_time_arrival: "62.1%", reschedules_72hr: "8.2%" },
+      control:   { appointments: 4310, no_shows: "27.8%", on_time_arrival: "58.4%", reschedules_72hr: "4.1%" },
+    },
+    results: "No-show rate: -6.4pp (p<0.001). On-time arrival: +3.7pp (p=0.02). Reschedule rate (72hr+ before appt): +4.1pp (p<0.001). Net appointment fill rate (no-show + last-minute cancel): -2.1pp (p=0.04).",
+    segments: "Effect concentrated in patients booked 14-21 days in advance. Patients booked 22+ days in advance showed minimal effect. New patients showed larger effect than returning patients.",
+    redFlags: "Reschedule rate increased significantly. Many of the 'saved' no-shows became reschedules — the slot is technically filled later but the original slot still went unused short-term.",
+    goldStandard: {
+      validity: "Statistically valid on the primary metric (no-show rate, p<0.001). Sample sizes adequate. Test duration appropriate for new-patient appointment cycle.",
+      practical: "6.4pp reduction in no-show rate is meaningful — at typical new-patient appointment values ($240+), this represents significant recovered revenue. However, the 4.1pp increase in reschedules partially offsets the impact on appointment slot utilization.",
+      segmentation: "The 14-21 day booking window shows the strongest effect, suggesting the 7-day reminder hits at the right cognitive distance. Patients booked further out may need different reminder cadence (perhaps 14-day + 7-day + 24-hour).",
+      threats: "The reschedule increase is a real threat. The treatment may not be reducing no-shows as much as it's converting no-shows into earlier reschedules — same outcome for the original slot, just better-known to the schedulers. The TRUE metric is appointment slot utilization (was the original slot filled or not), which only improved 2.1pp net.",
+      shipDecision: "Ship the 7-day reminder, but with awareness that the 'win' is smaller than the headline no-show number suggests. The real benefit is operational predictability (reschedules with notice are easier to fill than no-shows). Set guardrail metric: provider productivity — if reschedules cluster at undesirable times, provider utilization may suffer. Consider testing a same-day-fill list to capture released reschedule slots.",
+    },
+  },
+  {
+    id: "ab-hc-2", domain: "healthcare",
+    hypothesis: "Redesigning the patient portal homepage to lead with 'View Test Results' (vs current 'Schedule Appointment') will increase test result viewing rate within 7 days of result posting.",
+    setup: "Health system patient portal, 45-day test. Treatment: redesigned homepage. Control: existing homepage. Random assignment at user level.",
+    metrics: {
+      treatment: { users: 28400, results_viewed_7day: "62.4%", appointments_scheduled: "8.2%", portal_logins: "2.4 per user" },
+      control:   { users: 28100, results_viewed_7day: "44.1%", appointments_scheduled: "11.8%", portal_logins: "1.9 per user" },
+    },
+    results: "Test results viewed within 7 days: +18.3pp (p<0.001). Appointments scheduled: -3.6pp (p<0.001). Portal logins: +0.5 per user (p<0.001).",
+    segments: "Patients with recent (last 30 days) lab work showed largest results-viewing lift. Patients with chronic conditions showed appointment-scheduling decline more sharply than acute-care patients.",
+    redFlags: "Appointment scheduling decreased significantly. Treatment may be solving one problem (results viewing) while creating another (appointment booking friction).",
+    goldStandard: {
+      validity: "Statistically valid on both primary metrics. Sample sizes adequate. The conflicting directions of the two metrics are real, not noise.",
+      practical: "Practically significant in both directions. The +18.3pp results viewing lift is a major patient experience win. The -3.6pp appointment scheduling decline is a real revenue and care-coordination concern.",
+      segmentation: "Chronic condition patients showing sharper appointment decline is concerning — this population needs regular follow-up scheduling, and any friction here has clinical implications, not just operational ones.",
+      threats: "This is a textbook tradeoff: optimizing for one user task at the expense of another. The redesigned homepage promotes one action by demoting another. There's no methodological threat — the data is clean — but the decision needs to weigh patient experience (better results visibility) against operational and clinical needs (appointment scheduling for chronic patients).",
+      shipDecision: "Do not ship as-is. The 3.6pp drop in appointment scheduling is a meaningful clinical and revenue concern, particularly concentrated in chronic patients. Iterate on the design: maintain the results-viewing prominence but add a persistent appointment-scheduling shortcut that doesn't require deeper navigation. Re-test the modified design. The hypothesis (that results visibility would improve) was correct; the implementation created an unintended consequence.",
+    },
+  },
+  {
+    id: "ab-hc-3", domain: "healthcare",
+    hypothesis: "Replacing physician-led discharge education with a video-based discharge module will reduce 30-day readmission rate for CHF patients by improving education consistency.",
+    setup: "Hospital cardiology unit, 90-day test. Treatment (n=420): video-based discharge education + nurse Q&A. Control (n=410): standard physician-led discharge. Patients randomized at admission.",
+    metrics: {
+      treatment: { patients: 420, readmit_30day: "16.2%", patient_satisfaction: "4.2/5", discharge_time: "28 min avg" },
+      control:   { patients: 410, readmit_30day: "18.1%", patient_satisfaction: "4.4/5", discharge_time: "42 min avg" },
+    },
+    results: "30-day readmission: -1.9pp (p=0.34, not significant). Patient satisfaction: -0.2 (p=0.08). Discharge time: -14 minutes (p<0.001).",
+    segments: "English-speaking patients showed -3.4pp readmit reduction (closer to significance). Spanish-speaking patients showed +2.1pp readmit increase (not significant individually due to smaller sample). Patients 65+ showed worse outcomes than patients under 65.",
+    redFlags: "Sample size of 830 patients is small for detecting modest readmit rate differences. The Spanish-speaking patient subgroup may have been disadvantaged by video module language coverage. Patients 65+ comprise the bulk of CHF cases.",
+    goldStandard: {
+      validity: "Not statistically valid on the primary metric (readmit rate, p=0.34). Sample size is underpowered to detect a 2pp difference in readmit rate — would need ~3,000 patients per arm for adequate power. The discharge time finding is statistically valid but secondary.",
+      practical: "The 1.9pp readmit reduction would be practically meaningful IF it were real. With p=0.34 and small sample, we cannot conclude this is anything but noise. The 14-minute discharge time saving is operationally meaningful but not the primary outcome.",
+      segmentation: "The Spanish-speaking subgroup pattern is a serious equity concern. Even though individually not significant, the directional difference (treatment worse for Spanish-speaking, better for English-speaking) suggests the video module may have language coverage or cultural appropriateness issues. The 65+ population showing worse outcomes is also concerning since they're the primary CHF population.",
+      threats: "Underpowered study (small sample, large variance in readmit rates). Heterogeneous treatment effects suggest the intervention works for some populations and may harm others. Patient satisfaction directionally lower in treatment, suggesting discharged patients felt less supported.",
+      shipDecision: "Do not ship. The primary endpoint did not meet statistical significance, and concerning subgroup patterns (Spanish-speaking, 65+) suggest the intervention may not be safe for the broader CHF population. Iterate: improve language coverage of video module, then re-test with larger sample size powered to detect a 2pp readmit rate difference (~3,000 patients per arm). The 14-minute discharge time saving is real but does not justify the equity risk.",
+    },
+  },
+
+  // FINANCE — 3 scenarios
+  {
+    id: "ab-fin-1", domain: "finance",
+    hypothesis: "Simplifying the credit card application form from 14 fields to 8 fields (with optional fields hidden behind 'Show more') will increase completion rate without harming approval rate.",
+    setup: "Credit card issuer, 30-day test on the online application page. Treatment: 8-field form. Control: 14-field form. New applicants only.",
+    metrics: {
+      treatment: { applicants: 24800, completion: "61.2%", approved: "32.4%", first_3mo_default: "1.8%" },
+      control:   { applicants: 24600, completion: "48.4%", approved: "34.1%", first_3mo_default: "1.4%" },
+    },
+    results: "Completion rate: +12.8pp (p<0.001). Approval rate among completers: -1.7pp (p=0.02). First-90-day default rate: +0.4pp (p=0.04).",
+    segments: "Completion lift was consistent across all credit score bands. Default rate increase was concentrated in the 580-650 credit score band (+1.8pp default vs +0.1pp default in 750+ score band).",
+    redFlags: "First-90-day default rate is a leading indicator of long-term default. The 0.4pp increase is small in absolute terms but represents 28% relative increase. The simplified form may be capturing applicants who provided less reliable self-reported data, hurting approval model accuracy.",
+    goldStandard: {
+      validity: "Statistically valid on all three metrics. Sample sizes adequate. Test duration appropriate for completion and short-term default measurement.",
+      practical: "Completion lift is practically significant — 12.8pp more completed applications represents substantial top-of-funnel growth. However, the default rate increase is also practically significant: a 28% relative increase in early defaults at credit card scale translates to material loss provisions.",
+      segmentation: "The default rate concentration in the 580-650 credit band is the critical finding. Removing fields means the underwriting model has less data to make accurate decisions, and the impact is largest where the model is most marginal — the subprime band. Higher credit scores are robust to less data; lower scores are not.",
+      threats: "The 90-day default rate is a leading indicator only. The TRUE 18-24 month default rate is what matters for unit economics, and 30-day data is too early to know that. Unit economics impact of the trade (more applications × lower-quality applications) needs full lifecycle modeling.",
+      shipDecision: "Do not ship without modification. Net unit economics are likely negative once full default cycle plays out — the 28% relative default increase, even if only 0.4pp absolute, will erode the gains from higher completion. Iterate: simplify the form for prime applicants (700+ credit score) but maintain the 14-field form for subprime applicants where the model needs more data. Re-test segmented form with proper unit economics modeling.",
+    },
+  },
+  {
+    id: "ab-fin-2", domain: "finance",
+    hypothesis: "Adding a 'Round up to the nearest dollar' savings option at checkout will increase the percentage of customers who enable automatic savings.",
+    setup: "Mobile banking app, 21-day test on checkout flow. Treatment: round-up option visible at every transaction. Control: existing flow without round-up.",
+    metrics: {
+      treatment: { users: 84200, savings_enrollment: "12.4%", checkout_completion: "94.1%", session_length: "3.2 min" },
+      control:   { users: 83800, savings_enrollment: "3.2%", checkout_completion: "94.8%", session_length: "2.9 min" },
+    },
+    results: "Savings enrollment: +9.2pp (p<0.001). Checkout completion: -0.7pp (p=0.04). Session length: +0.3 min (p<0.001).",
+    segments: "Largest enrollment increase among users 25-34. Users 55+ showed lower enrollment lift but higher checkout completion impact (-1.4pp). Users with existing automatic savings showed no effect (already opted in).",
+    redFlags: "Checkout completion declined slightly, particularly among older users. Some users may be confused or distracted by the new option, leading to abandoned transactions. Session length increase suggests added friction.",
+    goldStandard: {
+      validity: "Statistically valid on all metrics. Sample sizes adequate. Checkout completion decline is small but real (p=0.04, tight CI).",
+      practical: "Savings enrollment lift is dramatic (+287% relative) — this is a meaningful behavior change at scale. The 0.7pp checkout completion decline is small but at high transaction volume represents real lost revenue.",
+      segmentation: "Users 55+ showing higher checkout abandonment is a usability concern. The intervention is working as intended for younger users (savings enrollment) but creating friction for older users (checkout completion).",
+      threats: "Long-term retention of round-up enrollment is unknown — users who enable on impulse may disable when they see savings accumulate slowly. Default behavior may decay. Also: are users actually saving more, or just routing money differently? Need to validate that round-up savings is incremental savings, not displacing other savings behaviors.",
+      shipDecision: "Ship with a UX iteration: make the round-up option more dismissible for users who don't want it, particularly on mobile (where the friction was largest). The savings enrollment gain dramatically outweighs the checkout completion loss in user-value terms. Set guardrail metrics: 90-day round-up enrollment retention rate (target 60%+), and incremental total savings per enrolled user (verify this is new savings, not displaced).",
+    },
+  },
+  {
+    id: "ab-fin-3", domain: "finance",
+    hypothesis: "Adding personalized financial insights ('You spent 23% more on dining this month than last month') to the account dashboard will increase weekly active user rate.",
+    setup: "Personal finance app, 60-day test. Treatment: 3-5 personalized insights on dashboard, refreshed weekly. Control: existing dashboard.",
+    metrics: {
+      treatment: { users: 42100, weekly_active: "58.4%", session_frequency: "4.2 per week", subscription_churn: "2.4%/mo" },
+      control:   { users: 41800, weekly_active: "44.2%", session_frequency: "3.1 per week", subscription_churn: "3.1%/mo" },
+    },
+    results: "Weekly active rate: +14.2pp (p<0.001). Session frequency: +1.1 per week (p<0.001). Monthly subscription churn: -0.7pp (p=0.02). Effect was strongest in weeks 1-3, declined in weeks 4-8 but stayed positive.",
+    segments: "Power users (top 20% by historical engagement) showed largest absolute lift. New users (under 30 days tenure) showed modest lift but had lower baseline. Users with under 3 connected accounts showed almost no effect (insights were thin).",
+    redFlags: "Effect declining over time is consistent with novelty effect — the 'wow' of new insights wears off as users see similar patterns repeatedly. The week 1-3 vs week 4-8 gap suggests steady-state effect may be smaller than the headline.",
+    goldStandard: {
+      validity: "Statistically valid on all metrics. The 60-day duration is sufficient to begin assessing novelty decay. Sample sizes adequate.",
+      practical: "Practically significant on every metric. Even if the steady-state effect is half the headline, +7pp WAU and -0.35pp churn are meaningful for a personal finance app where engagement drives retention drives revenue.",
+      segmentation: "The thin-data segment (under 3 accounts) is a clear UX issue — insights need data to be insightful. Power user lift is expected (they engage more, get more insights). New user effect is muted because they don't have spending history to compare against. The product needs different mechanics for users with less data history.",
+      threats: "Novelty effect is the primary threat. Week 4-8 effect was smaller than week 1-3, and the trend may continue. A 90-day or 180-day re-measurement is needed to find steady-state effect. Also: insights are based on month-over-month comparisons — what happens in months where spending is unusually flat (no insights to surface)?",
+      shipDecision: "Ship with two modifications: (1) gracefully handle low-data users by showing different content or onboarding-style guidance, and (2) commit to a 90-day post-launch re-measurement to confirm steady-state lift. The headline gains are large enough that even a 50% novelty discount still leaves practical significance. Set guardrail metric: insight relevance feedback (in-app rating per insight) to detect when insight quality decays.",
+    },
+  },
+
+  // OPERATIONS / SUPPLY CHAIN — 3 scenarios
+  {
+    id: "ab-ops-1", domain: "operations",
+    hypothesis: "Switching from time-based to volume-based dispatch routing for last-mile delivery drivers will reduce average delivery time per stop.",
+    setup: "Last-mile delivery network, 30-day test in 4 metro markets. Treatment: routes optimized for volume density. Control: existing time-windowed routes. Randomization at driver-day level.",
+    metrics: {
+      treatment: { driver_days: 1840, avg_stops_per_route: "62.4", delivery_time_per_stop: "8.2 min", on_time_delivery: "88.4%", driver_overtime: "6.2%" },
+      control:   { driver_days: 1820, avg_stops_per_route: "58.1", delivery_time_per_stop: "9.8 min", on_time_delivery: "91.2%", driver_overtime: "4.1%" },
+    },
+    results: "Stops per route: +4.3 (p<0.001). Delivery time per stop: -1.6 min (p<0.001). On-time delivery: -2.8pp (p=0.02). Driver overtime: +2.1pp (p<0.001).",
+    segments: "Suburban routes showed largest improvement in stops per route. Urban routes showed degraded on-time delivery (-5.4pp). Rural routes showed mixed results.",
+    redFlags: "On-time delivery decline is concerning — the routing optimization may be packing routes too densely, causing late deliveries when any disruption occurs. Driver overtime increased.",
+    goldStandard: {
+      validity: "Statistically valid on all primary metrics. Sample sizes (driver-days) adequate for the test duration.",
+      practical: "Stops per route up 7.4% relative is operationally significant. Delivery time per stop down 16% is also meaningful. However, the on-time delivery decline (-2.8pp) and driver overtime increase (+2.1pp) are real costs that offset the efficiency gains.",
+      segmentation: "Urban route degradation is the critical finding. The volume-based routing assumes consistent stop times, but urban routes have higher variance (traffic, parking, building access) that breaks the optimization. The intervention works for suburban density but fails in urban complexity.",
+      threats: "Test duration of 30 days may not capture seasonal effects (weather, traffic patterns). Driver fatigue from overtime is a leading indicator of safety incidents and turnover that won't show in 30 days. Customer complaints about late deliveries may show up later in NPS or churn.",
+      shipDecision: "Ship for suburban and rural routes only. Do not ship for urban routes — the on-time delivery decline and overtime cost likely exceed the efficiency gains there. For urban routes, develop a hybrid model that incorporates traffic variance and stop-time uncertainty into the routing algorithm. Set guardrail metrics: customer complaints, driver turnover, and safety incident rate (90-day post-launch).",
+    },
+  },
+  {
+    id: "ab-ops-2", domain: "operations",
+    hypothesis: "Adding a 'Express Pickup' option for high-frequency wholesale customers will reduce loading dock wait time and increase wholesale order frequency.",
+    setup: "Distribution center serving wholesale customers, 60-day test. Treatment: top 20% of wholesale customers by order frequency get Express Pickup lane access. Control: standard pickup process.",
+    metrics: {
+      treatment: { customers: 142, avg_wait_time: "18 min", weekly_orders: "3.4", on_time_pickup: "94.2%", customer_satisfaction: "4.6/5" },
+      control:   { customers: 138, avg_wait_time: "47 min", weekly_orders: "2.8", on_time_pickup: "82.1%", customer_satisfaction: "4.1/5" },
+    },
+    results: "Wait time: -29 min (p<0.001). Weekly orders: +0.6 (p<0.001). On-time pickup: +12.1pp (p<0.001). Customer satisfaction: +0.5 (p<0.001).",
+    segments: "All segments showed positive effects. Largest absolute improvement among customers placing 5+ orders/week. Smallest absolute improvement among customers placing 1-2 orders/week (smaller baseline volume).",
+    redFlags: "What about the impact on customers NOT in the Express Pickup tier? The control group's wait time was 47 minutes — much higher than the treatment's 18 minutes — suggesting non-tier customers may experience longer waits when Express Pickup customers bypass the queue.",
+    goldStandard: {
+      validity: "Statistically valid on the treatment group's primary metrics. However, the test design did not measure the spillover effect on the non-Express Pickup customer base, which is a critical gap.",
+      practical: "Practically significant gains for the treatment group. 29-minute wait time reduction is operationally meaningful. 0.6 additional orders per week per customer translates to 21% volume increase from this segment.",
+      segmentation: "The fact that all treatment segments benefited is good. But the more important segmentation question is the population NOT included in the test — the bottom 80% of wholesale customers who may be experiencing degraded service.",
+      threats: "Major threat: this is a queue-jumping intervention, and the win for treatment customers may come at the cost of control customers. The control group wait time of 47 minutes (vs treatment's 18 minutes) hints at this — but the test wasn't designed to measure it. Need to compare control group wait time pre-test vs during-test to see if it degraded.",
+      shipDecision: "Ship pending one validation: pull pre-test data on average wait time for the bottom 80% of customers and compare to during-test data. If their wait times degraded materially (more than 10 minutes), the gain for top customers is partly extracted from the rest. Mitigate by: (1) capping Express Pickup capacity so it doesn't fully consume dock resources, or (2) tiering benefits more granularly. Set guardrail metric: total dock throughput (sum across all customers) — must not decline.",
+    },
+  },
+  {
+    id: "ab-ops-3", domain: "operations",
+    hypothesis: "Replacing paper-based picking lists with handheld scanner-guided picking will reduce picking errors and increase units-per-labor-hour.",
+    setup: "DTC fulfillment center, 45-day test. Treatment: handheld scanners for selected pickers (n=42). Control: paper picking lists (n=44). Pickers randomized at start of test.",
+    metrics: {
+      treatment: { pickers: 42, units_per_hour: "112", pick_accuracy: "99.6%", training_completion: "98%", picker_satisfaction: "3.8/5" },
+      control:   { pickers: 44, units_per_hour: "98", pick_accuracy: "99.1%", training_completion: "100%", picker_satisfaction: "4.2/5" },
+    },
+    results: "Units per hour: +14 (p<0.001). Pick accuracy: +0.5pp (p=0.04). Training completion: -2pp (p=0.18). Picker satisfaction: -0.4 (p=0.01).",
+    segments: "Experienced pickers (180+ days tenure) showed largest productivity lift. New pickers (under 30 days tenure) showed minimal improvement and lowest satisfaction with handheld system.",
+    redFlags: "Picker satisfaction declined significantly with handheld scanners. New pickers struggled with the technology. Two pickers in the treatment group dropped out of the test mid-way (data excluded but pattern noted).",
+    goldStandard: {
+      validity: "Statistically valid on the productivity and accuracy metrics. Sample size (86 pickers) is adequate for individual-level metrics. Drop-out of two treatment pickers is a methodological concern — were they removed for performance or did they refuse the technology?",
+      practical: "14% productivity lift is operationally significant — at fulfillment center scale this translates to meaningful labor cost savings. 0.5pp accuracy improvement is practically meaningful given the cost of pick errors (returns, customer complaints).",
+      segmentation: "New picker satisfaction and productivity gap is concerning. The technology has a learning curve that may extend beyond the 45-day test window. Long-term productivity depends on both experienced pickers (who benefit) and new pickers (who currently struggle).",
+      threats: "Picker satisfaction decline could lead to higher turnover. Turnover at fulfillment centers is already high — making the job worse for pickers may have downstream cost (retraining, productivity ramp time). The two drop-outs are a signal that warrants investigation.",
+      shipDecision: "Ship with a phased rollout: experienced pickers first, then new pickers after 60-day training program designed for the handheld system. Address picker satisfaction directly — ergonomics, training quality, and the option to switch back to paper for difficult orders. Set guardrail metrics: picker turnover rate (90-day post-launch), and average time-to-productivity for new pickers (must not increase significantly).",
+    },
+  },
+
+  // MARKETING — 3 scenarios
+  {
+    id: "ab-mkt-1", domain: "marketing",
+    hypothesis: "Subject lines that include the recipient's first name will increase email open rate compared to subject lines without personalization.",
+    setup: "DTC retailer, 14-day test on weekly newsletter. Treatment: 'Sarah, your weekly drop is here'. Control: 'Your weekly drop is here'. Random A/B at send.",
+    metrics: {
+      treatment: { sent: 482000, open_rate: "24.1%", click_rate: "3.2%", unsubscribe_rate: "0.18%", revenue_per_send: "$0.42" },
+      control:   { sent: 481000, open_rate: "23.4%", click_rate: "3.1%", unsubscribe_rate: "0.14%", revenue_per_send: "$0.41" },
+    },
+    results: "Open rate: +0.7pp (p=0.04). Click rate: +0.1pp (p=0.62). Unsubscribe rate: +0.04pp (p=0.03). Revenue per send: +$0.01 (p=0.71).",
+    segments: "Newer subscribers (under 90 days) showed +1.4pp open rate lift. Long-tenured subscribers (1+ year) showed -0.2pp open rate (slightly negative). Effect was negligible across all click and revenue metrics.",
+    redFlags: "Statistically significant on open rate but the magnitude is tiny. Unsubscribe rate increased (also significant). Effect on click rate and revenue is essentially zero.",
+    goldStandard: {
+      validity: "Statistically valid on open rate and unsubscribe rate (the two significant findings). Click rate and revenue per send are not significantly different. With sample sizes this large, even tiny differences become statistically significant — this is the classic case where statistical significance does not imply practical significance.",
+      practical: "Open rate lift is so small (+0.7pp on a 23.4% baseline = +3% relative) and revenue per send is essentially flat. The unsubscribe rate increase, while small, is concerning for long-term list health. Personalization is widely overestimated as a lift driver.",
+      segmentation: "The segment story is more interesting than the headline: new subscribers like personalization, long-tenured subscribers slightly dislike it. This pattern suggests personalization feels intrusive when the subscriber-brand relationship has been impersonal — a 'you don't know me, why are you using my name' reaction.",
+      threats: "Apple Mail Privacy Protection inflates open rate measurement. Some 'opens' may be automated proxy fetches that don't reflect actual engagement. Click rate is more honest, and click rate didn't move at all.",
+      shipDecision: "Do not ship as universal treatment. The lift on open rate is small, doesn't translate to revenue, and increases unsubscribes. Consider segment-specific use: personalization for new subscribers (under 90 days) where it shows real lift, but no personalization for long-tenured subscribers where it backfires. Re-test the segmented approach. Don't repeat the marketing-industry mistake of treating personalization as universally good.",
+    },
+  },
+  {
+    id: "ab-mkt-2", domain: "marketing",
+    hypothesis: "Replacing the homepage hero image (model wearing product) with a customer testimonial video (real customer reviewing product) will increase conversion rate.",
+    setup: "DTC beauty brand, 30-day test on homepage. Treatment: 30-second customer testimonial video. Control: existing static hero image. New visitors only.",
+    metrics: {
+      treatment: { visitors: 184200, conversion: "1.4%", avg_session_duration: "3.4 min", scroll_depth: "62%", revenue_per_visitor: "$0.84" },
+      control:   { visitors: 183800, conversion: "1.7%", avg_session_duration: "2.8 min", scroll_depth: "48%", revenue_per_visitor: "$1.02" },
+    },
+    results: "Conversion: -0.3pp (p<0.001). Session duration: +0.6 min (p<0.001). Scroll depth: +14pp (p<0.001). Revenue per visitor: -$0.18 (p<0.001).",
+    segments: "Mobile users showed largest conversion decline (-0.5pp). Desktop users showed smaller decline (-0.1pp, p=0.18). New visitors showed worse performance than returning visitors.",
+    redFlags: "Treatment shows higher engagement (longer session, deeper scroll) but lower conversion and revenue. Users are watching the video but not buying. Mobile decline is sharpest — possibly because the video plays poorly on mobile or is too long for mobile attention.",
+    goldStandard: {
+      validity: "Statistically valid on all primary metrics. Sample sizes large. Test duration adequate. The directional finding (more engagement, less conversion) is real.",
+      practical: "Practically significant in the wrong direction. -$0.18 revenue per visitor at this traffic translates to substantial revenue loss over time. The hypothesis (testimonial video would convert better) is rejected.",
+      segmentation: "The mobile/desktop gap is informative. Video content on mobile homepage is frequently a conversion killer due to bandwidth, autoplay restrictions, and attention dynamics. The treatment may work fine on desktop but cannot survive mobile traffic share.",
+      threats: "The 'higher engagement, lower conversion' pattern is a classic distraction. Users are spending more time on the page (watching the video) but the video doesn't drive purchase intent — it satisfies curiosity instead. This is a meaningful pattern beyond this single test: engagement metrics can move in the wrong direction relative to revenue.",
+      shipDecision: "Do not ship. Iterate: try the testimonial video as a secondary element (lower on the page) rather than as the hero, so users see the product first and the testimonial as supporting content. Alternatively, test a shorter (10-15 second) testimonial video specifically for mobile. Re-test before deploying.",
+    },
+  },
+  {
+    id: "ab-mkt-3", domain: "marketing",
+    hypothesis: "Showing 3 ad creative variants in rotation (vs the single best-performing creative) will reduce ad fatigue and improve sustained ROAS over a 60-day campaign window.",
+    setup: "DTC apparel brand, 60-day test on Facebook ads. Treatment: 3 creative variants rotated weekly. Control: single best-performing creative used throughout. Same audience targeting and budget.",
+    metrics: {
+      treatment: { impressions: 4200000, ctr: "1.8%", cpa: "$28", roas: "2.4x", frequency_avg: "4.8" },
+      control:   { impressions: 4180000, ctr: "2.1%", cpa: "$24", roas: "2.8x", frequency_avg: "5.2" },
+    },
+    results: "CTR: -0.3pp (p<0.001). CPA: +$4 (p<0.001). ROAS: -0.4x (p<0.001). Frequency: -0.4 per user (p=0.02). Effect was inverted in the first 14 days (treatment performed better) and reversed in days 14-60.",
+    segments: "Audiences with high overlap (existing customers) showed treatment performing worse throughout. Cold audiences showed treatment performing better in early period, then converging to control.",
+    redFlags: "The inverted effect over time is the key finding. Treatment was winning in the first 14 days but lost ground over the next 46 days. The control creative may have been chosen because it was already optimized — the rotation diluted that performance.",
+    goldStandard: {
+      validity: "Statistically valid on the aggregate metrics over the full 60 days. The temporal pattern (early treatment win, late treatment loss) is also real and important — though it inverts the headline conclusion if you only looked at early data.",
+      practical: "Practically significant in the wrong direction. -0.4x ROAS is a meaningful campaign performance loss. The hypothesis (rotation reduces fatigue) was directionally wrong for this campaign.",
+      segmentation: "Existing customers (high overlap) showed worse rotation performance throughout — they're already familiar with the brand and the rotation didn't add fresh interest. Cold audiences showed early lift that decayed. The story is: rotation helps with novelty for unfamiliar audiences but doesn't beat a strong winner over time.",
+      threats: "The 14-day inversion point is a serious threat to the hypothesis. If you ran this test for 14 days, you'd ship the rotation and lose ROAS for the remaining 46 days. This is why long-running tests matter for ad campaigns. Also: 'frequency' decreased in treatment, which could mean rotation is showing fewer impressions per user — so users may not be hitting the threshold needed to convert.",
+      shipDecision: "Do not ship rotation as universal strategy. The single best creative outperformed rotation over a 60-day window. However, consider: (1) using rotation for cold audience acquisition specifically (where early-period lift was real), and (2) refreshing the single best creative every 30-45 days rather than rotating. The deeper insight: a strong creative is more valuable than rotation; the right play is finding new strong creatives, not diluting strong creatives.",
+    },
+  },
+
+  // PRODUCT ANALYTICS — 5 scenarios
+  {
+    id: "ab-prod-1", domain: "product",
+    hypothesis: "Adding a one-tap 'Continue with Google' option to the signup screen will reduce drop-off in the signup funnel and increase D7 retention.",
+    setup: "Mobile app signup, 30-day test. Treatment: Google SSO button + email signup option. Control: email signup only.",
+    metrics: {
+      treatment: { signup_starts: 84200, signup_completion: "72.4%", d1_retention: "48.2%", d7_retention: "31.4%", account_quality_score: "0.68" },
+      control:   { signup_starts: 83800, signup_completion: "58.1%", d1_retention: "52.4%", d7_retention: "34.2%", account_quality_score: "0.74" },
+    },
+    results: "Signup completion: +14.3pp (p<0.001). D1 retention: -4.2pp (p<0.001). D7 retention: -2.8pp (p<0.001). Account quality score (composite of profile completion, friend connections, content engagement): -0.06 (p<0.001).",
+    segments: "All segments showed signup completion lift. D7 retention decline was concentrated in users who came from paid ad channels. Organic signups showed no significant retention difference.",
+    redFlags: "Signup completion went up dramatically but the resulting users retain worse and have lower 'quality scores'. Treatment may be importing lower-intent users who would have abandoned at email signup but now coast through SSO without genuine interest.",
+    goldStandard: {
+      validity: "Statistically valid on all metrics. Sample sizes large enough to detect meaningful differences. The 30-day window is adequate for D7 retention measurement.",
+      practical: "Practically significant on signup completion (+24% relative) — a major top-of-funnel improvement. But also practically significant on retention degradation. The trade has to be evaluated on lifetime user value, not signup count.",
+      segmentation: "The paid-channel concentration of retention decline is the key finding. Paid users were already lower-intent than organic users; SSO removes the only friction that filtered out the very lowest-intent paid users. Organic users with genuine interest don't need that filter.",
+      threats: "Signup completion is a vanity metric in isolation. The right metric is qualified active users 30 days out, not raw signups. The account quality score decline is a leading indicator that these users will not produce normal user economics. Also: 4.2pp D1 retention drop is a sharp signal — these users are bouncing on first session.",
+      shipDecision: "Ship for organic acquisition channels only. For paid channels, either: (1) maintain email-only signup to filter intent, or (2) ship Google SSO but add a low-friction qualification step (e.g., 'What brings you here today?') that filters out drive-by signups. Set guardrail metric: 30-day qualified active users (not just signups). The practical lift is meaningless if the new signups don't become users.",
+    },
+  },
+  {
+    id: "ab-prod-2", domain: "product",
+    hypothesis: "Replacing chronological feed with algorithmic 'For You' ranking will increase session length and DAU.",
+    setup: "Social content app, 45-day test. Treatment: ML-ranked feed showing posts ordered by predicted engagement. Control: chronological feed (newest posts first).",
+    metrics: {
+      treatment: { users: 142000, dau_mau_ratio: "42%", session_length: "12.4 min", session_frequency: "3.8/day", creator_post_rate: "8.2%" },
+      control:   { users: 141000, dau_mau_ratio: "38%", session_length: "8.6 min", session_frequency: "3.2/day", creator_post_rate: "11.4%" },
+    },
+    results: "DAU/MAU ratio: +4pp (p<0.001). Session length: +3.8 min (p<0.001). Session frequency: +0.6/day (p<0.001). Creator post rate: -3.2pp (p<0.001).",
+    segments: "Consumer (non-posting) users showed strong positive effects across all metrics. Creator users (top 10% by historical posts) showed reduced post frequency. Smallest creators (1-5 posts/month) had the sharpest decline (-5.4pp).",
+    redFlags: "Consumer engagement up significantly. Creator behavior down significantly. This is the classic 'algorithmic feed kills creator economy' pattern — when posts compete for algorithmic ranking instead of being seen by followers, smaller creators feel less rewarded for posting.",
+    goldStandard: {
+      validity: "Statistically valid on all primary metrics. Sample sizes very large. The bidirectional finding (consumer up, creator down) is real and important.",
+      practical: "Practically significant on both sides. +4pp DAU/MAU and +3.8 min session length are major engagement gains. -3.2pp creator post rate is also major — reducing supply of new content has compounding effects on long-term platform health.",
+      segmentation: "Smallest creators (1-5 posts/month) being most affected is critical. These creators are the platform's growth engine — converting consumers to creators. Discouraging them from posting damages the creator pipeline. Top creators are buffered (they're already posting reliably) but the entry point to creation has gotten harder.",
+      threats: "This is a classic two-sided platform tradeoff. Short-term consumer engagement metrics improve at the cost of long-term content supply. If creator post rate decline continues, content becomes thin in 6-12 months and consumer engagement will revert. The 45-day test cannot capture this dynamic — content supply effects play out over months.",
+      shipDecision: "Ship the algorithmic feed but with a creator-protection mechanic: ensure new posts from a user's followers are prioritized (not just algorithmic 'For You'), so creators still feel rewarded by reaching their existing audience. Re-test the modified algorithm. Set long-term guardrail metrics: creator post rate trend (must not decline beyond 1pp), small-creator activation rate (consumers who become creators), and content supply diversity (top X% of creators contributing what fraction of content).",
+    },
+  },
+  {
+    id: "ab-prod-3", domain: "product",
+    hypothesis: "Sending push notifications at the user's individual 'optimal time' (based on historical engagement) will increase notification CTR vs. a single fixed-time daily send.",
+    setup: "Mobile productivity app, 21-day test. Treatment: ML-determined per-user optimal send time. Control: single fixed time (8 AM local). Same notification content and frequency.",
+    metrics: {
+      treatment: { users: 84000, push_ctr: "8.4%", session_post_push: "62.1%", notification_optout: "2.4%/mo", overall_dau: "+0.8% absolute" },
+      control:   { users: 83800, push_ctr: "5.8%", session_post_push: "52.4%", notification_optout: "3.1%/mo", overall_dau: "Baseline" },
+    },
+    results: "Push CTR: +2.6pp (p<0.001). Session-after-push rate: +9.7pp (p<0.001). Monthly opt-out rate: -0.7pp (p<0.001). Overall DAU: +0.8% absolute (p<0.001).",
+    segments: "All segments showed positive effects. Largest CTR lift among users with irregular engagement patterns (where optimal time differs most from 8 AM). Smallest effect among users who already engage at 7-9 AM (their optimal time was close to control).",
+    redFlags: "Treatment is using historical engagement to predict optimal times, which creates a feedback loop: users who engaged in the past at certain times will continue to be sent notifications at those times. The model may be reinforcing existing patterns rather than capturing 'true' optimal times.",
+    goldStandard: {
+      validity: "Statistically valid across all primary metrics. Sample sizes adequate. 21-day test duration is appropriate for notification engagement metrics. CTR lift is large and consistent.",
+      practical: "Practically significant gains across the board. CTR up 45% relative, opt-out rate down 23% relative, and overall DAU up 0.8% absolute (a meaningful win at scale). This is one of the most clearly positive results in the test set.",
+      segmentation: "All segments benefit. The mechanism is clear: users with engagement patterns far from the 8 AM control time benefit most from personalization. Users already aligned to the control time benefit less but are not harmed.",
+      threats: "Self-reinforcing prediction is a real but not disqualifying threat — the model captures real preferences and acting on them is value-creating. A more meaningful threat: what about new users with no historical engagement data? The test focused on existing users; cold-start performance for new users is unknown. Also: opt-out rate decline may be temporary; users may simply not yet have noticed the notifications.",
+      shipDecision: "Ship for users with sufficient engagement history (e.g., 30+ days). For new users, default to 8 AM control time with switch-over after 30 days of data. Set guardrail metrics: cold-start (new user) notification engagement rate, and 90-day opt-out trend (verify the decline is durable, not just early-period).",
+    },
+  },
+  {
+    id: "ab-prod-4", domain: "product",
+    hypothesis: "Reducing onboarding from 7 steps to 3 steps will increase activation rate (defined as completing first core action) without harming user quality.",
+    setup: "B2B SaaS product, 30-day test on new signups. Treatment: 3-step onboarding (essential fields only). Control: 7-step onboarding (full profile, integrations, preferences).",
+    metrics: {
+      treatment: { signups: 8400, activation_d1: "62.4%", activation_d7: "74.1%", retention_d30: "44.2%", paid_conversion_d30: "8.1%" },
+      control:   { signups: 8200, activation_d1: "48.2%", activation_d7: "61.4%", retention_d30: "42.4%", paid_conversion_d30: "10.4%" },
+    },
+    results: "D1 activation: +14.2pp (p<0.001). D7 activation: +12.7pp (p<0.001). D30 retention: +1.8pp (p=0.04). D30 paid conversion: -2.3pp (p<0.001).",
+    segments: "Self-serve signups showed largest activation lift but smallest paid conversion. Sales-assisted signups showed moderate lift. Enterprise prospect signups showed paid conversion decline most sharply (-3.4pp).",
+    redFlags: "Activation went up dramatically but paid conversion declined. The shorter onboarding may be activating more users but the users who complete the longer onboarding are higher-intent and more likely to pay.",
+    goldStandard: {
+      validity: "Statistically valid on activation and paid conversion (p<0.001 on both). D30 retention is borderline significant. Sample sizes adequate. The directional pattern (activation up, paid conversion down) is real.",
+      practical: "Practically significant on both sides. +14pp D1 activation is a major top-of-funnel improvement. -2.3pp paid conversion is also major — at SaaS unit economics, paid conversion drives the entire business model. The trade has to be evaluated on revenue per signup, not activation rate alone.",
+      segmentation: "Enterprise signup decline is the key finding. The longer onboarding wasn't just 'friction' — it was qualification. Enterprise prospects who complete a 7-step onboarding are signaling readiness and intent. Removing the steps removes the signal AND the qualification, importing more low-intent enterprise leads who don't convert.",
+      threats: "Revenue per signup is the right metric, not activation. Calculation: control had 8200 × 10.4% = 853 paid conversions; treatment had 8400 × 8.1% = 680 paid conversions. Despite higher activation, treatment produced 173 fewer paid customers — a clear revenue loss.",
+      shipDecision: "Do not ship as universal change. The activation gain doesn't translate to paid conversion gain — it's the opposite. Iterate: maintain 7-step onboarding for enterprise prospects (where qualification matters), use 3-step onboarding for self-serve / SMB prospects (where activation speed matters more than qualification). Re-test the segmented onboarding. Set primary metric: paid conversions per signup, not activation rate.",
+    },
+  },
+  {
+    id: "ab-prod-5", domain: "product",
+    hypothesis: "Showing users a weekly summary of their app usage statistics ('You used Focus mode 14 times this week — top 10% of users') will increase D30 retention through engagement gamification.",
+    setup: "Productivity mobile app, 60-day test. Treatment: weekly usage summary email + in-app notification. Control: no summary. Random assignment at user level.",
+    metrics: {
+      treatment: { users: 42000, d30_retention: "62.4%", session_frequency: "4.2/week", session_length: "8.4 min", subscription_renewal: "84.2%" },
+      control:   { users: 41800, d30_retention: "58.1%", session_frequency: "3.8/week", session_length: "7.2 min", subscription_renewal: "81.4%" },
+    },
+    results: "D30 retention: +4.3pp (p<0.001). Session frequency: +0.4/week (p<0.001). Session length: +1.2 min (p<0.001). Subscription renewal: +2.8pp (p=0.003).",
+    segments: "Power users (top 20% by historical engagement) showed largest lift across all metrics. Casual users showed smallest lift, especially on subscription renewal. Users in 'top 10%' rankings showed dramatically higher renewal rates than users in lower percentile rankings.",
+    redFlags: "The summary email shows users their percentile ranking. Users in the top 10% are told they're top 10%. This may create a self-fulfilling positive feedback loop where 'winners' feel rewarded and stay, while 'losers' (lower percentiles) feel discouraged. Are the bottom-percentile users actually retaining better, or did the test miss measuring whether this messaging hurt them?",
+    goldStandard: {
+      validity: "Statistically valid on all primary metrics. Sample sizes adequate. 60-day test captures sufficient time to measure D30 retention and renewal cycle effects.",
+      practical: "Practically significant gains. +4.3pp D30 retention and +2.8pp subscription renewal are meaningful for a subscription product. At scale, these gains compound substantially.",
+      segmentation: "The power user concentration of effects is informative. Showing top users they're top creates engagement; showing bottom users they're bottom may demotivate. The current test doesn't break out the bottom-percentile user retention separately — it should, because the bottom 50% of users are who you most need to retain (the top 20% retains regardless).",
+      threats: "Two threats: (1) selection bias — users who open the email are more engaged baseline, and the email may be measuring engagement effects rather than causing them. (2) bottom-percentile messaging effect — the percentile framing could harm users in the lower half of usage distribution. The aggregate metrics may be hiding harmful effects on a subgroup.",
+      shipDecision: "Ship with one modification: do NOT show percentile ranking to users in the bottom 50% of usage distribution. For those users, show absolute usage with positive framing ('You used Focus mode 4 times this week — keep going!') instead of comparative ranking. Re-measure after 30 days to confirm bottom-half retention is preserved or improved. Set guardrail metric: bottom-half D30 retention rate (must not decline relative to control).",
+    },
+  },
+];
+
+// ── A/B TEST MODE COMPONENT ────────────────────────────────────────────────
+
+function ABTestMode({ apiKey, progress, onScore }) {
+  const [activeDomain, setActiveDomain] = useState("retail");
+  const [scenarioIdx, setScenarioIdx] = useState(0);
+  const [stage, setStage] = useState("input");      // input, submitted, graded
+  const [validity, setValidity] = useState("");
+  const [practical, setPractical] = useState("");
+  const [segmentation, setSegmentation] = useState("");
+  const [threats, setThreats] = useState("");
+  const [shipDecision, setShipDecision] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const domainScenarios = AB_TEST_SCENARIOS.filter(s => s.domain === activeDomain);
+  const scenario = domainScenarios[scenarioIdx];
+  const domainObj = KPI_DOMAINS.find(d => d.id === activeDomain);
+  const domainColor = domainObj?.color || C.accent;
+
+  const handleDomainChange = (id) => {
+    setActiveDomain(id);
+    setScenarioIdx(0);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setStage("input");
+    setValidity("");
+    setPractical("");
+    setSegmentation("");
+    setThreats("");
+    setShipDecision("");
+    setFeedback(null);
+    setError("");
+  };
+
+  const grade = async () => {
+    if (!apiKey) { setError("Add your Anthropic API key above to grade your reasoning."); return; }
+    if (!validity.trim() || !practical.trim() || !segmentation.trim() || !threats.trim() || !shipDecision.trim()) {
+      setError("Fill in all five fields before grading.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const prompt = `You are a senior data analyst evaluating a junior analyst's analysis of an A/B test result.
+
+DOMAIN: ${activeDomain}
+
+HYPOTHESIS: ${scenario.hypothesis}
+
+SETUP: ${scenario.setup}
+
+RESULTS: ${scenario.results}
+
+SEGMENT BREAKDOWN: ${scenario.segments}
+
+NOTES / POTENTIAL ISSUES: ${scenario.redFlags}
+
+GOLD-STANDARD ANSWERS (what a senior analyst would say):
+STATISTICAL VALIDITY: ${scenario.goldStandard.validity}
+PRACTICAL SIGNIFICANCE: ${scenario.goldStandard.practical}
+SEGMENTATION ANALYSIS: ${scenario.goldStandard.segmentation}
+THREATS / RED FLAGS: ${scenario.goldStandard.threats}
+SHIP DECISION: ${scenario.goldStandard.shipDecision}
+
+USER'S ANSWERS:
+STATISTICAL VALIDITY: ${validity}
+PRACTICAL SIGNIFICANCE: ${practical}
+SEGMENTATION ANALYSIS: ${segmentation}
+THREATS / RED FLAGS: ${threats}
+SHIP DECISION: ${shipDecision}
+
+Grade the user on each of these 5 dimensions (each 0-3 scale):
+- 0 = missed entirely or fundamentally wrong
+- 1 = surface-level, missed the key consideration
+- 2 = solid analyst answer
+- 3 = senior-analyst answer with nuance
+
+Output structured plain text in this exact format:
+
+VALIDITY_SCORE: [0-3]
+VALIDITY_FEEDBACK: [1-2 sentences on whether they correctly evaluated statistical validity]
+
+PRACTICAL_SCORE: [0-3]
+PRACTICAL_FEEDBACK: [1-2 sentences on whether they distinguished statistical from practical significance]
+
+SEGMENTATION_SCORE: [0-3]
+SEGMENTATION_FEEDBACK: [1-2 sentences on whether they identified heterogeneous treatment effects]
+
+THREATS_SCORE: [0-3]
+THREATS_FEEDBACK: [1-2 sentences on whether they identified methodological threats — novelty, SRM, peeking, network effects, confounds]
+
+SHIP_DECISION_SCORE: [0-3]
+SHIP_DECISION_FEEDBACK: [1-2 sentences on whether their ship recommendation was clear, supported by the data, and named tradeoffs]
+
+OVERALL: [strong, partial, or weak]
+KEY_TAKEAWAY: [one sentence — the single most important framing they missed or got right]
+
+Plain text only, no markdown. Be honest and discriminating — don't grade leniently. A "strong" rating should be reserved for senior-analyst-quality work. "Partial" is the realistic ceiling for most junior responses. Statistical significance without practical significance, or missing a major threat, should produce a weak rating regardless of how much was written.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 2000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      setFeedback(text);
+      setStage("graded");
+
+      const overallMatch = text.match(/OVERALL:\s*(strong|partial|weak)/i);
+      if (overallMatch) {
+        const score = overallMatch[1].toLowerCase();
+        onScore(`intel-abtest-${activeDomain}`, scenarioIdx, score, { q: scenario.hypothesis.slice(0, 80) });
+      }
+    } catch (e) {
+      setError(e.message || "Grading failed");
+    }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setScenarioIdx(i => (i + 1) % domainScenarios.length);
+    resetForm();
+  };
+
+  const prev = () => {
+    setScenarioIdx(i => (i - 1 + domainScenarios.length) % domainScenarios.length);
+    resetForm();
+  };
+
+  return (
+    <div>
+      {/* Domain selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        {KPI_DOMAINS.map(d => (
+          <button
+            key={d.id}
+            onClick={() => handleDomainChange(d.id)}
+            style={{
+              padding: "7px 14px", borderRadius: 6, border: `1.5px solid ${activeDomain === d.id ? d.color : C.border}`,
+              background: activeDomain === d.id ? d.color + "18" : "transparent",
+              color: activeDomain === d.id ? d.color : C.muted,
+              fontFamily: mono, fontSize: 10, cursor: "pointer", letterSpacing: "0.06em",
+            }}
+          >
+            {d.icon} {d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Scenario nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          Scenario {scenarioIdx + 1} of {domainScenarios.length}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={prev} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>← Prev</button>
+          <button onClick={next} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>Next →</button>
+        </div>
+      </div>
+
+      {/* Hypothesis & Setup */}
+      <div style={{ background: C.card, border: `1.5px solid ${domainColor}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 8 }}>
+          {domainObj?.icon} HYPOTHESIS
+        </div>
+        <div style={{ fontSize: 14, color: C.text, lineHeight: 1.6, marginBottom: 12 }}>{scenario.hypothesis}</div>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>SETUP</div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>{scenario.setup}</div>
+      </div>
+
+      {/* Results display */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 12 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 12 }}>EXPERIMENT RESULTS</div>
+
+        {/* Treatment vs Control table */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.ok}`, borderRadius: 6, padding: "10px 12px" }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 6 }}>TREATMENT</div>
+            {Object.entries(scenario.metrics.treatment).map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
+                <span style={{ color: C.muted, fontFamily: mono }}>{k}</span>
+                <span style={{ color: C.text, fontFamily: mono }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "10px 12px" }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>CONTROL</div>
+            {Object.entries(scenario.metrics.control).map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
+                <span style={{ color: C.muted, fontFamily: mono }}>{k}</span>
+                <span style={{ color: C.text, fontFamily: mono }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 4 }}>RESULTS</div>
+          <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.results}</div>
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 4 }}>SEGMENT BREAKDOWN</div>
+          <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.segments}</div>
+        </div>
+
+        <div>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 4 }}>NOTES / POTENTIAL ISSUES</div>
+          <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.redFlags}</div>
+        </div>
+      </div>
+
+      {/* Structured input */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 14 }}>
+          YOUR ANALYSIS — 5 DIMENSIONS
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            1. STATISTICAL VALIDITY — is this a valid result?
+          </div>
+          <textarea
+            value={validity}
+            onChange={e => setValidity(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Sample size, p-values, confidence intervals, test duration..."
+            style={{
+              width: "100%", minHeight: 50, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            2. PRACTICAL SIGNIFICANCE — is the effect size meaningful?
+          </div>
+          <textarea
+            value={practical}
+            onChange={e => setPractical(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Magnitude of effect, business impact, opportunity cost..."
+            style={{
+              width: "100%", minHeight: 50, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            3. SEGMENTATION — are there heterogeneous treatment effects?
+          </div>
+          <textarea
+            value={segmentation}
+            onChange={e => setSegmentation(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Which segments benefited / were harmed? What does the variance tell you?"
+            style={{
+              width: "100%", minHeight: 50, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            4. THREATS — what could be wrong with this result?
+          </div>
+          <textarea
+            value={threats}
+            onChange={e => setThreats(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Novelty effect, SRM, peeking, confounds, network effects, missing measurements..."
+            style={{
+              width: "100%", minHeight: 60, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: domainColor, letterSpacing: "0.12em", marginBottom: 5 }}>
+            5. SHIP DECISION — ship, iterate, or kill? Why? What guardrails?
+          </div>
+          <textarea
+            value={shipDecision}
+            onChange={e => setShipDecision(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Your recommendation. Be specific. Name the tradeoffs and the monitoring metrics."
+            style={{
+              width: "100%", minHeight: 80, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+          {stage === "input" && (
+            <button onClick={grade} disabled={loading} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.ok}`,
+              background: C.ok + "18", color: C.ok,
+              fontFamily: mono, fontSize: 11, cursor: loading ? "wait" : "pointer", letterSpacing: "0.06em",
+            }}>
+              {loading ? "Grading (15-30 sec)..." : "Grade with AI"}
+            </button>
+          )}
+          {stage === "graded" && (
+            <button onClick={resetForm} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.border}`,
+              background: "transparent", color: C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+            }}>
+              Try Again
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ background: C.err + "15", border: `1px solid ${C.err}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12, color: C.err, fontSize: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {feedback && stage === "graded" && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.ok}`, borderRadius: 12, padding: 18 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 10 }}>AI FEEDBACK</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, color: C.text, lineHeight: 1.65, fontFamily: mono, margin: 0 }}>{feedback}</pre>
+
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.accent, letterSpacing: "0.12em", marginBottom: 12 }}>SENIOR-ANALYST GOLD STANDARD</div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>STATISTICAL VALIDITY</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.validity}</div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>PRACTICAL SIGNIFICANCE</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.practical}</div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>SEGMENTATION</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.segmentation}</div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>THREATS</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>{scenario.goldStandard.threats}</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 4 }}>SHIP DECISION</div>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, fontStyle: "italic" }}>{scenario.goldStandard.shipDecision}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 function IntelMode({ apiKey, progress, onScore }) {
   const [submode, setSubmode] = useState("library");
 
@@ -6845,6 +7633,7 @@ function IntelMode({ apiKey, progress, onScore }) {
       {submode === "dashboard" && <DashboardDrillMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "problem"   && <ProblemMetricMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "insight"   && <InsightRecMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+      {submode === "abtest"    && <ABTestMode apiKey={apiKey} progress={progress} onScore={onScore} />}
     </div>
   );
 }
