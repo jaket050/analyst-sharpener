@@ -3746,6 +3746,1306 @@ const DASHBOARD_DRILLS = [
       },
     ],
   },
+// ── MODE 2 v2: ADDITIONAL DASHBOARD DRILLS (20 new, 4 per domain) ──────────
+// Append these to the DASHBOARD_DRILLS array in intel_modes_2_3.jsx
+// Each drill tells a different story from the existing 5
+
+// RETAIL: drills 2-5
+  {
+    id: "retail-2",
+    domain: "retail",
+    title: "End-of-Season Inventory Review — Fall Collection",
+    subtitle: "Week 14 of 16-week selling season",
+    scenario: "You are the merchandising analyst at a mid-market apparel brand. The Fall collection entered its final two weeks of full-price selling. The planning team needs your read on which categories to markdown now vs. hold, and whether to pull forward the Spring receipt schedule.",
+    kpis: [
+      { label: "SELL-THROUGH (SEASON)", value: "61%", delta: "▼ 11pp vs plan", up: false },
+      { label: "INVENTORY ON HAND", value: "$4.2M", delta: "▲ 28% vs plan", up: false },
+      { label: "FULL-PRICE SALES MIX", value: "74%", delta: "▼ 8pp YoY", up: false },
+      { label: "WEEKS OF SUPPLY", value: "6.4 wks", delta: "▲ 2.1 wks vs plan", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "SELL-THROUGH BY CATEGORY — SEASON TO DATE",
+        bars: [
+          { label: "Outerwear", value: 82, color: "#4ade80" },
+          { label: "Knitwear", value: 74, color: "#4ade80" },
+          { label: "Denim", value: 58, color: "#fbbf24" },
+          { label: "Accessories", value: 49, color: "#f87171" },
+          { label: "Dresses", value: 38, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "lineMulti",
+        title: "WEEKLY SELL-THROUGH PACE — ACTUAL VS PLAN",
+        series: [
+          { label: "Plan", color: "#4fc3f7", points: [8, 9, 10, 10, 9, 8, 7, 7, 6, 6, 5, 5, 4, 4] },
+          { label: "Actual", color: "#f87171", points: [9, 10, 9, 8, 7, 6, 5, 4, 4, 4, 3, 3, 3, null] },
+        ],
+        xLabels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14"],
+        yMax: 12,
+        yUnit: "% ST/wk",
+      },
+      {
+        type: "barHorizontal",
+        title: "EXCESS INVENTORY BY CATEGORY ($K)",
+        bars: [
+          { label: "Dresses", value: 1840, max: 2000 },
+          { label: "Accessories", value: 1120, max: 2000 },
+          { label: "Denim", value: 820, max: 2000 },
+          { label: "Knitwear", value: 310, max: 2000 },
+          { label: "Outerwear", value: 110, max: 2000 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Two categories (Dresses and Accessories) are sitting on $3M of excess inventory with 6+ weeks of supply and decelerating weekly pace — with only 2 weeks of full-price selling left, these categories need an immediate markdown decision or they'll clear at deeply discounted rates in the season-end liquidation window.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Outerwear and Knitwear are selling through at 82% and 74% with minimal excess — far above the blended average and almost certainly already sold through to near-terminal depth. Dresses at 38% sell-through in week 14 of 16 is the real outlier — weekly pace has decelerated to 3% per week, meaning at current velocity they'd need 20+ weeks to clear, which is structurally impossible. The gap between the best and worst performing categories (44pp) suggests an assortment selection problem, not a demand environment problem.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the price sensitivity curve for Dresses from last season's markdown cadence — specifically, what discount depth triggered a meaningful sell-through acceleration and at what markdown timing. If 30% off in week 14 drove 8% weekly sell-through last year, we have a defensible markdown recommendation for this week's meeting. Without the prior-year markdown response curve, any markdown recommendation is a guess.",
+      },
+    ],
+  },
+  {
+    id: "retail-3",
+    domain: "retail",
+    title: "Email Program Performance — Q1 Review",
+    subtitle: "Q1 2026 vs Q1 2025",
+    scenario: "You are the CRM analyst preparing the quarterly email performance review for the VP of Marketing. Email drives 34% of total revenue. The VP has noticed that revenue per send is declining and wants a root cause before the Q2 budget discussion.",
+    kpis: [
+      { label: "LIST SIZE", value: "1.42M", delta: "▲ 31% YoY", up: true },
+      { label: "AVG OPEN RATE", value: "19.4%", delta: "▼ 10.8pp YoY", up: false },
+      { label: "CLICK RATE", value: "1.8%", delta: "▼ 1.2pp YoY", up: false },
+      { label: "REVENUE PER SEND", value: "$0.38", delta: "▼ $0.21 YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "OPEN RATE TREND — MONTHLY (LAST 12 MONTHS)",
+        series: [
+          { label: "Open Rate", color: "#f87171", points: [31, 30, 29, 28, 26, 25, 24, 22, 21, 20, 20, 19] },
+          { label: "List Size (×100K)", color: "#4fc3f7", points: [10.8, 11.0, 11.2, 11.5, 11.8, 12.0, 12.4, 12.8, 13.2, 13.6, 14.0, 14.2] },
+        ],
+        xLabels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 35,
+      },
+      {
+        type: "barCategorical",
+        title: "OPEN RATE BY ACQUISITION SOURCE — Q1 2026",
+        bars: [
+          { label: "Organic/Direct", value: 31.2, color: "#4ade80" },
+          { label: "Referral", value: 28.4, color: "#4ade80" },
+          { label: "Content DL", value: 24.8, color: "#4fc3f7" },
+          { label: "Pop-up Modal", value: 12.1, color: "#f87171" },
+          { label: "Lead Magnet", value: 9.8, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 35,
+      },
+      {
+        type: "barHorizontal",
+        title: "SUBSCRIBERS BY ACQUISITION SOURCE (000s)",
+        bars: [
+          { label: "Pop-up Modal", value: 580, max: 600 },
+          { label: "Lead Magnet", value: 310, max: 600 },
+          { label: "Content Download", value: 280, max: 600 },
+          { label: "Organic/Direct", value: 160, max: 600 },
+          { label: "Referral", value: 90, max: 600 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The list grew 31% by aggressively acquiring low-quality subscribers via pop-up modals and lead magnets, which open at 10-12% vs 28-31% for organic subscribers — and since modal/lead magnet sources now represent 62% of the list, they're dragging the blended open rate down and making the channel look broken when the underlying high-quality list is still performing well.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The inverse relationship between list size and open rate is the signal: as list size grew, open rate declined at almost exactly the pace you'd predict if the new subscribers are performing at 10-12% vs the existing base at 30%+. This isn't deliverability degradation or Apple Mail Privacy Protection distortion — it's a list-mix math problem. The best subscribers (organic, referral) are a shrinking percentage of an inflating denominator.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull revenue per email sent segmented by acquisition source — specifically, the LTV-to-date for pop-up modal and lead magnet subscribers acquired in the last 12 months compared to organic subscribers from the same period. If modal subscribers generate $0.12 per send vs organic's $0.58 per send, the case for pausing modal acquisition and implementing a sunset policy for disengaged subscribers writes itself in revenue terms, not just engagement terms.",
+      },
+    ],
+  },
+  {
+    id: "retail-4",
+    domain: "retail",
+    title: "New Product Launch Tracker — Spring Footwear",
+    subtitle: "Weeks 1-6 post-launch",
+    scenario: "You are the analytics lead for a specialty footwear brand. The Spring 2026 collection launched 6 weeks ago. The product team wants your assessment before deciding whether to reorder the top styles, markdown the underperformers, or pull a style entirely.",
+    kpis: [
+      { label: "BLENDED SELL-THROUGH", value: "44%", delta: "▼ 6pp vs prior launch", up: false },
+      { label: "RETURN RATE", value: "22%", delta: "▲ 8pp vs prior launch", up: false },
+      { label: "AVG REVIEW SCORE", value: "3.8 / 5", delta: "▼ 0.6 vs prior launch", up: false },
+      { label: "REORDER ELIGIBLE STYLES", value: "3 of 12", delta: "Prior launch: 7 of 11", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "SELL-THROUGH BY STYLE — WEEK 6",
+        bars: [
+          { label: "Canvas Low", value: 78, color: "#4ade80" },
+          { label: "Leather Mid", value: 71, color: "#4ade80" },
+          { label: "Sport Slide", value: 62, color: "#4ade80" },
+          { label: "Woven Flat", value: 41, color: "#fbbf24" },
+          { label: "Platform Clog", value: 28, color: "#f87171" },
+          { label: "Strappy Heel", value: 19, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "barCategorical",
+        title: "RETURN RATE BY STYLE — WEEK 6",
+        bars: [
+          { label: "Canvas Low", value: 8, color: "#4ade80" },
+          { label: "Leather Mid", value: 11, color: "#4ade80" },
+          { label: "Sport Slide", value: 9, color: "#4ade80" },
+          { label: "Woven Flat", value: 24, color: "#fbbf24" },
+          { label: "Platform Clog", value: 38, color: "#f87171" },
+          { label: "Strappy Heel", value: 41, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 50,
+      },
+      {
+        type: "barHorizontal",
+        title: "REVIEW THEMES — PLATFORM CLOG + STRAPPY HEEL (TOP COMPLAINTS)",
+        bars: [
+          { label: "Runs small / sizing off", value: 148, max: 160 },
+          { label: "Uncomfortable / poor support", value: 124, max: 160 },
+          { label: "Not as pictured", value: 98, max: 160 },
+          { label: "Quality/materials", value: 61, max: 160 },
+          { label: "Shipping damage", value: 18, max: 160 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The launch has a clean split: three styles (Canvas Low, Leather Mid, Sport Slide) are performing at or above prior launch benchmarks with low returns and strong sell-through, while two styles (Platform Clog, Strappy Heel) are failing on every dimension — low sell-through, 38-41% return rates, and review themes pointing to sizing problems and product-page misrepresentation.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "A 38-41% return rate is 4-5× the healthy benchmark for footwear and cannot be explained by demand softness — the Canvas Low and Leather Mid prove the category is working. The combination of 'runs small' and 'not as pictured' reviews on the Platform Clog and Strappy Heel together suggest two distinct problems: a sizing/last issue with the physical product, and a photography/description disconnect on the product page. Both need separate fixes.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the size distribution of Platform Clog and Strappy Heel returns vs orders — specifically, whether returns skew toward customers who ordered their normal size vs sized up or down. If 70%+ of returns come from customers who ordered their normal size and returned because it was too small, the fix is a product page sizing callout ('runs small, size up'), which is a 24-hour change. If returns are distributed evenly across sizes, the problem is in the last itself and requires a vendor conversation.",
+      },
+    ],
+  },
+  {
+    id: "retail-5",
+    domain: "retail",
+    title: "Subscription Box Monthly Cohort Review",
+    subtitle: "March 2026 cohorts vs trailing 6-month average",
+    scenario: "You are the analyst for a DTC subscription box service (home goods, $48/month). The Head of Retention is reviewing March acquisition cohorts and pause/cancel behavior before the Q2 retention budget meeting.",
+    kpis: [
+      { label: "NEW SUBSCRIBERS (MAR)", value: "4,820", delta: "▲ 22% MoM", up: true },
+      { label: "30-DAY RETENTION", value: "71%", delta: "▼ 9pp vs avg", up: false },
+      { label: "PAUSE RATE (DAY 30)", value: "18%", delta: "▲ 6pp vs avg", up: false },
+      { label: "LTV (PROJECTED 12-MO)", value: "$188", delta: "▼ $41 vs avg", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "30-DAY RETENTION BY ACQUISITION COHORT",
+        series: [
+          { label: "Oct cohort", color: "#4ade80", points: [100, 82, 80, 79, 78] },
+          { label: "Jan cohort", color: "#4fc3f7", points: [100, 80, 78, 77, 76] },
+          { label: "Mar cohort", color: "#f87171", points: [100, 71, 68, null, null] },
+        ],
+        xLabels: ["Day 0", "Day 30", "Day 60", "Day 90", "Day 120"],
+        yMax: 100,
+        yUnit: "% retained",
+      },
+      {
+        type: "barCategorical",
+        title: "MARCH COHORT — ACQUISITION CHANNEL MIX",
+        bars: [
+          { label: "Paid Social", value: 58, color: "#fbbf24" },
+          { label: "Influencer", value: 22, color: "#4fc3f7" },
+          { label: "Organic/SEO", value: 12, color: "#4ade80" },
+          { label: "Referral", value: 8, color: "#4ade80" },
+        ],
+        unit: "%",
+        yMax: 70,
+      },
+      {
+        type: "barHorizontal",
+        title: "CANCEL/PAUSE REASON — MARCH COHORT DAY 30",
+        bars: [
+          { label: "Too expensive", value: 38, max: 50 },
+          { label: "Didn't like the items", value: 31, max: 50 },
+          { label: "Already have too much", value: 18, max: 50 },
+          { label: "Gifted / one-time", value: 9, max: 50 },
+          { label: "Quality issue", value: 4, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "March's volume growth came from a channel mix shift toward paid social (58% of acquisition vs historical ~30%) that's importing structurally worse subscribers — the cohort's 30-day retention is 9pp below average, pause rate is 6pp above, and 'too expensive' as the top cancel reason suggests discount-acquired subscribers who didn't value the product at full price.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The March cohort's 30-day drop to 71% is unusually sharp — prior cohorts held 80%+ through day 30. Combined with paid social being 58% of acquisition vs historical ~30% and 'too expensive' being the top cancel reason (not 'didn't like items'), this strongly suggests the paid social campaigns are using heavy discount offers to drive trial from price-sensitive subscribers who have no intention of continuing at $48/month. The influencer channel at 22% is worth isolating — if those subscribers retain at 80%+, the problem is paid social specifically, not the March product mix.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull 30-day retention segmented by acquisition channel within the March cohort — specifically paid social vs influencer vs organic. If organic and referral subscribers are retaining at 79%+ and paid social subscribers are retaining at 62%, the budget reallocation recommendation is straightforward and the data is unambiguous. If all channels are retaining poorly, the problem is the March box curation itself.",
+      },
+    ],
+  },
+
+// HEALTHCARE: drills 2-5
+  {
+    id: "healthcare-2",
+    domain: "healthcare",
+    title: "Revenue Cycle Performance Dashboard",
+    subtitle: "Q1 2026 vs trailing 4-quarter average",
+    scenario: "You are the revenue cycle analyst at a multi-specialty physician group. The CFO has flagged that cash collections are running below budget for the third consecutive month. She needs your read on root cause before the board meeting next week.",
+    kpis: [
+      { label: "DAYS IN AR", value: "54.2", delta: "▲ 14.8 days", up: false },
+      { label: "CLEAN CLAIM RATE", value: "87.4%", delta: "▼ 6.2pp", up: false },
+      { label: "INITIAL DENIAL RATE", value: "14.8%", delta: "▲ 5.1pp", up: false },
+      { label: "NET COLLECTION RATE", value: "93.1%", delta: "▼ 3.8pp", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "DENIAL RATE BY PAYER — QUARTERLY TREND",
+        series: [
+          { label: "Medicare", color: "#4ade80", points: [8.2, 8.4, 8.1, 8.3] },
+          { label: "Medicaid", color: "#4fc3f7", points: [11.2, 11.8, 12.1, 12.4] },
+          { label: "Blue Cross", color: "#fbbf24", points: [9.1, 18.2, 26.4, 31.8] },
+          { label: "Aetna", color: "#f87171", points: [8.8, 9.1, 9.4, 9.2] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 35,
+        yUnit: "%",
+      },
+      {
+        type: "barCategorical",
+        title: "DENIAL REASON CODES — Q1 2026 (% of DENIALS)",
+        bars: [
+          { label: "Prior Auth Missing", value: 42, color: "#f87171" },
+          { label: "Eligibility Error", value: 28, color: "#fbbf24" },
+          { label: "Coding Error", value: 18, color: "#fbbf24" },
+          { label: "Timely Filing", value: 8, color: "#4fc3f7" },
+          { label: "Other", value: 4, color: "#4ade80" },
+        ],
+        unit: "%",
+        yMax: 50,
+      },
+      {
+        type: "barHorizontal",
+        title: "AR AGING BUCKETS — CURRENT ($K)",
+        bars: [
+          { label: "0-30 days", value: 1840, max: 2000 },
+          { label: "31-60 days", value: 980, max: 2000 },
+          { label: "61-90 days", value: 620, max: 2000 },
+          { label: "91-120 days", value: 480, max: 2000 },
+          { label: "120+ days", value: 1240, max: 2000 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "One payer — Blue Cross — has driven denial rates from 9% to 32% over four quarters, and the primary denial reason (42% of all denials are prior auth missing) points to a policy change on Blue Cross's end that our authorization workflow hasn't caught up to, creating an AR pile-up that's now showing in the 120+ day aging bucket.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The Blue Cross denial rate trajectory — 9.1% to 31.8% in four quarters — is not a drift, it's a structural break. Medicare, Aetna, and even Medicaid are stable or slightly moving, which rules out an internal coding or staffing problem. A 3.5× denial rate increase at one payer in 12 months almost always traces to a policy change (new prior authorization requirements, formulary change, network contract modification) rather than anything we did. The 120+ day AR bucket at $1.24M is the financial consequence — those are Blue Cross claims sitting in denial/appeal limbo.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the Blue Cross denial list segmented by procedure code and service date — specifically looking for which procedure codes started getting denied and when exactly the first spike occurred. If denials are concentrated on specific CPT codes that changed prior auth requirements after a specific date, we have a clear before/after and a specific authorization workflow gap to fix. That also gives us the basis for a payer relations conversation and potentially a retro-authorization request for the claims already denied.",
+      },
+    ],
+  },
+  {
+    id: "healthcare-3",
+    domain: "healthcare",
+    title: "OR Utilization Dashboard — Q1 2026",
+    subtitle: "14-surgeon surgical service line",
+    scenario: "You are the surgical analytics lead. OR utilization has been below the 80% target for three consecutive quarters. The COO has asked for a root cause analysis before the surgical services committee meeting.",
+    kpis: [
+      { label: "OR UTILIZATION", value: "62%", delta: "▼ 18pp vs target", up: false },
+      { label: "FIRST-CASE ON-TIME START", value: "68%", delta: "▼ 14pp vs target", up: false },
+      { label: "AVG TURNOVER TIME", value: "38 min", delta: "▲ 11 min vs target", up: false },
+      { label: "CASE CANCELLATION RATE", value: "8.2%", delta: "▲ 3.1pp YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "BLOCK UTILIZATION BY SURGEON — Q1 2026 (%)",
+        bars: [
+          { label: "Surgeon A", value: 94, color: "#4ade80" },
+          { label: "Surgeon B", value: 91, color: "#4ade80" },
+          { label: "Surgeon C", value: 88, color: "#4ade80" },
+          { label: "Surgeon D", value: 82, color: "#4ade80" },
+          { label: "Surgeon E", value: 71, color: "#fbbf24" },
+          { label: "Surgeon F", value: 34, color: "#f87171" },
+          { label: "Surgeon G", value: 28, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "barCategorical",
+        title: "CASE CANCELLATION REASONS — Q1 2026 (%)",
+        bars: [
+          { label: "Patient medical", value: 38, color: "#4fc3f7" },
+          { label: "Patient no-show", value: 28, color: "#fbbf24" },
+          { label: "Instrument unavail.", value: 22, color: "#f87171" },
+          { label: "Surgeon unavail.", value: 8, color: "#fbbf24" },
+          { label: "Scheduling error", value: 4, color: "#4ade80" },
+        ],
+        unit: "%",
+        yMax: 45,
+      },
+      {
+        type: "barHorizontal",
+        title: "FIRST-CASE DELAY REASONS — Q1 2026 (MINUTES LOST)",
+        bars: [
+          { label: "Patient late to pre-op", value: 142, max: 160 },
+          { label: "Consent not complete", value: 118, max: 160 },
+          { label: "Anesthesia not ready", value: 94, max: 160 },
+          { label: "Instrument setup", value: 72, max: 160 },
+          { label: "Surgeon late", value: 48, max: 160 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "OR utilization is failing at three distinct points simultaneously: block allocation (two surgeons at 28-34% utilization are holding blocks that high-utilization surgeons need), first-case start (patient pre-op readiness and consent completion are the top delay drivers), and instrument availability (22% of cancellations are from instruments not being ready), each of which has a different fix.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Surgeon F and G at 28-34% block utilization stand out — they're holding reserved OR time they aren't filling, which alone could account for 6-8pp of the utilization gap. But the more operationally interesting finding is that instrument unavailability drives 22% of cancellations: this isn't a surgeon or patient problem, it's a sterile processing or supply chain problem that cancels cases that were otherwise ready to proceed. At 8.2% total cancellation rate, instrument-related cancellations represent roughly 1.8% of all cases — a fixable process failure with immediate utilization impact.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the block schedule for Surgeons F and G for the next 8 weeks alongside the add-on case request log for Surgeons A-D. If A-D have a backlog of add-on requests that are being denied because F and G's blocks are technically reserved, the reallocation case is immediate and data-supported. Implementing a 72-hour automatic block release rule for blocks not filled to 80% would free up capacity without requiring a permanent reallocation conversation.",
+      },
+    ],
+  },
+  {
+    id: "healthcare-4",
+    domain: "healthcare",
+    title: "Population Health Quality Dashboard — Medicare Advantage",
+    subtitle: "Q1 2026 vs Star Rating targets",
+    scenario: "You are the population health analyst at a Medicare Advantage plan. The plan's Star Rating dropped from 4.0 to 3.5 last cycle. The Medical Director needs to identify which quality measures to prioritize for the Q2 intervention push.",
+    kpis: [
+      { label: "COMPOSITE STAR SCORE", value: "3.5 ★", delta: "▼ 0.5 vs prior year", up: false },
+      { label: "HEDIS MEASURES AT TARGET", value: "6 of 14", delta: "Prior year: 10 of 14", up: false },
+      { label: "CARE GAP CLOSURE RATE", value: "41%", delta: "▼ 12pp vs target", up: false },
+      { label: "MEMBER SATISFACTION (CAHPS)", value: "76%", delta: "▼ 4pp vs prior year", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "HEDIS MEASURE PERFORMANCE VS THRESHOLD (%)",
+        bars: [
+          { label: "Colorectal Screen", value: 71, color: "#4ade80" },
+          { label: "A1c Control (<8)", value: 68, color: "#4ade80" },
+          { label: "Med Adherence–Statins", value: 82, color: "#4ade80" },
+          { label: "Breast Cancer Screen", value: 58, color: "#fbbf24" },
+          { label: "BP Control (<140/90)", value: 54, color: "#f87171" },
+          { label: "Med Adherence–Diabetes", value: 61, color: "#fbbf24" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "lineMulti",
+        title: "CARE GAP CLOSURE RATE — MONTHLY",
+        series: [
+          { label: "Target", color: "#4ade80", points: [53, 53, 53, 53, 53, 53] },
+          { label: "Actual", color: "#f87171", points: [48, 46, 44, 42, 41, 41] },
+        ],
+        xLabels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 60,
+        yUnit: "%",
+      },
+      {
+        type: "barHorizontal",
+        title: "OPEN CARE GAPS BY MEASURE — TOP 5 (MEMBER COUNT)",
+        bars: [
+          { label: "BP Control", value: 4820, max: 5500 },
+          { label: "Breast Cancer Screen", value: 3940, max: 5500 },
+          { label: "Med Adherence–Diabetes", value: 3210, max: 5500 },
+          { label: "A1c Testing", value: 2180, max: 5500 },
+          { label: "Colorectal Screen", value: 1640, max: 5500 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "BP Control has the largest open gap population (4,820 members below threshold) and is a triple-weighted Star measure, making it the highest-leverage single intervention — but care gap closure rate has been declining for 6 consecutive months, suggesting the outreach infrastructure itself is broken, not just the individual measure performance.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Medication Adherence for statins is at 82% — above threshold — while Medication Adherence for Diabetes medications is at 61% — below threshold. Both are adherence measures, same basic intervention model (pharmacy outreach, auto-refill enrollment, blister packs), but dramatically different performance. This gap suggests either the diabetes adherence program isn't running at the same intensity as the statin program, or that the diabetes medication population has structural barriers (cost, side effects, insulin complexity) that demand a different intervention approach.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the outreach attempt rate and response rate for the BP Control care gap population segmented by provider group — specifically comparing which primary care groups have high care gap closure rates vs which groups have low rates for the same member population. If two provider groups account for 60% of open BP gaps, targeted provider engagement with those specific groups (and their EMR-integrated care gap alerts) will move the measure more efficiently than a broad member-level outreach campaign.",
+      },
+    ],
+  },
+  {
+    id: "healthcare-5",
+    domain: "healthcare",
+    title: "ED Throughput & Patient Experience Dashboard",
+    subtitle: "March 2026 vs 6-month trailing average",
+    scenario: "You are the ED analytics lead. Patient experience scores have been declining for three months and the CNO wants to understand whether it's a throughput problem, a staffing problem, or something else before restructuring the ED nursing model.",
+    kpis: [
+      { label: "DOOR-TO-PROVIDER (MIN)", value: "48 min", delta: "▲ 22 min vs avg", up: false },
+      { label: "HCAHPS ED SCORE", value: "68th pctile", delta: "▼ 14 pctile pts", up: false },
+      { label: "LWBS RATE", value: "4.2%", delta: "▲ 2.8pp vs avg", up: false },
+      { label: "ED VOLUME (DAILY AVG)", value: "142 visits", delta: "▲ 18% vs avg", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "DOOR-TO-PROVIDER TIME BY SHIFT (MINUTES)",
+        series: [
+          { label: "Day (7a-3p)", color: "#4ade80", points: [28, 29, 30, 32, 34, 36] },
+          { label: "Evening (3p-11p)", color: "#fbbf24", points: [32, 36, 41, 48, 54, 58] },
+          { label: "Night (11p-7a)", color: "#f87171", points: [26, 27, 28, 30, 31, 32] },
+        ],
+        xLabels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 65,
+        yUnit: "min",
+      },
+      {
+        type: "barCategorical",
+        title: "HCAHPS DOMAIN SCORES — MARCH vs BENCHMARK (%)",
+        bars: [
+          { label: "Communication", value: 74, color: "#4ade80" },
+          { label: "Pain Management", value: 71, color: "#4ade80" },
+          { label: "Responsiveness", value: 48, color: "#f87171" },
+          { label: "Quietness", value: 62, color: "#fbbf24" },
+          { label: "Overall Rating", value: 58, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "barHorizontal",
+        title: "LWBS RATE BY HOUR OF DAY — MARCH (%)",
+        bars: [
+          { label: "3pm-7pm", value: 7.8, max: 10 },
+          { label: "7pm-11pm", value: 6.4, max: 10 },
+          { label: "11am-3pm", value: 3.2, max: 10 },
+          { label: "7am-11am", value: 1.8, max: 10 },
+          { label: "11pm-7am", value: 0.9, max: 10 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The ED problem is concentrated in the evening shift (3pm-11pm), which has seen door-to-provider time nearly double in 6 months while day and night shifts are relatively stable — and this is confirmed by the LWBS data where 3pm-11pm accounts for the majority of patients who left without being seen.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The HCAHPS Responsiveness score (48%) is dramatically lower than Communication (74%) and Pain Management (71%) — a 26pp gap between domains in the same patient experience. Patients feel nurses are communicating and managing pain adequately, but not responding quickly enough to call lights and requests. This is a capacity/workload issue, not a care quality issue, and it's directly downstream of the evening volume surge. Also notable: the night shift door-to-provider time is stable at 30-32 minutes despite presumably lower staffing, suggesting the night shift nurse-to-patient ratio is actually more appropriate for the overnight volume than the evening shift's.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the evening shift (3pm-11pm) nurse-to-patient ratio by month for the past 6 months alongside the volume data. If volume grew 18% but nursing FTEs on evening shift stayed flat, the responsiveness problem and door-to-provider increase are both direct consequences of a coverage gap that's been widening for months. That's a staffing solution, not a process solution — and it changes the CNO's restructuring conversation entirely.",
+      },
+    ],
+  },
+
+// FINANCE: drills 2-5
+  {
+    id: "finance-2",
+    domain: "finance",
+    title: "Working Capital Health Dashboard — Manufacturing Co.",
+    subtitle: "Q1 2026 vs prior year Q1",
+    scenario: "You are the FP&A analyst at a $280M manufacturing company. Free cash flow is significantly below EBITDA despite strong earnings. The CFO is presenting to the board next week and needs a working capital narrative.",
+    kpis: [
+      { label: "CASH CONVERSION CYCLE", value: "74 days", delta: "▲ 28 days YoY", up: false },
+      { label: "DAYS IN AR (DSO)", value: "52 days", delta: "▲ 14 days YoY", up: false },
+      { label: "DAYS INVENTORY (DIO)", value: "68 days", delta: "▲ 18 days YoY", up: false },
+      { label: "DAYS PAYABLE (DPO)", value: "46 days", delta: "▲ 4 days YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "CASH CONVERSION CYCLE COMPONENTS — QUARTERLY",
+        series: [
+          { label: "DSO", color: "#f87171", points: [38, 40, 44, 48, 52] },
+          { label: "DIO", color: "#fbbf24", points: [50, 54, 58, 62, 68] },
+          { label: "DPO", color: "#4ade80", points: [42, 42, 43, 44, 46] },
+        ],
+        xLabels: ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 80,
+        yUnit: "days",
+      },
+      {
+        type: "barCategorical",
+        title: "DSO BY CUSTOMER SEGMENT — Q1 2026",
+        bars: [
+          { label: "Enterprise (>$5M)", value: 82, color: "#f87171" },
+          { label: "Mid-Market", value: 48, color: "#fbbf24" },
+          { label: "SMB (<$500K)", value: 31, color: "#4ade80" },
+          { label: "Government", value: 94, color: "#f87171" },
+        ],
+        unit: "days",
+        yMax: 110,
+      },
+      {
+        type: "barHorizontal",
+        title: "INVENTORY BY CATEGORY — DAYS ON HAND",
+        bars: [
+          { label: "Raw materials", value: 38, max: 80 },
+          { label: "WIP", value: 12, max: 80 },
+          { label: "Finished goods — fast", value: 22, max: 80 },
+          { label: "Finished goods — slow", value: 68, max: 80 },
+          { label: "MRO/spare parts", value: 142, max: 80 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The cash conversion cycle expanded 28 days over 12 months because both DSO and DIO are growing without proportional DPO offset — Enterprise and Government customers are paying significantly slower, and slow-moving finished goods plus MRO inventory have accumulated to levels well above operational needs.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "MRO and spare parts inventory at 142 days on hand is far above any operational benchmark — MRO typically runs 30-45 days. This is likely stranded inventory from a past equipment or maintenance initiative that never got cleaned up. It's not generating revenue, it's not turning, and it's sitting on the balance sheet consuming working capital. Combined with slow finished goods at 68 days, these two categories alone are probably $15-20M of trapped cash that has nothing to do with the business model.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the Enterprise and Government customer aging detail — specifically which customers have expanded their payment terms in the last 12 months and whether this was formalized in a contract amendment or is informal slow-pay behavior. If it's informal, we have immediate leverage to enforce existing terms. If it was contractually amended, those amendments should have been flagged as working capital impacts at signing. Either way, the answer determines whether the fix is collections enforcement or contract renegotiation.",
+      },
+    ],
+  },
+  {
+    id: "finance-3",
+    domain: "finance",
+    title: "SaaS Unit Economics Dashboard",
+    subtitle: "Trailing 4 quarters, monthly cohorts",
+    scenario: "You are the growth finance analyst at a $38M ARR B2B SaaS company. The board's investment committee is meeting next month to decide whether to approve a $15M growth round. They've asked for a unit economics brief before the term sheet conversation.",
+    kpis: [
+      { label: "BLENDED CAC", value: "$8,420", delta: "▲ 64% over 18 months", up: false },
+      { label: "LTV (24-MO COHORT)", value: "$22,100", delta: "▲ 8% over 18 months", up: false },
+      { label: "LTV:CAC RATIO", value: "2.6×", delta: "▼ from 4.2× 18 months ago", up: false },
+      { label: "CAC PAYBACK PERIOD", value: "28 months", delta: "▲ 11 months over 18 months", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "CAC BY CHANNEL — QUARTERLY ($K)",
+        series: [
+          { label: "Inbound/SEO", color: "#4ade80", points: [2.8, 3.1, 3.2, 3.4] },
+          { label: "Outbound SDR", color: "#4fc3f7", points: [6.2, 7.1, 8.4, 9.8] },
+          { label: "Paid Search", color: "#fbbf24", points: [5.8, 8.2, 11.4, 14.2] },
+          { label: "Events/Field", color: "#f87171", points: [12.4, 16.8, 22.1, 28.4] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 32,
+        yUnit: "$K",
+      },
+      {
+        type: "barCategorical",
+        title: "LTV:CAC BY CHANNEL — Q1 2026",
+        bars: [
+          { label: "Inbound/SEO", value: 7.8, color: "#4ade80" },
+          { label: "Outbound SDR", value: 3.1, color: "#4fc3f7" },
+          { label: "Paid Search", value: 1.9, color: "#f87171" },
+          { label: "Events/Field", value: 0.9, color: "#f87171" },
+        ],
+        unit: "×",
+        yMax: 9,
+      },
+      {
+        type: "barHorizontal",
+        title: "MARKETING BUDGET ALLOCATION — Q1 2026 (%)",
+        bars: [
+          { label: "Events/Field", value: 38, max: 50 },
+          { label: "Paid Search", value: 28, max: 50 },
+          { label: "Outbound SDR", value: 22, max: 50 },
+          { label: "Inbound/SEO", value: 12, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Two channels (Events/Field at 0.9× LTV:CAC and Paid Search at 1.9×) are destroying unit economics while consuming 66% of the marketing budget, while Inbound/SEO at 7.8× LTV:CAC — the highest-returning channel — gets only 12% of spend.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Events/Field CAC has gone from $12.4K to $28.4K in four quarters — a 2.3× increase — while LTV hasn't moved proportionally. A CAC that's grown 129% in 12 months on a channel that consumes 38% of the budget is the single most alarming number on this dashboard. Combined with LTV:CAC of 0.9× (meaning we're spending more to acquire customers than we'll ever recover from them), this channel is actively destroying value at current spend levels. No board would approve a $15M growth round to scale a channel with sub-1.0× LTV:CAC.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the LTV of customers acquired through Events/Field vs Inbound/SEO, segmented by customer segment (company size, industry). The hypothesis: Events/Field is bringing in a fundamentally different (worse) customer profile — perhaps smaller companies with shorter retention — not just a more expensive version of the same customer. If the customer profile differs, cutting Events/Field isn't just a CAC fix; it's a customer quality fix. That's the argument that lands with an investment committee.",
+      },
+    ],
+  },
+  {
+    id: "finance-4",
+    domain: "finance",
+    title: "Public Company Earnings Review — Q1 2026",
+    subtitle: "Reported vs Consensus Estimates",
+    scenario: "You are the equity analyst covering a mid-cap consumer technology company. Q1 results just dropped. You have 20 minutes to write your morning note before the market opens.",
+    kpis: [
+      { label: "REVENUE", value: "$284M", delta: "▼ $8M vs consensus", up: false },
+      { label: "ADJ. EPS", value: "$0.82", delta: "▲ $0.06 vs consensus", up: true },
+      { label: "GROSS MARGIN", value: "61.4%", delta: "▲ 2.1pp YoY", up: true },
+      { label: "FWD GUIDANCE (Q2)", value: "$271-278M", delta: "▼ $14M below consensus", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "QUARTERLY REVENUE — ACTUAL VS CONSENSUS ($M)",
+        series: [
+          { label: "Consensus", color: "#4fc3f7", points: [262, 271, 278, 292] },
+          { label: "Actual", color: "#fbbf24", points: [264, 270, 276, 284] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 310,
+        yUnit: "$M",
+      },
+      {
+        type: "barCategorical",
+        title: "REVENUE BY SEGMENT — Q1 2026 vs PRIOR YEAR ($M)",
+        bars: [
+          { label: "Hardware", value: 142, color: "#f87171" },
+          { label: "Software/SaaS", value: 98, color: "#4ade80" },
+          { label: "Services", value: 44, color: "#4fc3f7" },
+        ],
+        unit: "$M",
+        yMax: 180,
+      },
+      {
+        type: "barHorizontal",
+        title: "Q1 EPS BRIDGE — BEAT DRIVERS ($M impact)",
+        bars: [
+          { label: "Gross margin expansion", value: 14, max: 20 },
+          { label: "OpEx reduction (layoffs)", value: 18, max: 20 },
+          { label: "Lower tax rate (one-time)", value: 8, max: 20 },
+          { label: "Revenue miss (negative)", value: 12, max: 20 },
+          { label: "Higher D&A (negative)", value: 6, max: 20 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The EPS beat is a cost story, not a growth story — gross margin expansion and layoffs drove the earnings outperformance while revenue missed consensus for the fourth consecutive quarter, and the Q2 guide ($271-278M vs consensus $292M) signals the revenue deceleration is accelerating, not stabilizing.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The EPS bridge reveals that the $0.06 EPS beat was built on layoffs ($18M impact), a one-time tax benefit ($8M), and gross margin expansion — but the layoffs and tax benefit are non-recurring, meaning Q2 will not have the same tailwinds. Combined with a Q2 guide $14M below consensus, the market should trade this as a deteriorating growth business using cost cuts to mask revenue weakness. The gross margin expansion is the only genuine positive — if it's durable, it matters; if it's from product mix shift or temporary input cost relief, it's also non-recurring.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the Hardware segment YoY growth rate alongside management's commentary on unit volumes vs pricing. Hardware revenue appears to be declining (smallest segment, showing on the chart) and hardware is typically the lead indicator for the software attach rate. If hardware units are declining, software/SaaS growth will decelerate 2-3 quarters later as the install base shrinks — which would make the Q2 guide miss look conservative, not prudent.",
+      },
+    ],
+  },
+  {
+    id: "finance-5",
+    domain: "finance",
+    title: "Cost Structure Analysis — Pre-IPO Review",
+    subtitle: "Trailing 8 quarters operating leverage analysis",
+    scenario: "You are the CFO's analyst at a growth-stage SaaS company preparing for IPO in 12 months. The underwriters have flagged that the company's cost structure doesn't show operating leverage, which is a concern for public market investors. You need to present a path to margin improvement.",
+    kpis: [
+      { label: "REVENUE GROWTH (YoY)", value: "42%", delta: "Strong", up: true },
+      { label: "GROSS MARGIN", value: "76%", delta: "▲ 3pp YoY", up: true },
+      { label: "OPERATING MARGIN", value: "▼18%", delta: "▼ 4pp YoY", up: false },
+      { label: "SG&A AS % OF REVENUE", value: "62%", delta: "▲ 8pp YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "REVENUE vs OPEX GROWTH — QUARTERLY (% YoY)",
+        series: [
+          { label: "Revenue Growth", color: "#4ade80", points: [38, 40, 41, 42, 42] },
+          { label: "R&D Growth", color: "#4fc3f7", points: [42, 44, 46, 48, 52] },
+          { label: "S&M Growth", color: "#fbbf24", points: [48, 54, 58, 62, 68] },
+          { label: "G&A Growth", color: "#f87171", points: [52, 58, 64, 71, 78] },
+        ],
+        xLabels: ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 85,
+        yUnit: "% YoY",
+      },
+      {
+        type: "barCategorical",
+        title: "HEADCOUNT BY FUNCTION — Q1 2026",
+        bars: [
+          { label: "Engineering", value: 284, color: "#4fc3f7" },
+          { label: "Sales", value: 218, color: "#fbbf24" },
+          { label: "G&A", value: 142, color: "#f87171" },
+          { label: "Marketing", value: 96, color: "#fbbf24" },
+          { label: "CS/Support", value: 88, color: "#4ade80" },
+        ],
+        unit: "FTEs",
+        yMax: 300,
+      },
+      {
+        type: "barHorizontal",
+        title: "G&A HEADCOUNT vs REVENUE BENCHMARK (PER $10M REVENUE)",
+        bars: [
+          { label: "This company", value: 18, max: 20 },
+          { label: "Series D peer avg", value: 12, max: 20 },
+          { label: "Pre-IPO peer avg", value: 9, max: 20 },
+          { label: "Post-IPO peer avg", value: 7, max: 20 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Revenue is growing at 42% but every operating expense category is growing faster — G&A at 78% YoY, S&M at 68% — and G&A headcount per $10M of revenue is 2× the pre-IPO peer benchmark, which is the specific number underwriters are flagging as evidence that the company hasn't built scalable infrastructure.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "G&A growing at 78% YoY on 42% revenue growth is the outlier — R&D and S&M over-growing revenue is common in growth-stage SaaS and somewhat defensible, but G&A (Finance, HR, Legal, IT) is a pure overhead function that should exhibit the strongest operating leverage as revenue scales. G&A at 18 FTEs per $10M vs the 9 FTE post-IPO benchmark means the company is running double the administrative overhead of comparable public companies. This is almost certainly the underwriters' specific concern — it suggests the company hasn't rightsized its back-office for scale.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the G&A headcount breakdown by sub-function (Finance team size vs HR vs Legal vs IT vs Facilities) and compare each to the peer benchmark. The aggregate 18 FTE/10M masks where the bloat actually is — it's almost never uniform. If Finance has 6 FTEs per $10M vs a benchmark of 2.5, the fix is Finance; if IT is the outlier, the fix is IT. Presenting the underwriters with a function-level benchmark analysis and a 24-month G&A rationalization roadmap turns their concern into a narrative of discipline, not a liability.",
+      },
+    ],
+  },
+
+// OPERATIONS: drills 2-5
+  {
+    id: "operations-2",
+    domain: "operations",
+    title: "Manufacturing Line OEE Dashboard — Plant B",
+    subtitle: "Q1 2026 vs prior quarter and target",
+    scenario: "You are the manufacturing analyst at a consumer goods plant. Plant B's OEE has declined for three consecutive quarters. The Plant Manager is meeting with the VP of Operations next week and needs to present a root cause and recovery plan.",
+    kpis: [
+      { label: "OEE", value: "58%", delta: "▼ 17pp vs target (75%)", up: false },
+      { label: "AVAILABILITY", value: "74%", delta: "▼ 16pp vs target", up: false },
+      { label: "PERFORMANCE", value: "89%", delta: "▼ 3pp vs target", up: false },
+      { label: "QUALITY", value: "98.4%", delta: "Within target range", up: true },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "OEE COMPONENTS — QUARTERLY TREND (%)",
+        series: [
+          { label: "Availability", color: "#f87171", points: [91, 86, 80, 74] },
+          { label: "Performance", color: "#fbbf24", points: [92, 91, 90, 89] },
+          { label: "Quality", color: "#4ade80", points: [98.8, 98.6, 98.5, 98.4] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 100,
+        yUnit: "%",
+      },
+      {
+        type: "barCategorical",
+        title: "DOWNTIME CAUSES — Q1 2026 (HOURS)",
+        bars: [
+          { label: "Mechanical failure", value: 142, color: "#f87171" },
+          { label: "Planned maintenance", value: 68, color: "#4fc3f7" },
+          { label: "Material shortage", value: 42, color: "#fbbf24" },
+          { label: "Changeover", value: 38, color: "#fbbf24" },
+          { label: "Operator/setup", value: 18, color: "#4ade80" },
+        ],
+        unit: "hrs",
+        yMax: 160,
+      },
+      {
+        type: "barHorizontal",
+        title: "TOP 5 MECHANICAL FAILURES BY FREQUENCY — Q1 2026",
+        bars: [
+          { label: "Conveyor belt slippage", value: 38, max: 50 },
+          { label: "Sealing unit jam", value: 31, max: 50 },
+          { label: "Filler nozzle clog", value: 24, max: 50 },
+          { label: "Label applicator misalign", value: 18, max: 50 },
+          { label: "Vision system fault", value: 12, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The OEE problem is almost entirely an Availability problem — Performance and Quality are essentially at target — and the Availability loss is concentrated in mechanical failures (142 hours), specifically four recurring failure modes that together account for most of the unplanned downtime, suggesting equipment in need of targeted preventive maintenance, not a systemic overhaul.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Quality is at 98.4% — holding steady through four quarters of declining Availability. This rules out operator degradation (tired/rushed operators would produce more defects), material quality issues, and process control problems. The failure modes are almost entirely mechanical: conveyor belt slippage, sealing unit jams, filler nozzle clogs, and label applicator misalignment are all predictable, maintainable failure points. The anomaly is that these failure modes are recurring across four quarters without being addressed through targeted preventive maintenance — which suggests the PM schedule hasn't been updated to reflect the actual failure pattern.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the preventive maintenance schedule and completion log for the conveyor belt, sealing unit, and filler nozzle for the past 12 months — specifically looking at whether PM tasks for these components were completed on schedule or deferred. If PM completion for these three components is running at 60-70% adherence while other components are at 90%+, the fix is PM schedule enforcement, not equipment replacement. That's a 30-day operational change, not a capital request.",
+      },
+    ],
+  },
+  {
+    id: "operations-3",
+    domain: "operations",
+    title: "Supplier Performance Scorecard — Q1 2026",
+    subtitle: "Top 10 suppliers by spend, quarterly review",
+    scenario: "You are the procurement analyst preparing the quarterly supplier scorecard review. The VP of Procurement wants to identify which supplier relationships need intervention before the annual contract renewal cycle that begins next month.",
+    kpis: [
+      { label: "NETWORK SOTD (AVG)", value: "91.2%", delta: "▼ 4.8pp YoY", up: false },
+      { label: "SUPPLIERS BELOW 90%", value: "4 of 10", delta: "Prior year: 1 of 10", up: false },
+      { label: "LEAD TIME VARIANCE", value: "±6.4 days", delta: "▲ 3.1 days YoY", up: false },
+      { label: "QUALITY DEFECT RATE", value: "1.8%", delta: "▲ 0.6pp YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "SUPPLIER ON-TIME DELIVERY — Q1 2026 (%)",
+        bars: [
+          { label: "Supplier A", value: 98, color: "#4ade80" },
+          { label: "Supplier B", value: 96, color: "#4ade80" },
+          { label: "Supplier C", value: 94, color: "#4ade80" },
+          { label: "Supplier D", value: 91, color: "#4ade80" },
+          { label: "Supplier E", value: 88, color: "#fbbf24" },
+          { label: "Supplier F", value: 82, color: "#f87171" },
+          { label: "Supplier G", value: 74, color: "#f87171" },
+          { label: "Supplier H", value: 68, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 100,
+      },
+      {
+        type: "lineMulti",
+        title: "SUPPLIERS F, G, H — SOTD TREND (QUARTERLY %)",
+        series: [
+          { label: "Supplier F", color: "#fbbf24", points: [94, 91, 86, 82] },
+          { label: "Supplier G", color: "#f87171", points: [92, 88, 80, 74] },
+          { label: "Supplier H", color: "#f87171", points: [96, 90, 78, 68] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 100,
+        yUnit: "%",
+      },
+      {
+        type: "barHorizontal",
+        title: "SUPPLIER H — LATE DELIVERY ROOT CAUSES Q1 2026 (%)",
+        bars: [
+          { label: "Raw material shortage", value: 48, max: 60 },
+          { label: "Production capacity", value: 31, max: 60 },
+          { label: "Port/logistics delay", value: 14, max: 60 },
+          { label: "Quality hold", value: 7, max: 60 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "Three suppliers (F, G, H) have been in a sustained, accelerating SOTD decline for four consecutive quarters — this isn't noise or a bad quarter, it's a structural deterioration trend — and Supplier H at 68% SOTD with raw material shortage as the primary root cause is the highest near-term risk to our production schedule.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Suppliers F, G, and H are all declining simultaneously and at an accelerating rate — Supplier H dropped 28pp in four quarters, which is almost certainly capacity or financial distress, not a process problem. Suppliers A-D are stable at 91-98%, which rules out a demand forecast or lead time problem on our side. The fact that three suppliers are deteriorating while four are stable suggests these three suppliers share a common problem — possibly a shared raw material input, a shared logistics lane, or a shared geographic risk — rather than three independent failures.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Determine whether Suppliers F, G, and H share a common upstream input or geography. If all three source a critical raw material from the same region or use the same logistics carrier, the root cause is systemic and affects all three simultaneously. That would change the intervention from three separate supplier conversations to a single supply chain risk mitigation: identifying alternate sources for the shared input before the annual contract renewal.",
+      },
+    ],
+  },
+  {
+    id: "operations-4",
+    domain: "operations",
+    title: "Fulfillment Center Productivity Dashboard — FC East",
+    subtitle: "Week 18 of 2026",
+    scenario: "You are the operations analyst for a DTC fulfillment network. FC East has been flagged for two consecutive weeks of below-target labor productivity. The Fulfillment Director wants a root cause before deciding whether to pull in additional temporary headcount.",
+    kpis: [
+      { label: "UNITS PER LABOR HOUR", value: "82", delta: "▼ 24 vs target (106)", up: false },
+      { label: "ORDERS SHIPPED ON TIME", value: "91.4%", delta: "▼ 5.8pp vs target", up: false },
+      { label: "PICK ACCURACY", value: "99.4%", delta: "Within target", up: true },
+      { label: "NEW HIRE MIX (FC EAST)", value: "44%", delta: "Network avg: 18%", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "UNITS PER LABOR HOUR — FC EAST vs NETWORK",
+        series: [
+          { label: "Network Average", color: "#4ade80", points: [104, 106, 105, 107, 106, 106] },
+          { label: "FC East", color: "#f87171", points: [105, 104, 100, 94, 88, 82] },
+        ],
+        xLabels: ["W13", "W14", "W15", "W16", "W17", "W18"],
+        yMax: 120,
+        yUnit: "units/hr",
+      },
+      {
+        type: "barCategorical",
+        title: "PRODUCTIVITY BY TENURE BAND — FC EAST W18",
+        bars: [
+          { label: "0-30 days", value: 61, color: "#f87171" },
+          { label: "31-90 days", value: 78, color: "#fbbf24" },
+          { label: "91-180 days", value: 96, color: "#4fc3f7" },
+          { label: "180+ days", value: 112, color: "#4ade80" },
+        ],
+        unit: "units/hr",
+        yMax: 130,
+      },
+      {
+        type: "barHorizontal",
+        title: "LABOR HOURS BY TENURE BAND — FC EAST W18 (%)",
+        bars: [
+          { label: "0-30 days (new hire)", value: 44, max: 50 },
+          { label: "31-90 days", value: 24, max: 50 },
+          { label: "91-180 days", value: 18, max: 50 },
+          { label: "180+ days (experienced)", value: 14, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "44% of FC East's labor hours are being worked by associates in their first 30 days (at 61 units/hr vs 112 for experienced workers), and the network average new-hire mix is only 18% — meaning FC East has a concentration of inexperienced labor that's mathematically sufficient to explain the entire productivity gap without any process or equipment problem.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Pick accuracy is 99.4% — within target — while units per labor hour is 23% below target. This is the specific signature of inexperienced-but-careful workers: new hires work slowly and deliberately, which produces high accuracy but low throughput. If the productivity problem were equipment or process-related, accuracy would degrade alongside throughput. The data pattern rules out process failure and points directly to workforce tenure mix as the cause.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the historical productivity ramp curve for FC East new hires from prior hiring cohorts — specifically, how many weeks it takes for new associates to reach 90% of target productivity. If the historical ramp is 8-10 weeks, and the current new-hire cohort is at week 3-4, the productivity gap is temporary and self-resolving without additional headcount. If the ramp historically takes 14+ weeks, temporary headcount makes sense to bridge the gap. The decision depends entirely on the ramp duration, which is a known number from prior cohort data.",
+      },
+    ],
+  },
+  {
+    id: "operations-5",
+    domain: "operations",
+    title: "Inventory Health Dashboard — National Retail Network",
+    subtitle: "Q1 2026 end-of-period",
+    scenario: "You are the inventory analytics lead at a national specialty retailer. Total inventory has grown 28% YoY but gross margin dollars are flat, suggesting inventory is building without proportional revenue. The CFO has asked for a working capital diagnostic before the bank covenant review.",
+    kpis: [
+      { label: "TOTAL INVENTORY ($M)", value: "$184M", delta: "▲ 28% YoY", up: false },
+      { label: "INVENTORY TURNOVER", value: "4.8×", delta: "▼ from 6.2× YoY", up: false },
+      { label: "WEEKS OF SUPPLY", value: "10.8 wks", delta: "▲ 3.4 wks YoY", up: false },
+      { label: "AGED INVENTORY (>180 days)", value: "$38M", delta: "▲ 142% YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "barCategorical",
+        title: "INVENTORY TURNOVER BY CATEGORY — Q1 2026 vs PRIOR YEAR",
+        bars: [
+          { label: "Electronics", value: 7.8, color: "#4ade80" },
+          { label: "Apparel", value: 4.2, color: "#fbbf24" },
+          { label: "Home Goods", value: 3.8, color: "#fbbf24" },
+          { label: "Seasonal", value: 2.1, color: "#f87171" },
+          { label: "Accessories", value: 1.8, color: "#f87171" },
+        ],
+        unit: "×",
+        yMax: 9,
+      },
+      {
+        type: "lineMulti",
+        title: "AGED INVENTORY (>180 DAYS) — QUARTERLY ($M)",
+        series: [
+          { label: "Aged Inventory", color: "#f87171", points: [15.7, 19.2, 26.4, 38.1] },
+          { label: "Total Inventory", color: "#4fc3f7", points: [143, 152, 164, 184] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 200,
+        yUnit: "$M",
+      },
+      {
+        type: "barHorizontal",
+        title: "AGED INVENTORY BY CATEGORY — Q1 2026 ($M)",
+        bars: [
+          { label: "Seasonal", value: 18.4, max: 20 },
+          { label: "Accessories", value: 12.8, max: 20 },
+          { label: "Home Goods", value: 4.2, max: 20 },
+          { label: "Apparel", value: 2.1, max: 20 },
+          { label: "Electronics", value: 0.6, max: 20 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The inventory buildup is concentrated in Seasonal and Accessories ($31M of $38M aged inventory) — categories with the lowest turns — while Electronics continues to turn at 7.8× and barely shows in aged inventory, indicating the problem is category-level overbuy or poor in-season management, not broad demand weakness.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Aged inventory grew 142% YoY while total inventory grew only 28% — the aged bucket is growing nearly 5× faster than total inventory. This is the signature of accumulating unsold inventory that isn't being marked down and liquidated — it's being carried on the books at full cost while continuing to occupy floor space and tie up working capital. The fact that this accelerated across four quarters without intervention (from $15.7M to $38M) suggests there's no systematic aged-inventory review and action protocol in place.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the current carrying cost of the $38M aged inventory (storage cost + cost of capital + estimated markdown to clear) vs the expected recovery value at current markdown depth and velocity. If the aged inventory will recover $22M at a 40% markdown but costs $4M per quarter to carry, the financial case for taking an immediate $16M markdown loss is stronger than carrying for another two quarters. The bank covenant review makes this urgent — carrying $38M of low-recovery inventory against the covenant calculation is a harder conversation than showing a clean markdown plan.",
+      },
+    ],
+  },
+
+// MARKETING: drills 2-5
+  {
+    id: "marketing-2",
+    domain: "marketing",
+    title: "Organic Search & Content Performance Dashboard",
+    subtitle: "Q1 2026 vs Q1 2025",
+    scenario: "You are the digital analytics lead at a B2B software company. The Head of Content has invested $800K in content marketing over the past 18 months with the promise of organic traffic compounding. Q1 results are in and leadership is questioning the ROI.",
+    kpis: [
+      { label: "ORGANIC SESSIONS", value: "184,200", delta: "▲ 24% YoY", up: true },
+      { label: "ORGANIC-TO-LEAD RATE", value: "1.8%", delta: "▼ 1.4pp YoY", up: false },
+      { label: "ORGANIC MQL VOLUME", value: "3,316", delta: "▼ 18% YoY", up: false },
+      { label: "COST PER ORGANIC MQL", value: "$241", delta: "▲ $128 YoY (at $800K spend)", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "ORGANIC SESSIONS BY CONTENT TYPE — MONTHLY",
+        series: [
+          { label: "Informational/Blog", color: "#4fc3f7", points: [28, 34, 42, 51, 58, 64, 72, 78, 84, 88, 91, 94] },
+          { label: "Product/Solution pages", color: "#4ade80", points: [18, 19, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25] },
+          { label: "Comparison pages", color: "#fbbf24", points: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] },
+        ],
+        xLabels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 100,
+        yUnit: "K sessions",
+      },
+      {
+        type: "barCategorical",
+        title: "CONVERSION RATE BY CONTENT TYPE — Q1 2026 (%)",
+        bars: [
+          { label: "Comparison pages", value: 4.8, color: "#4ade80" },
+          { label: "Product/Solution", value: 3.2, color: "#4ade80" },
+          { label: "Informational/Blog", value: 0.4, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 6,
+      },
+      {
+        type: "barHorizontal",
+        title: "ORGANIC SESSIONS vs MQL CONTRIBUTION BY TYPE",
+        bars: [
+          { label: "Informational/Blog (51% sessions)", value: 18, max: 100 },
+          { label: "Product pages (14% sessions)", value: 44, max: 100 },
+          { label: "Comparison pages (10% sessions)", value: 38, max: 100 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The content investment drove organic traffic growth (+24%) but the traffic is almost entirely low-converting informational content (0.4% conversion rate, 18% of MQL contribution) while the high-converting pages — Comparison (4.8%) and Product/Solution (3.2%) — grew slowly and together contribute 82% of MQLs on only 24% of sessions.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The MQL output actually declined 18% YoY despite a 24% increase in organic sessions — traffic grew and leads fell simultaneously. This inverse relationship means the content mix has shifted toward traffic-generating-but-non-converting informational content, diluting the blended conversion rate from 3.2% to 1.8%. The Cost per Organic MQL nearly doubled not because the content got more expensive but because it got less effective per dollar at generating commercial intent. The $800K investment bought impressive-looking traffic that isn't actually supporting the sales funnel.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the content investment breakdown (how much of the $800K went to informational blog vs comparison pages vs product content) alongside the MQL-to-SQL conversion rates by content source. If comparison page visitors convert at 4.8% to MQL and then convert at 40% to SQL, while blog visitors convert at 0.4% to MQL and then at 12% to SQL, the downstream pipeline contribution of blog content is essentially zero. That math makes the reallocation recommendation to commercial-intent content a revenue argument, not just a traffic argument.",
+      },
+    ],
+  },
+  {
+    id: "marketing-3",
+    domain: "marketing",
+    title: "Social Media & Community Dashboard",
+    subtitle: "Q1 2026 vs Q1 2025",
+    scenario: "You are the social media analyst at a DTC wellness brand. The brand has invested in growing Instagram and TikTok presence over the past year. Q1 results are in and the CMO wants to understand why social traffic hasn't converted to meaningful revenue growth despite follower growth.",
+    kpis: [
+      { label: "TOTAL FOLLOWERS", value: "284K", delta: "▲ 68% YoY", up: true },
+      { label: "AVG ENGAGEMENT RATE", value: "2.1%", delta: "▼ 1.8pp YoY", up: false },
+      { label: "SOCIAL-ATTRIBUTED REVENUE", value: "$184K", delta: "▲ 8% YoY", up: true },
+      { label: "REVENUE PER FOLLOWER", value: "$0.65", delta: "▼ $0.72 YoY", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "FOLLOWERS vs ENGAGEMENT RATE — MONTHLY",
+        series: [
+          { label: "Followers (×10K)", color: "#4fc3f7", points: [16.9, 18.2, 19.8, 21.4, 23.1, 24.8, 26.2, 27.4, 28.1, 28.0, 28.2, 28.4] },
+          { label: "Engagement Rate (%)", color: "#f87171", points: [3.8, 3.6, 3.4, 3.2, 3.1, 2.9, 2.8, 2.6, 2.4, 2.2, 2.2, 2.1] },
+        ],
+        xLabels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        yMax: 45,
+      },
+      {
+        type: "barCategorical",
+        title: "CONTENT TYPE PERFORMANCE — AVG ENGAGEMENT RATE Q1 2026",
+        bars: [
+          { label: "UGC/Repost", value: 4.8, color: "#4ade80" },
+          { label: "Founder content", value: 4.2, color: "#4ade80" },
+          { label: "Product how-to", value: 3.1, color: "#4fc3f7" },
+          { label: "Lifestyle/Brand", value: 1.8, color: "#fbbf24" },
+          { label: "Promotional", value: 0.9, color: "#f87171" },
+        ],
+        unit: "%",
+        yMax: 6,
+      },
+      {
+        type: "barHorizontal",
+        title: "POST FREQUENCY BY CONTENT TYPE — Q1 2026 (% of posts)",
+        bars: [
+          { label: "Promotional", value: 42, max: 50 },
+          { label: "Lifestyle/Brand", value: 31, max: 50 },
+          { label: "Product how-to", value: 14, max: 50 },
+          { label: "Founder content", value: 8, max: 50 },
+          { label: "UGC/Repost", value: 5, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The brand is growing followers but declining in engagement because 73% of posts are the lowest-performing content types (Promotional at 0.9% and Lifestyle at 1.8%), while the highest-performing content (UGC at 4.8%, Founder at 4.2%) accounts for only 13% of posts — the audience is growing but becoming less engaged because the content mix is optimized for posting volume, not audience resonance.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The engagement rate decay is perfectly inverse to the follower growth — as the account scaled, engagement fell at nearly the same rate followers grew, suggesting that the growth tactics (likely paid follower acquisition or broad hashtag strategies) brought in followers who don't genuinely connect with the brand. Revenue per follower also fell from $1.37 to $0.65, meaning each marginal follower is worth less than prior followers. This is an audience quality problem, not a content quality problem — the brand is measuring the wrong growth metric.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the engagement rate and story link-click rate (or link-in-bio click rate) for UGC and Founder content specifically for the past 6 months — and compare this to the click-to-purchase conversion rate on the traffic those posts generated. If UGC and Founder posts drive 4-5× the engagement AND 3× the click-to-purchase rate, the recommendation to shift 40-50% of content toward those formats has a revenue case that's stronger than the engagement case. The CMO cares about revenue; engagement rate is the means, not the end.",
+      },
+    ],
+  },
+  {
+    id: "marketing-4",
+    domain: "marketing",
+    title: "Paid Search Performance Dashboard — B2B SaaS",
+    subtitle: "Q1 2026 vs Q4 2025",
+    scenario: "You are the demand generation analyst. Paid search is the largest marketing channel at $420K quarterly spend. The VP of Marketing needs to justify the Q2 budget renewal to the CFO, who is skeptical about paid search efficiency.",
+    kpis: [
+      { label: "TOTAL SPEND", value: "$420K", delta: "Same as Q4", up: true },
+      { label: "MQL VOLUME", value: "1,284", delta: "▼ 18% vs Q4", up: false },
+      { label: "COST PER MQL", value: "$327", delta: "▲ $72 vs Q4", up: false },
+      { label: "PIPELINE INFLUENCED", value: "$4.2M", delta: "▼ 12% vs Q4", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "COST PER MQL BY KEYWORD CATEGORY — QUARTERLY ($)",
+        series: [
+          { label: "Brand keywords", color: "#4ade80", points: [48, 51, 49, 52] },
+          { label: "Competitor keywords", color: "#4fc3f7", points: [184, 198, 212, 228] },
+          { label: "Category keywords", color: "#fbbf24", points: [284, 318, 364, 412] },
+          { label: "Problem-aware", color: "#f87171", points: [142, 168, 198, 241] },
+        ],
+        xLabels: ["Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+        yMax: 450,
+        yUnit: "$",
+      },
+      {
+        type: "barCategorical",
+        title: "SPEND ALLOCATION BY KEYWORD CATEGORY — Q1 2026 (%)",
+        bars: [
+          { label: "Category keywords", value: 44, color: "#fbbf24" },
+          { label: "Problem-aware", value: 28, color: "#f87171" },
+          { label: "Competitor", value: 18, color: "#4fc3f7" },
+          { label: "Brand", value: 10, color: "#4ade80" },
+        ],
+        unit: "%",
+        yMax: 50,
+      },
+      {
+        type: "barHorizontal",
+        title: "MQL-TO-SQL CONVERSION RATE BY KEYWORD CATEGORY (%)",
+        bars: [
+          { label: "Brand keywords", value: 42, max: 50 },
+          { label: "Competitor keywords", value: 31, max: 50 },
+          { label: "Problem-aware", value: 18, max: 50 },
+          { label: "Category keywords", value: 8, max: 50 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "72% of the paid search budget is going to category and problem-aware keywords that cost $241-412 per MQL and convert at 8-18% to SQL, while Brand keywords cost $52 per MQL and convert at 42% to SQL — but Brand only gets 10% of the budget because it has limited scale, leaving competitor keywords as the most efficient scalable growth lever at $228 CPM and 31% SQL conversion.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "Category keyword CPM has grown from $284 to $412 in four quarters — a 45% increase — while MQL-to-SQL conversion at 8% suggests these keywords are attracting early-stage researchers, not buyers. Spending 44% of budget on the highest-cost, lowest-converting keyword category and watching that cost escalate every quarter is the core efficiency problem. The 'problem-aware' category at $241 CPM and 18% SQL conversion is actually more efficient but only gets 28% of budget.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Pull the 6-month pipeline-to-close rate (win rate) segmented by keyword category — specifically whether Category keyword MQLs that do convert to SQL close at a different rate than Competitor or Brand keyword MQLs. A 8% MQL-to-SQL rate is recoverable if Category keyword deals close at 40% (suggesting they're educating the market and then winning late); it's unrecoverable if they close at 12% (suggesting they're generating trial interest that doesn't convert). The full funnel math, not just the MQL cost, determines whether the reallocation recommendation is correct.",
+      },
+    ],
+  },
+  {
+    id: "marketing-5",
+    domain: "marketing",
+    title: "Customer Retention & Lifecycle Dashboard",
+    subtitle: "Q1 2026 cohort analysis",
+    scenario: "You are the lifecycle marketing analyst at a subscription e-commerce brand. The Retention team has been running campaigns for 12 months. The CMO wants to know whether the retention investment is working before deciding whether to increase the budget for Q2.",
+    kpis: [
+      { label: "90-DAY RETENTION", value: "38%", delta: "▲ 3pp vs prior year", up: true },
+      { label: "REACTIVATION RATE", value: "8.2%", delta: "▲ 1.4pp vs prior year", up: true },
+      { label: "CHURN WITHIN 30 DAYS", value: "31%", delta: "▼ 2pp vs prior year", up: true },
+      { label: "INCREMENTAL RETENTION LIFT", value: "Unclear", delta: "No holdout test running", up: false },
+    ],
+    charts: [
+      {
+        type: "lineMulti",
+        title: "RETENTION CURVE — TREATED vs HISTORICAL BENCHMARK (%)",
+        series: [
+          { label: "Historical benchmark", color: "#4fc3f7", points: [100, 72, 58, 46, 38, 34] },
+          { label: "Q1 2026 treated cohort", color: "#4ade80", points: [100, 74, 61, 50, 40, 37] },
+        ],
+        xLabels: ["Day 0", "Day 30", "Day 60", "Day 90", "Day 120", "Day 150"],
+        yMax: 100,
+        yUnit: "% retained",
+      },
+      {
+        type: "barCategorical",
+        title: "RETENTION CAMPAIGN SEND VOLUME vs OPEN RATE",
+        bars: [
+          { label: "Win-back email", value: 22, color: "#4fc3f7" },
+          { label: "At-risk SMS", value: 34, color: "#fbbf24" },
+          { label: "Loyalty offer email", value: 18, color: "#4ade80" },
+          { label: "Pause incentive", value: 28, color: "#fbbf24" },
+        ],
+        unit: "% open/response",
+        yMax: 40,
+      },
+      {
+        type: "barHorizontal",
+        title: "RETENTION BUDGET ALLOCATION — Q1 2026 ($K)",
+        bars: [
+          { label: "Discount offers", value: 184, max: 200 },
+          { label: "SMS platform", value: 62, max: 200 },
+          { label: "Email platform + creative", value: 48, max: 200 },
+          { label: "Loyalty reward cost", value: 124, max: 200 },
+          { label: "Analytics/tooling", value: 22, max: 200 },
+        ],
+      },
+    ],
+    questions: [
+      {
+        q: "In one sentence, what is the story this dashboard is telling?",
+        gold: "The retention metrics improved modestly — 90-day retention up 3pp, early churn down 2pp — but there is no holdout group, which means we cannot determine whether this improvement is caused by the $440K retention investment or by seasonal patterns, product improvements, or organic behavior change that would have occurred without the campaigns.",
+      },
+      {
+        q: "What is anomalous or unexpected in this data?",
+        gold: "The KPI dashboard shows the fourth metric, Incremental Retention Lift, as 'Unclear — No holdout test running.' This is the most important number on the dashboard and it's missing. The 3pp retention improvement looks positive, but it's being compared to a historical benchmark, not a concurrent control group. If the product team made a UX improvement in Q4 that reduced friction, or if Q1 seasonally retains better than Q3, the entire 3pp gain could be unrelated to the $440K spend. Running a 12-month retention program without a holdout group is the most common mistake in lifecycle marketing.",
+      },
+      {
+        q: "What would you ask next? Name the one piece of data you would pull before the meeting.",
+        gold: "Implement a holdout group immediately for Q2 — even 10% of the at-risk population excluded from retention campaigns — so that by Q3 we have an apples-to-apples comparison. For the CMO meeting this quarter, pull the retention rate trend for customers who received zero retention touches in Q1 (self-identified holdouts who unsubscribed from marketing emails or were missed due to data issues) and compare to the treated group. If untreated customers retained at 37% and treated at 40%, the incremental lift is real but modest. If they retained at 40% too, the program isn't adding value at any cost.",
+      },
+    ],
+  },
 ];
 
 // ── PROBLEM-TO-METRIC SCENARIOS (Mode 3) ───────────────────────────────────
