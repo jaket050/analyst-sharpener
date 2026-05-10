@@ -7611,13 +7611,105 @@ Plain text only, no markdown. Be honest and discriminating — don't grade lenie
 const AB_LEARNING_COLOR = "#2dd4bf";
 
 const AB_CATEGORIES = [
-  { id: "foundations", label: "📐 Foundations", description: "Hypothesis testing basics" },
+  { id: "basics",      label: "🌱 Basics",       description: "Core concepts first" },
+  { id: "foundations", label: "📐 Foundations", description: "Hypothesis testing tools" },
   { id: "design",      label: "🎯 Test Design",  description: "Setting up clean experiments" },
   { id: "analysis",    label: "📊 Analysis",     description: "Reading results correctly" },
   { id: "threats",     label: "⚠️ Threats",      description: "What can go wrong" },
 ];
 
 const AB_LEARNING = {
+  basics: [
+    {
+      concept: "What is an A/B Test?",
+      formula: "Two versions, random assignment, compare outcomes",
+      why: "An A/B test (also called a randomized controlled experiment) compares two versions of something — a webpage, email, feature, ad — to see which performs better on a defined outcome. Random assignment is what makes any difference in outcomes attributable to the treatment itself, not to differences between users.",
+      context: "Use A/B tests when you want to know whether a change CAUSES a real improvement, not just whether the metric went up after launch. Without a control group, post-launch movement could be from seasonality, marketing, weather, or competitor behavior.",
+      pitfalls: [
+        "Pre/post comparisons (metric before launch vs metric after launch) are NOT A/B tests. They confuse the effect of your change with everything else changing in the world.",
+        "An A/B test with no clear hypothesis or success metric is just feature deployment with extra steps. Define what you're measuring before launch, not after.",
+      ],
+      related: ["Control Group", "Treatment Group", "Random Assignment"],
+    },
+    {
+      concept: "Control Group",
+      formula: "The arm of the test that does NOT receive the change",
+      why: "The control group represents the counterfactual: what would have happened if the change weren't made. Without a control, you cannot separate the treatment's effect from everything else changing simultaneously.",
+      context: "Control users should experience exactly what production users would experience without the change — same UI, same flows, same copy, everything identical except the variable being tested.",
+      pitfalls: [
+        "Comparing a treatment cohort to historical data instead of a randomized control mixes treatment effect with seasonality, marketing, and unrelated changes. This is not an A/B test.",
+        "If control users somehow learn about or interact with the treatment (spillover), the comparison is contaminated. Common in messaging features, social products, and small-team experiments.",
+      ],
+      related: ["Treatment Group", "Causal Inference", "Network Effects"],
+    },
+    {
+      concept: "Treatment Group",
+      formula: "The arm of the test that receives the change being tested",
+      why: "The treatment group experiences the new version — the feature, design, or copy you want to evaluate. Their outcomes are compared to the control to estimate the change's effect on the metric of interest.",
+      context: "Standard A/B tests use one treatment vs one control. A/B/C/D tests with multiple treatments are valid but require larger samples and multiple-comparison correction.",
+      pitfalls: [
+        "Adding multiple treatment arms (A/B/C/D) without expanding sample size leaves each comparison underpowered. More arms ≠ free information.",
+        "Treatment 'leaks' — control users accidentally seeing treatment — bias results toward zero. Verify the assignment system actually enforces the split.",
+      ],
+      related: ["Control Group", "Multiple Comparisons", "Sample Size"],
+    },
+    {
+      concept: "Random Assignment",
+      formula: "Each user has equal probability of being placed in treatment or control, independent of any user attribute",
+      why: "Random assignment is the single most important feature of an A/B test. It ensures treatment and control are statistically equivalent on average — same mix of new vs returning users, mobile vs desktop, regions, behaviors. Any difference in outcomes therefore comes from the treatment itself, not from the groups being different to begin with.",
+      context: "Randomize using a hash of user ID or session ID, not by signup date, region, or any user attribute. Always verify the actual split came out close to 50/50 before interpreting results.",
+      pitfalls: [
+        "Self-selection breaks randomization. Letting users 'opt in' to a beta is not an A/B test — adopters differ systematically from non-adopters in ways that confound the result.",
+        "Time-based splits (treatment in morning, control in afternoon) introduce time-of-day confounders. Randomize at the user level, never the time level.",
+      ],
+      related: ["Sample Ratio Mismatch", "Causal Inference", "Selection Bias"],
+    },
+    {
+      concept: "Causal Inference",
+      formula: "Effect = Outcome(treatment) − Outcome(control), under random assignment",
+      why: "A/B tests answer causal questions: does this change CAUSE better outcomes? Random assignment is what makes the answer causal — it rules out alternative explanations (selection bias, confounders, reverse causality) that plague observational data.",
+      context: "Causal claims justify shipping decisions in a way correlational claims cannot. 'Users who used Feature X had higher retention' is correlational and weak. 'Feature X caused a 3% retention lift' (from an A/B test) is causal and actionable.",
+      pitfalls: [
+        "Observational analyses ('users who did X also did Y') are NOT causal. They suggest hypotheses worth testing; they don't prove effects. Confusing the two is the most common mistake in product analytics.",
+        "Causal effects from A/B tests apply to the specific treatment, population, and time window tested. Generalizing to different conditions or user types requires care, not assumption.",
+      ],
+      related: ["Random Assignment", "Selection Bias", "Heterogeneous Treatment Effects"],
+    },
+    {
+      concept: "Sample vs Population",
+      formula: "Sample = users in your test; Population = all users you want to generalize to",
+      why: "A/B tests measure outcomes on a finite sample but use those measurements to make claims about the full user population. The size and representativeness of the sample determine how confident those claims can be.",
+      context: "If your sample is biased (e.g., only US iOS users), results don't generalize beyond that group. If your sample is small, your estimates are noisy. Both factors matter, separately, for interpretation.",
+      pitfalls: [
+        "Conclusions about your sample are not automatic conclusions about your full user base. An A/B test on US users doesn't necessarily generalize to international users with different behaviors.",
+        "Even random samples have sampling error — the measured difference between groups will not exactly equal the true population difference. Hypothesis tests quantify how much that uncertainty matters.",
+      ],
+      related: ["Statistical Inference", "Variance", "Generalization"],
+    },
+    {
+      concept: "Variance & Sampling Noise",
+      formula: "Variance = average squared deviation from the mean; sampling noise = random variation between samples",
+      why: "Even when there is NO real treatment effect, two random groups of users produce slightly different metric values just by chance. This noise is why we need statistical tests — to distinguish real treatment effects from random variation.",
+      context: "Higher variance means more sample size needed to detect a given effect. Metrics like revenue (highly variable across users) need larger samples than metrics like click-through rate (less variable per user).",
+      pitfalls: [
+        "Treating any metric movement as meaningful ignores noise. Without a statistical test, you cannot tell whether a 2% lift is real or just sampling variation.",
+        "Reducing variance via stratification or CUPED can dramatically shrink required sample size. Ignoring variance reduction leaves statistical power on the table.",
+      ],
+      related: ["Statistical Power", "Sample Size", "CUPED"],
+    },
+    {
+      concept: "Statistical Inference",
+      formula: "Use sample data to make probabilistic claims about the population",
+      why: "Statistical inference is the bridge from 'I observed this difference in my sample' to 'I can conclude something about all users.' The tools — hypothesis tests, confidence intervals, p-values — are all about quantifying uncertainty in that bridge.",
+      context: "Every A/B test result is a statistical inference: the observed effect plus uncertainty about whether the true effect is exactly that, larger, smaller, or zero. Reporting effects without uncertainty hides the inference itself.",
+      pitfalls: [
+        "Reporting only point estimates ('treatment lifted conversion 3%') without confidence intervals or p-values omits the uncertainty that's central to correct interpretation.",
+        "Statistical inference assumes random sampling and independent observations. Both are commonly violated in real A/B tests, which means results are often more uncertain than the math suggests.",
+      ],
+      related: ["Confidence Interval", "P-value", "Hypothesis Testing"],
+    },
+  ],
+
   foundations: [
     {
       concept: "Null Hypothesis (H₀)",
@@ -7962,7 +8054,7 @@ const AB_LEARNING = {
 };
 
 function ABLearningMode({ apiKey, progress, onScore }) {
-  const [activeCategory, setActiveCategory] = useState("foundations");
+  const [activeCategory, setActiveCategory] = useState("basics");
   const [cardIdx, setCardIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [sessionScores, setSessionScores] = useState({});
