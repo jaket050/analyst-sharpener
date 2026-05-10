@@ -6039,6 +6039,7 @@ const INTEL_SUBMODES = [
   { id: "dashboard", label: "📊 Dashboard Drill", description: "60-sec timed reading" },
   { id: "problem",   label: "🧩 Problem to Metric", description: "Diagnostic reasoning" },
   { id: "insight",   label: "💡 Insight & Rec",    description: "Recommendation framing" },
+  { id: "ablearn",   label: "🎓 A/B Learning",     description: "Concept fundamentals" },
   { id: "abtest",    label: "🧪 A/B Test",          description: "Experiment analysis" },
 ];
 
@@ -7603,6 +7604,599 @@ Plain text only, no markdown. Be honest and discriminating — don't grade lenie
     </div>
   );
 }
+// ── A/B TESTING LEARNING MODE ─────────────────────────────────────────────
+// 30 concept flashcards across 4 categories (Foundations, Design, Analysis, Threats)
+// Single accent color (teal). Score keys: ablearn-{category}:{idx}
+
+const AB_LEARNING_COLOR = "#2dd4bf";
+
+const AB_CATEGORIES = [
+  { id: "foundations", label: "📐 Foundations", description: "Hypothesis testing basics" },
+  { id: "design",      label: "🎯 Test Design",  description: "Setting up clean experiments" },
+  { id: "analysis",    label: "📊 Analysis",     description: "Reading results correctly" },
+  { id: "threats",     label: "⚠️ Threats",      description: "What can go wrong" },
+];
+
+const AB_LEARNING = {
+  foundations: [
+    {
+      concept: "Null Hypothesis (H₀)",
+      formula: "H₀: μ_treatment = μ_control",
+      why: "The default 'no effect' assumption your test is designed to challenge. You never prove the alternative; you only fail to reject the null.",
+      context: "State H₀ before the test, not after. Always pair with a clearly stated H₁ and a pre-committed alpha level.",
+      pitfalls: [
+        "Failing to reject H₀ does not mean H₀ is true. It means you lacked evidence to reject it. Absence of evidence is not evidence of absence.",
+        "Redefining H₀ after seeing data is p-hacking dressed up as analysis. Lock it before launch.",
+      ],
+      related: ["Alternative Hypothesis", "P-value", "Type II Error"],
+    },
+    {
+      concept: "Alternative Hypothesis (H₁)",
+      formula: "H₁: μ_treatment ≠ μ_control (two-tailed)",
+      why: "Captures what you actually believe will happen. The wording (one-tailed vs two-tailed) determines what counts as evidence.",
+      context: "Use two-tailed by default. One-tailed only when you genuinely will not act on the opposite direction, which is rare in product work.",
+      pitfalls: [
+        "One-tailed tests double your power but only if you literally would not care about a negative effect. If your treatment could hurt metrics, you would care; use two-tailed.",
+        "Vague H₁ ('there's some effect') makes sample size calculation impossible. Specify direction and magnitude.",
+      ],
+      related: ["Null Hypothesis", "MDE", "Sample Size"],
+    },
+    {
+      concept: "P-value",
+      formula: "P(data ≥ observed | H₀ true)",
+      why: "The probability of seeing your result or more extreme, assuming no real effect exists. Lower p-values mean your data is harder to explain by chance alone.",
+      context: "Compare against pre-set alpha (usually 0.05). p < α means reject H₀. p ≥ α means fail to reject, which is not the same as accepting H₀.",
+      pitfalls: [
+        "P-value is NOT 'the probability the null is true.' It is the probability of the data given the null is true. These are different things.",
+        "Tiny p-values (p < 0.001) do not mean huge effects. A trivial effect at massive sample size produces extreme p-values.",
+      ],
+      related: ["Alpha", "Statistical Significance", "Multiple Comparisons"],
+    },
+    {
+      concept: "Alpha (α)",
+      formula: "α = P(reject H₀ | H₀ true)",
+      why: "The false-positive risk you accept before running the test. Convention is 0.05 (5% false-positive rate when no real effect exists).",
+      context: "Set alpha before the test, never after. Lower it (0.01) for high-stakes decisions where false positives are expensive.",
+      pitfalls: [
+        "Lowering alpha reduces false positives but also reduces power. You will miss more real effects. It is a tradeoff, not a free win.",
+        "Running 20 tests at α = 0.05 means ~1 false positive by chance alone. This is the multiple comparisons problem.",
+      ],
+      related: ["P-value", "Type I Error", "Multiple Comparisons"],
+    },
+    {
+      concept: "Confidence Interval (CI)",
+      formula: "CI = point estimate ± (critical value × SE)",
+      why: "A range of plausible values for the true effect. CIs communicate effect size and uncertainty, where p-values only communicate distinguishability from zero.",
+      context: "Always report CIs alongside p-values. A 95% CI shows the precision of your estimate; if it is wide, your estimate is unreliable even when significant.",
+      pitfalls: [
+        "A 95% CI does NOT mean '95% chance the true effect is in this range.' It means the procedure produces correct intervals 95% of the time across repeated experiments.",
+        "Wide CI = uncertain effect. Don't ship a feature with CI [+0.1%, +20%] just because zero is excluded. The effect could be trivial.",
+      ],
+      related: ["Standard Error", "P-value", "Effect Size"],
+    },
+    {
+      concept: "Statistical Power (1 − β)",
+      formula: "Power = P(reject H₀ | H₁ true)",
+      why: "Probability of detecting a real effect when one exists. Power of 0.80 means an 80% chance of catching a true effect of your target size.",
+      context: "Design every test for power ≥ 0.80. Sample size is calculated from power, MDE, baseline rate, and alpha. Underpowered tests are worse than no test.",
+      pitfalls: [
+        "Underpowered null results are uninterpretable. You cannot tell whether 'no effect' or 'missed it' is correct, so you cannot make a decision.",
+        "Power depends on the effect you are looking for. A test powered for MDE = 5% has near-zero power to detect an actual 1% effect.",
+      ],
+      related: ["Sample Size", "MDE", "Type II Error"],
+    },
+    {
+      concept: "Type I Error (False Positive)",
+      formula: "P(Type I) = α",
+      why: "Rejecting the null when it is actually true. Concluding there is an effect when there isn't. Directly controlled by your alpha level.",
+      context: "Most expensive when shipping the wrong feature has lasting cost (technical debt, brand, regulatory). Lower alpha shrinks Type I rate.",
+      pitfalls: [
+        "At α = 0.05, you get a false positive ~1 in 20 tests by chance. Many 'discoveries' in data-driven orgs are likely Type I errors.",
+        "Stopping a test the moment it shows significance ('peeking') silently inflates your true Type I rate well above your stated alpha.",
+      ],
+      related: ["Alpha", "Multiple Comparisons", "Peeking Problem"],
+    },
+    {
+      concept: "Type II Error (False Negative)",
+      formula: "P(Type II) = β; Power = 1 − β",
+      why: "Failing to reject the null when there is a real effect. Missing a real win. Controlled by sample size and effect size, not by alpha.",
+      context: "Tradeoff with Type I: lowering alpha (fewer false positives) raises beta (more false negatives). Both costs are real, and which matters more depends on the decision.",
+      pitfalls: [
+        "A null result from an underpowered test is not evidence of no effect. It is evidence you could not see one. Do not kill features based on underpowered nulls.",
+        "Power is rarely reported in product writeups. Always know what the test was powered to detect, or you do not know what the null actually means.",
+      ],
+      related: ["Statistical Power", "Sample Size", "MDE"],
+    },
+  ],
+
+  design: [
+    {
+      concept: "Sample Size Calculation",
+      formula: "n ≈ (16 × baseline × (1−baseline)) / MDE² for proportions, α = 0.05, power = 0.80",
+      why: "Sample size determines whether your test can detect the effect you care about. Calculated from baseline rate, MDE, alpha, and power. Get this wrong and your test is either underpowered or wasteful.",
+      context: "Calculate before launch using a power calculator. Smaller MDE or higher power means dramatically larger sample size.",
+      pitfalls: [
+        "Halving the MDE roughly quadruples required sample size. Tests targeting tiny effects become very long very fast.",
+        "Calculations assume independent observations. If users see treatment multiple times or interact with each other, your effective sample size is smaller than your raw user count.",
+      ],
+      related: ["Statistical Power", "MDE", "Network Effects"],
+    },
+    {
+      concept: "Minimum Detectable Effect (MDE)",
+      formula: "MDE = smallest effect size your test can reliably catch at given α and power",
+      why: "MDE answers 'what is the smallest effect we'd need to see to call this a win, and can our test even detect it?' Setting MDE drives sample size and test duration.",
+      context: "Pick MDE based on the smallest practically meaningful effect, not the smallest effect you'd love to find. A 0.1% MDE on conversion rate may not be worth chasing even if statistically detectable.",
+      pitfalls: [
+        "Setting MDE too small inflates sample size and test duration to unsustainable levels. Pick MDE based on business impact, not optimism.",
+        "Detecting an effect at your MDE does not mean the true effect is exactly that size. Always look at the full CI, not just whether the effect cleared MDE.",
+      ],
+      related: ["Sample Size", "Practical Significance", "Effect Size"],
+    },
+    {
+      concept: "Randomization",
+      formula: "Assign each user to treatment or control via random hash, independent of any user attribute",
+      why: "Random assignment is what makes A/B test results causal. Without randomization, you cannot distinguish treatment effect from selection bias.",
+      context: "Randomize at the right unit (user, account, session) to match your analysis unit. Use a deterministic hash so the same user gets the same assignment across visits.",
+      pitfalls: [
+        "Randomizing at session level when users return multiple times means the same user may see treatment and control. Inflates noise and breaks independence assumptions.",
+        "Randomization can fail silently. Engineering bugs, caching, or assignment overrides produce non-random splits. Always verify with an SRM check.",
+      ],
+      related: ["Sample Ratio Mismatch", "Stratification", "A/A Test"],
+    },
+    {
+      concept: "Primary Metric",
+      formula: "The single metric the test is powered to detect; ship/no-ship decision is based on this",
+      why: "Pre-committing to one primary metric prevents post-hoc rationalization. If you measure 10 metrics and ship based on whichever moved, you are p-hacking.",
+      context: "Choose the primary metric based on the hypothesis. It should be tied to the user behavior the treatment is designed to change, not a downstream business metric.",
+      pitfalls: [
+        "Using revenue as primary metric for a UX feature usually fails because revenue is too noisy to detect UX-scale changes. Pick a closer-to-the-feature behavioral metric.",
+        "Adding a 'better' primary metric after seeing results invalidates the test's statistical guarantees. Lock the primary before launch.",
+      ],
+      related: ["Secondary Metric", "Guardrail Metric", "Multiple Comparisons"],
+    },
+    {
+      concept: "Secondary Metric",
+      formula: "Supporting metrics that build a fuller picture; not the basis for ship/no-ship",
+      why: "Secondary metrics give context to the primary. They help you understand WHY a primary moved (or didn't) and whether the result is stable across the funnel.",
+      context: "Use secondary metrics to validate the mechanism. If primary went up but the upstream behavior it should have changed didn't, something else is driving the result.",
+      pitfalls: [
+        "Treating secondary metrics as decision criteria silently turns them into multiple primaries, inflating false positive risk. Be honest about which metric is the gate.",
+        "Cherry-picking which secondary metrics to report after seeing results is a common form of motivated analysis. Pre-register secondaries when possible.",
+      ],
+      related: ["Primary Metric", "Guardrail Metric", "Multiple Comparisons"],
+    },
+    {
+      concept: "Guardrail Metric",
+      formula: "Metrics that must NOT degrade, even if primary improves",
+      why: "Guardrails protect against gaining on the primary at the cost of breaking something else. Common guardrails: latency, error rate, support tickets, retention, opt-out rates.",
+      context: "Set guardrail thresholds before the test (e.g., 'no more than 0.5% increase in latency'). If a guardrail breaks, do not ship even if primary wins.",
+      pitfalls: [
+        "Guardrails are often forgotten in post-test analysis. Always check them explicitly; a primary win that breaks a guardrail is a net loss.",
+        "Setting guardrail thresholds too loose makes them ceremonial. Pick thresholds tight enough that violation actually changes the decision.",
+      ],
+      related: ["Primary Metric", "Secondary Metric", "Threats"],
+    },
+    {
+      concept: "A/A Test",
+      formula: "Both arms get the same treatment (control); should produce no significant difference",
+      why: "A/A tests validate your experimentation infrastructure. If A vs A shows significance, your randomization, logging, or analysis pipeline has a bug.",
+      context: "Run A/A tests when standing up a new platform, after major infra changes, or when results across A/B tests look suspicious. They should produce p-values uniformly distributed [0, 1].",
+      pitfalls: [
+        "A single A/A test passing doesn't prove your platform is clean. Run many over time and check the distribution of p-values.",
+        "A failed A/A test is a serious signal. Do not run real A/B tests on a platform where A/A produces significance.",
+      ],
+      related: ["Randomization", "Sample Ratio Mismatch", "Validation"],
+    },
+    {
+      concept: "Pre-registration",
+      formula: "Publicly commit to hypothesis, primary metric, MDE, sample size, and analysis plan before running the test",
+      why: "Pre-registration prevents motivated analysis and HARKing (Hypothesizing After Results are Known). It is the strongest defense against unconscious p-hacking.",
+      context: "At minimum, document the hypothesis, primary metric, MDE, sample size, alpha, and stop conditions in writing before launching. Treat this as a contract with yourself.",
+      pitfalls: [
+        "Without pre-registration, even honest analysts unconsciously search for the analysis that makes the test 'work.' This isn't malice; it's how brains work.",
+        "Pre-registration is only useful if you actually follow it. Document deviations openly when they happen, rather than quietly switching analyses.",
+      ],
+      related: ["Primary Metric", "P-hacking", "Multiple Comparisons"],
+    },
+  ],
+
+  analysis: [
+    {
+      concept: "Effect Size",
+      formula: "Effect size = (mean_treatment − mean_control) / pooled_SD (Cohen's d) or simply the absolute/relative difference",
+      why: "Effect size answers 'how big is it?' Statistical significance only answers 'is it distinguishable from zero?' Effect size is what determines whether to ship.",
+      context: "Always report effect size with a confidence interval. A 0.5% lift with CI [+0.4%, +0.6%] is very different from a 0.5% lift with CI [−2%, +3%].",
+      pitfalls: [
+        "Reporting only p-values hides whether an effect is large enough to matter. Statistical significance without practical significance is noise.",
+        "Effect sizes from underpowered tests are biased toward extremes. Significant results from small samples often overstate the true effect.",
+      ],
+      related: ["Lift", "Practical Significance", "Confidence Interval"],
+    },
+    {
+      concept: "Lift: Absolute vs Relative",
+      formula: "Absolute lift = treatment − control; Relative lift = (treatment − control) / control",
+      why: "Same data, two very different framings. A 1pp absolute lift sounds small; a 25% relative lift on a 4% baseline sounds huge. They are the same thing.",
+      context: "Use both. Absolute is honest about real-world magnitude (e.g., 1pp more conversions per visitor). Relative is honest about proportional improvement (25% better than before).",
+      pitfalls: [
+        "Reporting only relative lift can inflate trivial absolute changes ('25% lift!' when baseline is 0.04%). Always pair with absolute.",
+        "Relative lift on tiny baselines is unstable. A 0.001% baseline moving to 0.0015% is a 50% relative lift but practically meaningless.",
+      ],
+      related: ["Effect Size", "Practical Significance", "Confidence Interval"],
+    },
+    {
+      concept: "Statistical vs Practical Significance",
+      formula: "Statistical: p < α. Practical: effect size large enough to act on.",
+      why: "Statistical significance only tells you the effect is distinguishable from zero. Practical significance asks whether the effect is worth shipping.",
+      context: "At very large sample sizes, almost any effect becomes statistically significant. The question shifts from 'is there an effect?' to 'is the effect big enough to matter?'",
+      pitfalls: [
+        "Shipping every statistically significant result regardless of effect size leads to feature bloat with no real user impact.",
+        "Killing a non-significant result with a positive trend in an underpowered test wastes potential wins. Re-run with adequate power before deciding.",
+      ],
+      related: ["Effect Size", "MDE", "Statistical Power"],
+    },
+    {
+      concept: "Confidence Interval Interpretation",
+      formula: "If CI excludes zero, effect is statistically significant at the corresponding α level",
+      why: "CI is the most informative single output of an A/B test. It tells you the direction, magnitude, and precision of the effect in one number.",
+      context: "Read CIs as ranges of plausible effects. If the entire CI is within your 'meaningful' range, ship. If it crosses into 'not meaningful,' the effect is too uncertain to ship.",
+      pitfalls: [
+        "Wide CIs that exclude zero (e.g., [+0.1%, +15%]) are technically significant but practically uninterpretable. The effect could be trivial or huge.",
+        "Narrow CIs near zero (e.g., [−0.1%, +0.1%]) are strong evidence the true effect is essentially zero. This is a more informative null than a wide null CI.",
+      ],
+      related: ["Effect Size", "Statistical Power", "Practical Significance"],
+    },
+    {
+      concept: "Stratification",
+      formula: "Pre-split users into strata (e.g., by country, platform) before randomizing within each",
+      why: "Stratification reduces variance by ensuring treatment and control are balanced on known confounders. Same conclusions, smaller sample size needed.",
+      context: "Use when you have known sources of variance (high-volume vs low-volume users, mobile vs desktop, region). Especially valuable for small samples or rare events.",
+      pitfalls: [
+        "Stratifying on a variable that's actually affected by the treatment introduces bias. Only stratify on attributes determined before treatment exposure.",
+        "Over-stratifying (too many strata, too few users per stratum) wastes the variance reduction and can break randomization integrity.",
+      ],
+      related: ["Randomization", "Variance Reduction", "Sample Size"],
+    },
+    {
+      concept: "CUPED (Variance Reduction)",
+      formula: "Adjusted_metric = metric − θ × (pre_period_metric − mean_pre_period)",
+      why: "CUPED uses pre-experiment data to remove user-level baseline variance, often shrinking required sample size by 20–50%. Same statistical conclusions, cheaper tests.",
+      context: "Use for any metric where users have history (DAU, revenue, engagement). The pre-period metric just needs to correlate with the experiment-period metric.",
+      pitfalls: [
+        "CUPED only works if pre-period data is available and not affected by the treatment. New users have no pre-period.",
+        "Choosing pre-period that overlaps with treatment exposure breaks the variance reduction guarantee. Use a strict pre-period only.",
+      ],
+      related: ["Stratification", "Sample Size", "Variance Reduction"],
+    },
+    {
+      concept: "Heterogeneous Treatment Effects",
+      formula: "Effect varies across user segments (e.g., new vs returning, mobile vs desktop)",
+      why: "Aggregate effect can hide major differences across segments. A null overall result might hide a strong positive effect in one segment and a strong negative in another.",
+      context: "Pre-specify which segments to analyze. Look for treatment effects that flip direction or change magnitude across user types. This is where segment-specific shipping decisions come from.",
+      pitfalls: [
+        "Slicing by many segments after seeing results is multiple-comparison fishing. Pre-register the segment cuts you'll examine.",
+        "A segment showing a much larger effect than the average is often a regression-to-mean signal, not a real subgroup difference. Validate before acting.",
+      ],
+      related: ["Segmentation", "Multiple Comparisons", "Regression to Mean"],
+    },
+    {
+      concept: "Average Treatment Effect (ATE)",
+      formula: "ATE = E[Y | treatment] − E[Y | control]",
+      why: "ATE is the population-level effect: the average difference in outcomes if everyone got treatment vs everyone got control. It's the standard A/B test estimate.",
+      context: "Most reported A/B test 'lifts' are ATEs. They describe the average user, not any specific user. Useful for ship decisions; less useful for personalization.",
+      pitfalls: [
+        "ATE can be near-zero even when treatment helps half the users and hurts the other half equally. Always check for heterogeneous effects.",
+        "ATE estimates how the population would respond if everyone were treated, not how the currently-treated subset is responding (relevant for adoption-gated features).",
+      ],
+      related: ["Heterogeneous Treatment Effects", "Effect Size", "Lift"],
+    },
+  ],
+
+  threats: [
+    {
+      concept: "Sample Ratio Mismatch (SRM)",
+      formula: "Chi-square test on observed vs expected split (e.g., 50/50). Significant SRM = broken assignment.",
+      why: "SRM signals your randomization is broken: the split between treatment and control is not what you intended. When SRM is present, treatment effects are likely contaminated and unreliable.",
+      context: "Check SRM at the start of every analysis, before looking at results. Industry rule: if SRM p < 0.001, do not interpret the test until cause is found.",
+      pitfalls: [
+        "Common causes: bot filtering applied differently to arms, caching that biases assignment, login/logout flows that re-randomize users. Engineering issues, not statistical ones.",
+        "A passing SRM check doesn't prove the test is clean, but a failing SRM check almost always means results are unreliable. Treat it as a hard gate.",
+      ],
+      related: ["Randomization", "A/A Test", "Validation"],
+    },
+    {
+      concept: "Novelty Effect",
+      formula: "Treatment effect inflates early in the test as users react to newness, then decays toward true steady-state effect",
+      why: "Early test results overstate the true long-run effect. Users click the new thing because it's new, not because they value it. Shipping based on early data ships novelty, not value.",
+      context: "Run tests long enough to see effect stabilize. Compare effect in week 1 vs week 4. If they differ substantially, the effect is partly novelty.",
+      pitfalls: [
+        "Stopping a test early when treatment looks great is the most common way novelty effect gets shipped to production. The 'win' fades within months.",
+        "Novelty also produces inverse effects: users dislike change initially, then adapt. Both are temporary and both should be measured against steady-state.",
+      ],
+      related: ["Test Duration", "Peeking Problem", "Heterogeneous Effects"],
+    },
+    {
+      concept: "Peeking Problem (Sequential Testing)",
+      formula: "Checking p-value repeatedly during a test inflates Type I error rate above stated alpha",
+      why: "Standard A/B test math assumes you check the result exactly once at a pre-specified sample size. Peeking and stopping early drives the true false-positive rate above 5%, sometimes to 30%+.",
+      context: "Either commit to a fixed sample size before launch and check only at the end, OR use sequential testing methods (mSPRT, alpha spending) designed to allow peeking.",
+      pitfalls: [
+        "Stopping a test the moment p < 0.05 sounds efficient but inflates false positives dramatically. Many 'wins' from early stopping are statistical artifacts.",
+        "Sequential testing methods exist but require advance configuration. You cannot retroactively apply them to a peeked test.",
+      ],
+      related: ["Type I Error", "Test Duration", "Pre-registration"],
+    },
+    {
+      concept: "Multiple Comparisons Problem",
+      formula: "Family-wise error rate (FWER) = 1 − (1 − α)^k, where k = number of tests",
+      why: "Running many tests at α = 0.05 each guarantees false positives by chance. With 20 tests, ~1 false positive is expected. With 100 tests, ~5 are expected.",
+      context: "Use Bonferroni correction (α/k) or FDR control (Benjamini-Hochberg) when looking at many metrics or running many simultaneous tests.",
+      pitfalls: [
+        "Slicing one test's data by 10 segments and reporting whichever segment is significant is a multiple comparisons problem in disguise.",
+        "Correction methods reduce false positives but also reduce power. Pre-specify the comparisons that matter so you don't have to correct for fishing.",
+      ],
+      related: ["Alpha", "Type I Error", "Heterogeneous Effects"],
+    },
+    {
+      concept: "Network Effects / Interference",
+      formula: "Treatment of one user affects outcomes for users in control (violates SUTVA: Stable Unit Treatment Value Assumption)",
+      why: "Standard A/B test math assumes user A's treatment does not affect user B's outcome. Networks, marketplaces, and shared resources break this assumption.",
+      context: "If treatment changes social, marketplace, or supply behavior (recommendations seen by friends, search results, supply availability), randomizing at user level produces biased estimates.",
+      pitfalls: [
+        "Examples: messaging features (treated users message control users, contaminating control), marketplace pricing (treatment shifts demand affecting control supply), recommendations (one user's clicks change what another sees).",
+        "Solutions are non-trivial: cluster randomization, switchback experiments, or geo-experiments. User-level randomization is wrong for these cases.",
+      ],
+      related: ["Randomization", "Sample Size", "Heterogeneous Effects"],
+    },
+    {
+      concept: "Regression to the Mean",
+      formula: "Extreme observations on a noisy metric tend to move toward the mean on remeasurement",
+      why: "Selecting users based on extreme behavior (highest spenders, most-active users) and then measuring change pre/post will show 'reversion' even with no treatment. This looks like a treatment effect but isn't.",
+      context: "Common in 're-engagement' or 'lapsed user' campaign analysis. Always use a randomized control group; never compare extreme cohorts to themselves over time.",
+      pitfalls: [
+        "Pre/post comparisons of extreme cohorts will show change in the direction of regression even from a placebo. Without a control, you cannot distinguish regression from real effect.",
+        "Confusing regression to mean with treatment effect inflates campaign ROI estimates, leading to over-investment in interventions that don't actually work.",
+      ],
+      related: ["Selection Bias", "Heterogeneous Effects", "Validation"],
+    },
+  ],
+};
+
+function ABLearningMode({ apiKey, progress, onScore }) {
+  const [activeCategory, setActiveCategory] = useState("foundations");
+  const [cardIdx, setCardIdx] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [sessionScores, setSessionScores] = useState({});
+
+  const cat = AB_CATEGORIES.find(c => c.id === activeCategory);
+  const cards = AB_LEARNING[activeCategory] || [];
+  const card = cards[cardIdx];
+  const cardKey = `ablearn-${activeCategory}:${cardIdx}`;
+  const persistedScore = progress.allTimeScores?.[cardKey];
+  const scoredThisSession = sessionScores[cardIdx];
+
+  const handleCategoryChange = (id) => {
+    setActiveCategory(id);
+    setCardIdx(0);
+    setRevealed(false);
+    setSessionScores({});
+  };
+
+  const handleScore = (score) => {
+    setSessionScores(s => ({ ...s, [cardIdx]: score }));
+    onScore(`ablearn-${activeCategory}`, cardIdx, score, { q: card.concept });
+  };
+
+  const handleNext = () => { setCardIdx(i => Math.min(i + 1, cards.length - 1)); setRevealed(false); };
+  const handlePrev = () => { setCardIdx(i => Math.max(i - 1, 0)); setRevealed(false); };
+
+  const strong  = Object.values(sessionScores).filter(v => v === "strong").length;
+  const partial = Object.values(sessionScores).filter(v => v === "partial").length;
+  const weak    = Object.values(sessionScores).filter(v => v === "weak").length;
+
+  if (!card) return <div style={{ padding: 40, color: C.muted, fontFamily: mono }}>No cards in this category.</div>;
+
+  return (
+    <div style={{ padding: "0 0 40px 0" }}>
+      {/* Category selector */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        {AB_CATEGORIES.map(c => (
+          <button
+            key={c.id}
+            onClick={() => handleCategoryChange(c.id)}
+            style={{
+              padding: "8px 16px", borderRadius: 8,
+              border: `1.5px solid ${activeCategory === c.id ? AB_LEARNING_COLOR : C.border}`,
+              background: activeCategory === c.id ? AB_LEARNING_COLOR + "18" : "transparent",
+              color: activeCategory === c.id ? AB_LEARNING_COLOR : C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+              display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2,
+            }}
+          >
+            <span>{c.label}</span>
+            <span style={{ fontSize: 9, opacity: 0.7, letterSpacing: "0.08em" }}>{c.description}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Progress */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          {cardIdx + 1} / {cards.length}
+        </span>
+        <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2 }}>
+          <div style={{
+            height: "100%", borderRadius: 2, background: AB_LEARNING_COLOR,
+            width: `${((cardIdx + 1) / cards.length) * 100}%`, transition: "width 0.3s",
+          }} />
+        </div>
+        <span style={{ fontFamily: mono, fontSize: 10, color: C.muted }}>
+          ✓ {strong} · ◑ {partial} · ✗ {weak}
+        </span>
+      </div>
+
+      {/* Card */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+
+        {/* Card header */}
+        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div>
+              <div style={{ fontFamily: mono, fontSize: 10, color: AB_LEARNING_COLOR, letterSpacing: "0.12em", marginBottom: 6 }}>
+                {cat.label.toUpperCase()}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                {card.concept}
+              </div>
+            </div>
+            {persistedScore && (
+              <div style={{
+                padding: "4px 10px", borderRadius: 6, fontSize: 10, fontFamily: mono, letterSpacing: "0.08em",
+                background: persistedScore === "strong" ? C.ok + "22" : persistedScore === "partial" ? C.warn + "22" : C.err + "22",
+                color: persistedScore === "strong" ? C.ok : persistedScore === "partial" ? C.warn : C.err,
+                border: `1px solid ${persistedScore === "strong" ? C.ok : persistedScore === "partial" ? C.warn : C.err}`,
+                flexShrink: 0,
+              }}>
+                {persistedScore}
+              </div>
+            )}
+          </div>
+
+          {/* Formula */}
+          <div style={{ marginTop: 14, padding: "10px 14px", background: C.surface, borderRadius: 8, border: `1px solid ${C.border}` }}>
+            <span style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.1em" }}>FORMULA  </span>
+            <span style={{ fontFamily: mono, fontSize: 12, color: AB_LEARNING_COLOR }}>{card.formula}</span>
+          </div>
+        </div>
+
+        {/* Reveal / full content */}
+        {!revealed ? (
+          <div style={{ padding: "24px 20px", textAlign: "center" }}>
+            <button
+              onClick={() => setRevealed(true)}
+              style={{
+                padding: "12px 32px", borderRadius: 8, border: `1.5px solid ${AB_LEARNING_COLOR}`,
+                background: AB_LEARNING_COLOR + "18", color: AB_LEARNING_COLOR,
+                fontFamily: mono, fontSize: 12, cursor: "pointer", letterSpacing: "0.08em",
+              }}
+            >
+              Reveal Full Card
+            </button>
+            <div style={{ marginTop: 12, fontFamily: mono, fontSize: 10, color: C.muted }}>
+              Think first: when does this concept apply, and how would you explain it in an interview?
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: "20px 20px 0" }}>
+
+            {/* Why it matters */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 6 }}>WHY IT MATTERS</div>
+              <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7 }}>{card.why}</div>
+            </div>
+
+            {/* When it applies */}
+            <div style={{ marginBottom: 16, padding: "14px 16px", background: AB_LEARNING_COLOR + "0f", borderRadius: 8, borderLeft: `3px solid ${AB_LEARNING_COLOR}` }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: AB_LEARNING_COLOR, letterSpacing: "0.12em", marginBottom: 6 }}>WHEN IT APPLIES</div>
+              <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7 }}>{card.context}</div>
+            </div>
+
+            {/* Pitfalls */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.err, letterSpacing: "0.12em", marginBottom: 8 }}>COMMON MISTAKES</div>
+              {card.pitfalls.map((m, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: C.text, lineHeight: 1.65 }}>
+                  <span style={{ color: C.err, flexShrink: 0 }}>⚠</span>
+                  <span>{m}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Related concepts */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 8 }}>RELATED CONCEPTS</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {card.related.map((r, i) => (
+                  <span key={i} style={{
+                    padding: "3px 8px", borderRadius: 4, fontSize: 10, fontFamily: mono,
+                    background: C.surface, border: `1px solid ${C.border}`, color: C.muted,
+                  }}>{r}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Score buttons */}
+            {!scoredThisSession && (
+              <div style={{ borderTop: `1px solid ${C.border}`, padding: "16px 0", display: "flex", gap: 8 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.08em", alignSelf: "center", marginRight: 4 }}>RATE:</div>
+                {[
+                  { label: "Strong",  score: "strong",  color: C.ok },
+                  { label: "Partial", score: "partial", color: C.warn },
+                  { label: "Weak",    score: "weak",    color: C.err },
+                ].map(({ label, score, color }) => (
+                  <button
+                    key={score}
+                    onClick={() => handleScore(score)}
+                    style={{
+                      padding: "8px 20px", borderRadius: 6, border: `1.5px solid ${color}`,
+                      background: "transparent", color, fontFamily: mono, fontSize: 11,
+                      cursor: "pointer", letterSpacing: "0.06em",
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {scoredThisSession && (
+              <div style={{ borderTop: `1px solid ${C.border}`, padding: "14px 0" }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: C.muted }}>
+                  Scored as{" "}
+                  <span style={{
+                    color: scoredThisSession === "strong" ? C.ok : scoredThisSession === "partial" ? C.warn : C.err
+                  }}>
+                    {scoredThisSession}
+                  </span>
+                  {" "}this session
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, gap: 8 }}>
+        <button
+          onClick={handlePrev}
+          disabled={cardIdx === 0}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: `1.5px solid ${C.border}`,
+            background: "transparent", color: cardIdx === 0 ? C.muted : C.text,
+            fontFamily: mono, fontSize: 12, cursor: cardIdx === 0 ? "not-allowed" : "pointer",
+          }}
+        >
+          ← Prev
+        </button>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted, alignSelf: "center" }}>
+          {Object.keys(sessionScores).length} / {cards.length} reviewed
+        </span>
+        <button
+          onClick={handleNext}
+          disabled={cardIdx === cards.length - 1}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: `1.5px solid ${AB_LEARNING_COLOR}`,
+            background: AB_LEARNING_COLOR + "18", color: AB_LEARNING_COLOR,
+            fontFamily: mono, fontSize: 12, cursor: cardIdx === cards.length - 1 ? "not-allowed" : "pointer",
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function IntelMode({ apiKey, progress, onScore }) {
   const [submode, setSubmode] = useState("library");
 
@@ -7634,6 +8228,7 @@ function IntelMode({ apiKey, progress, onScore }) {
       {submode === "problem"   && <ProblemMetricMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "insight"   && <InsightRecMode apiKey={apiKey} progress={progress} onScore={onScore} />}
       {submode === "abtest"    && <ABTestMode apiKey={apiKey} progress={progress} onScore={onScore} />}
+      {submode === "ablearn"   && <ABLearningMode apiKey={apiKey} progress={progress} onScore={onScore} />}
     </div>
   );
 }
@@ -8599,6 +9194,466 @@ function KPILibraryMode({ apiKey, progress, onScore }) {
     </div>
   );
 }
+
+// ── BEHAVIORAL STAR MODE ──────────────────────────────────────────────────
+
+const BEHAVIORAL_STAR_COLOR = "#fb7185";
+
+const BEHAVIORAL_CATEGORIES = [
+  { id: "ambiguity",      label: "Ambiguity" },
+  { id: "conflict",       label: "Conflict" },
+  { id: "failure",        label: "Failure & Learning" },
+  { id: "leadership",     label: "Leadership w/o Authority" },
+  { id: "prioritization", label: "Prioritization" },
+  { id: "translation",    label: "Tech ↔ Business" },
+  { id: "stakeholder",    label: "Stakeholder Mgmt" },
+];
+
+const BEHAVIORAL_QUESTIONS = [
+  // AMBIGUITY (4)
+  {
+    id: "amb-1", category: "ambiguity",
+    question: "Tell me about a time you had to deliver an analysis when the business question itself wasn't clearly defined.",
+    signalGuidance: "Look for: how they clarified the question (talking to stakeholders, scoping framework), how they decided what to analyze, whether they delivered something useful despite ambiguity. Senior responses translate vague asks into specific analyzable questions and verify alignment before going deep.",
+  },
+  {
+    id: "amb-2", category: "ambiguity",
+    question: "Walk me through an analysis where you had to make significant assumptions to fill gaps in the data.",
+    signalGuidance: "Look for: how they identified the gaps, what assumptions they made and why, how they communicated assumptions to stakeholders, whether they tested sensitivity to those assumptions. Senior responses make assumptions explicit, justify them with data when possible, and quantify how the conclusion changes if assumptions are wrong.",
+  },
+  {
+    id: "amb-3", category: "ambiguity",
+    question: "Describe a time you discovered the data didn't support what leadership expected.",
+    signalGuidance: "Look for: how they handled the tension between the data and the expected narrative, how they communicated unexpected findings, whether they verified the result before delivering it. Senior responses validate before challenging, frame unexpected findings constructively, and offer a path forward rather than just delivering bad news.",
+  },
+  {
+    id: "amb-4", category: "ambiguity",
+    question: "Tell me about a project where requirements changed mid-analysis. How did you adapt?",
+    signalGuidance: "Look for: how they assessed the impact of the change, what they kept vs threw away, how they re-scoped with stakeholders, whether they documented the decision. Senior responses don't just absorb scope changes, they evaluate cost, communicate tradeoffs, and re-anchor on the underlying business question.",
+  },
+
+  // CONFLICT (3)
+  {
+    id: "con-1", category: "conflict",
+    question: "Tell me about a time a stakeholder pushed back on your analysis.",
+    signalGuidance: "Look for: how they responded to the pushback (defensive vs curious), whether they distinguished disagreement on methodology from disagreement on conclusion, how they resolved it. Senior responses treat pushback as data, separate emotional reaction from substantive critique, and adjust when warranted while standing firm when right.",
+  },
+  {
+    id: "con-2", category: "conflict",
+    question: "Describe a disagreement with a teammate about the right analytical approach.",
+    signalGuidance: "Look for: how they framed the disagreement, how they evaluated competing approaches on merit, what the outcome was. Senior responses focus on the problem rather than ego, propose tests or criteria to resolve disagreement empirically, and document the decision rationale.",
+  },
+  {
+    id: "con-3", category: "conflict",
+    question: "Tell me about a time you had to push back on a request from someone senior to you.",
+    signalGuidance: "Look for: how they framed the pushback, what alternative they offered, how they preserved the relationship. Senior responses come with evidence and an alternative path, frame pushback in terms of business outcome rather than personal preference, and recognize when to escalate vs let it go.",
+  },
+
+  // FAILURE / LEARNING (4)
+  {
+    id: "fail-1", category: "failure",
+    question: "Tell me about an analysis you got wrong. What did you learn?",
+    signalGuidance: "Look for: specific ownership of the mistake, root cause analysis, concrete change in subsequent behavior. Senior responses name a specific failure clearly, identify the systemic cause (not just 'I should have been more careful'), and describe how their process changed afterward.",
+  },
+  {
+    id: "fail-2", category: "failure",
+    question: "Walk me through a project that didn't deliver the impact you expected.",
+    signalGuidance: "Look for: clarity on the gap between expectation and outcome, honest diagnosis of what they could have done differently, what they took forward. Senior responses distinguish what was in their control from what wasn't, identify upstream decisions that affected the outcome, and pull a generalizable lesson.",
+  },
+  {
+    id: "fail-3", category: "failure",
+    question: "Describe a time you missed something important in your data and what happened.",
+    signalGuidance: "Look for: how they discovered the miss, whether they self-reported or got caught, how they handled the recovery. Senior responses describe a verification process that got better, distinguish a one-time slip from a systemic blind spot, and demonstrate they took accountability publicly.",
+  },
+  {
+    id: "fail-4", category: "failure",
+    question: "Tell me about feedback you received that changed how you approach your work.",
+    signalGuidance: "Look for: specific feedback (not generic), evidence of internalization (not just hearing it), behavioral change. Senior responses can quote the feedback nearly word-for-word, describe the resistance they initially felt, and point to concrete examples of how their behavior changed.",
+  },
+
+  // LEADERSHIP WITHOUT AUTHORITY (3)
+  {
+    id: "lwa-1", category: "leadership",
+    question: "Tell me about a time you influenced a decision without having authority over it.",
+    signalGuidance: "Look for: how they earned credibility, how they framed their case, what specifically moved the decision. Senior responses build influence through proactive value delivery before needing it, frame recommendations in terms of decision-maker priorities, and provide a clear ask rather than just analysis.",
+  },
+  {
+    id: "lwa-2", category: "leadership",
+    question: "Describe a time you aligned cross-functional partners around a recommendation.",
+    signalGuidance: "Look for: how they identified each partner's interests, how they handled competing priorities, what their alignment process looked like. Senior responses treat alignment as a separate workstream from analysis, anticipate objections, and design recommendations that can survive multiple stakeholders' constraints.",
+  },
+  {
+    id: "lwa-3", category: "leadership",
+    question: "Walk me through a project where you had to coordinate work across people who didn't report to you.",
+    signalGuidance: "Look for: how they created accountability without authority, how they handled missed commitments, how they kept momentum. Senior responses establish clear ownership and timelines upfront, escalate constructively when needed, and create visibility so problems surface early.",
+  },
+
+  // PRIORITIZATION (3)
+  {
+    id: "prio-1", category: "prioritization",
+    question: "Tell me about a time you had more requests than you could handle. How did you decide what to work on?",
+    signalGuidance: "Look for: explicit prioritization criteria, how they communicated tradeoffs to requestors, whether they renegotiated scope or just deprioritized. Senior responses use a framework (impact, urgency, reversibility), say no with an alternative, and surface the tradeoff to leadership rather than absorbing it silently.",
+  },
+  {
+    id: "prio-2", category: "prioritization",
+    question: "Describe a situation where you had to deprioritize something important.",
+    signalGuidance: "Look for: explicit acknowledgment that the deprioritized work was real and valuable, the criteria they used, how they communicated the decision. Senior responses don't pretend the deprioritized work was unimportant, name the cost of the tradeoff, and revisit the decision when conditions change.",
+  },
+  {
+    id: "prio-3", category: "prioritization",
+    question: "Walk me through how you chose between two competing analytical projects with different stakeholders.",
+    signalGuidance: "Look for: how they evaluated each project's value, whether they involved stakeholders in the prioritization, how they handled the loser. Senior responses make prioritization transparent, surface the conflict to a decision-maker who can adjudicate, and don't put themselves in the position of choosing between stakeholders alone.",
+  },
+
+  // TECHNICAL ↔ BUSINESS TRANSLATION (3)
+  {
+    id: "trans-1", category: "translation",
+    question: "Tell me about a time you had to explain a technical finding to a non-technical audience.",
+    signalGuidance: "Look for: how they identified the audience's existing mental model, what analogies they used, how they verified understanding. Senior responses lead with the implication, not the methodology, use familiar reference points, and check for understanding rather than assuming it.",
+  },
+  {
+    id: "trans-2", category: "translation",
+    question: "Describe a time you translated a vague business question into something analyzable.",
+    signalGuidance: "Look for: how they got from vague ask to specific metric, how they pressure-tested the translation with the requestor, whether they identified what they couldn't answer. Senior responses iterate on the question definition before touching data, name what's in scope and what isn't, and make the translation explicit so stakeholders can correct it.",
+  },
+  {
+    id: "trans-3", category: "translation",
+    question: "Walk me through how you presented a complex statistical result to executives.",
+    signalGuidance: "Look for: how they handled uncertainty in the result, what they cut, how they made the recommendation actionable. Senior responses lead with the recommendation, present uncertainty as a range rather than hiding it, and connect the statistical finding to a concrete business decision.",
+  },
+
+  // STAKEHOLDER MANAGEMENT (4)
+  {
+    id: "stake-1", category: "stakeholder",
+    question: "Tell me about a time you found an unexpected result in your data and had to communicate it.",
+    signalGuidance: "Look for: how they verified the unexpected result before communicating, how they framed it for the audience, what they recommended. Senior responses validate before publishing, frame unexpected findings as new information rather than as a challenge to leadership, and pair the finding with a path forward.",
+  },
+  {
+    id: "stake-2", category: "stakeholder",
+    question: "Describe a time you built trust with a skeptical stakeholder.",
+    signalGuidance: "Look for: what specifically created the skepticism, how they addressed it, what changed in the relationship. Senior responses understand the source of skepticism (often previous bad experience), demonstrate competence through small wins before tackling the big ask, and earn trust through consistency over time.",
+  },
+  {
+    id: "stake-3", category: "stakeholder",
+    question: "Walk me through how you handled a stakeholder who kept changing requirements.",
+    signalGuidance: "Look for: how they identified the underlying problem (often unclear thinking, not flakiness), how they helped the stakeholder converge, what they did to prevent future churn. Senior responses treat changing requirements as a sign that the upstream question isn't clear, work to clarify the underlying need, and use checkpoints to manage scope.",
+  },
+  {
+    id: "stake-4", category: "stakeholder",
+    question: "Tell me about a time you delivered bad news to leadership.",
+    signalGuidance: "Look for: how they framed the bad news, whether they paired it with options, how they handled the leadership reaction. Senior responses lead with the headline, separate facts from interpretation, present options rather than just problems, and don't delay or soften to avoid discomfort.",
+  },
+];
+
+function BehavioralSTARMode({ apiKey, progress, onScore }) {
+  const [activeCategory, setActiveCategory] = useState("ambiguity");
+  const [questionIdx, setQuestionIdx] = useState(0);
+  const [stage, setStage] = useState("input");
+  const [situation, setSituation] = useState("");
+  const [task, setTask] = useState("");
+  const [action, setAction] = useState("");
+  const [result, setResult] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const categoryQuestions = BEHAVIORAL_QUESTIONS.filter(q => q.category === activeCategory);
+  const question = categoryQuestions[questionIdx];
+
+  const handleCategoryChange = (id) => {
+    setActiveCategory(id);
+    setQuestionIdx(0);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setStage("input");
+    setSituation("");
+    setTask("");
+    setAction("");
+    setResult("");
+    setFeedback(null);
+    setError("");
+  };
+
+  const grade = async () => {
+    if (!apiKey) { setError("Add your Anthropic API key above to grade your response."); return; }
+    if (!situation.trim() || !task.trim() || !action.trim() || !result.trim()) {
+      setError("Fill in all four STAR fields before grading.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const prompt = `You are a senior data analyst hiring manager evaluating a junior analyst's behavioral interview response for a Data Analyst role.
+
+CATEGORY: ${activeCategory}
+QUESTION: ${question.question}
+
+SIGNAL GUIDANCE (what to look for in this specific question): ${question.signalGuidance}
+
+THE CANDIDATE'S RESPONSE:
+SITUATION: ${situation}
+TASK: ${task}
+ACTION: ${action}
+RESULT: ${result}
+
+Grade across STAR completeness AND senior-analyst signals.
+
+STAR FRAMEWORK (each 0-3):
+- SITUATION: Specific context, time/place/people, scope. Not vague.
+- TASK: Their specific responsibility. What was THEIR role, not the team's.
+- ACTION: What THEY specifically did. Concrete steps. "I" not "we" without distinguishing their part.
+- RESULT: Quantified outcome. Connection to business impact.
+
+SENIOR ANALYST SIGNALS (each 0-3):
+- DATA THINKING: Evidence of analytical rigor, frameworks, hypotheses, validation, segmentation, sensitivity testing.
+- BUSINESS FRAMING: Connection to business outcome, stakeholder needs, tradeoffs, opportunity cost.
+- OWNERSHIP: Personal accountability, what they would do differently, lessons internalized into ongoing behavior.
+
+Be discriminating. Don't grade leniently. "Strong" is reserved for senior-quality responses with specific evidence on every dimension. "Partial" is the realistic ceiling for most junior responses. Vague answers without specifics get "weak" regardless of length.
+
+Output structured plain text in this exact format:
+
+SITUATION_SCORE: [0-3]
+SITUATION_FEEDBACK: [1-2 sentences]
+TASK_SCORE: [0-3]
+TASK_FEEDBACK: [1-2 sentences]
+ACTION_SCORE: [0-3]
+ACTION_FEEDBACK: [1-2 sentences]
+RESULT_SCORE: [0-3]
+RESULT_FEEDBACK: [1-2 sentences]
+
+DATA_THINKING_SCORE: [0-3]
+DATA_THINKING_FEEDBACK: [1-2 sentences]
+BUSINESS_FRAMING_SCORE: [0-3]
+BUSINESS_FRAMING_FEEDBACK: [1-2 sentences]
+OWNERSHIP_SCORE: [0-3]
+OWNERSHIP_FEEDBACK: [1-2 sentences]
+
+OVERALL: [strong, partial, or weak]
+KEY_TAKEAWAY: [one sentence on the most important improvement to make]
+
+Plain text only, no markdown.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 2000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      setFeedback(text);
+      setStage("graded");
+
+      const overallMatch = text.match(/OVERALL:\s*(strong|partial|weak)/i);
+      if (overallMatch) {
+        const score = overallMatch[1].toLowerCase();
+        onScore(`behavioral-${activeCategory}`, questionIdx, score, { q: question.question.slice(0, 80) });
+      }
+    } catch (e) {
+      setError(e.message || "Grading failed");
+    }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setQuestionIdx(i => (i + 1) % categoryQuestions.length);
+    resetForm();
+  };
+
+  const prev = () => {
+    setQuestionIdx(i => (i - 1 + categoryQuestions.length) % categoryQuestions.length);
+    resetForm();
+  };
+
+  return (
+    <div>
+      {/* Category selector */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+        {BEHAVIORAL_CATEGORIES.map(c => {
+          const count = BEHAVIORAL_QUESTIONS.filter(q => q.category === c.id).length;
+          return (
+            <button
+              key={c.id}
+              onClick={() => handleCategoryChange(c.id)}
+              style={{
+                padding: "7px 12px", borderRadius: 6,
+                border: `1.5px solid ${activeCategory === c.id ? BEHAVIORAL_STAR_COLOR : C.border}`,
+                background: activeCategory === c.id ? BEHAVIORAL_STAR_COLOR + "18" : "transparent",
+                color: activeCategory === c.id ? BEHAVIORAL_STAR_COLOR : C.muted,
+                fontFamily: mono, fontSize: 10, cursor: "pointer", letterSpacing: "0.06em",
+              }}
+            >
+              {c.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Question nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontFamily: mono, fontSize: 11, color: C.muted }}>
+          Question {questionIdx + 1} of {categoryQuestions.length}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={prev} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>← Prev</button>
+          <button onClick={next} style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: mono, fontSize: 10, cursor: "pointer" }}>Next →</button>
+        </div>
+      </div>
+
+      {/* Question display */}
+      <div style={{ background: C.card, border: `1.5px solid ${BEHAVIORAL_STAR_COLOR}`, borderRadius: 12, padding: "16px 20px", marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: BEHAVIORAL_STAR_COLOR, letterSpacing: "0.12em", marginBottom: 8 }}>
+          🌟 BEHAVIORAL QUESTION
+        </div>
+        <div style={{ fontSize: 15, color: C.text, lineHeight: 1.6, fontWeight: 500 }}>{question.question}</div>
+      </div>
+
+      {/* STAR input fields */}
+      <div style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, letterSpacing: "0.12em", marginBottom: 14 }}>
+          STAR FRAMEWORK
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: BEHAVIORAL_STAR_COLOR, letterSpacing: "0.12em", marginBottom: 5 }}>
+            S — SITUATION
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 6, fontStyle: "italic" }}>
+            Set context. Specific time, place, people, scope.
+          </div>
+          <textarea
+            value={situation}
+            onChange={e => setSituation(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="When and where? Who was involved? What was the scope?"
+            style={{
+              width: "100%", minHeight: 60, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: BEHAVIORAL_STAR_COLOR, letterSpacing: "0.12em", marginBottom: 5 }}>
+            T — TASK
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 6, fontStyle: "italic" }}>
+            Your specific responsibility. Not the team's, yours.
+          </div>
+          <textarea
+            value={task}
+            onChange={e => setTask(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="What was YOUR specific role? What were you accountable for?"
+            style={{
+              width: "100%", minHeight: 60, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: BEHAVIORAL_STAR_COLOR, letterSpacing: "0.12em", marginBottom: 5 }}>
+            A — ACTION
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 6, fontStyle: "italic" }}>
+            What you specifically did. Concrete steps. "I" not "we".
+          </div>
+          <textarea
+            value={action}
+            onChange={e => setAction(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Walk through your specific actions step by step. What did you do, why, in what order?"
+            style={{
+              width: "100%", minHeight: 100, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: BEHAVIORAL_STAR_COLOR, letterSpacing: "0.12em", marginBottom: 5 }}>
+            R — RESULT
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 6, fontStyle: "italic" }}>
+            Quantified outcome. Business impact. What you learned.
+          </div>
+          <textarea
+            value={result}
+            onChange={e => setResult(e.target.value)}
+            disabled={stage === "graded"}
+            placeholder="Measurable outcome. Business impact. What you would do differently."
+            style={{
+              width: "100%", minHeight: 70, padding: "8px 10px",
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5,
+              color: C.text, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+          {stage === "input" && (
+            <button onClick={grade} disabled={loading} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.ok}`,
+              background: C.ok + "18", color: C.ok,
+              fontFamily: mono, fontSize: 11, cursor: loading ? "wait" : "pointer", letterSpacing: "0.06em",
+            }}>
+              {loading ? "Grading (15-30 sec)..." : "Grade with AI"}
+            </button>
+          )}
+          {stage === "graded" && (
+            <button onClick={resetForm} style={{
+              padding: "10px 24px", borderRadius: 6, border: `1.5px solid ${C.border}`,
+              background: "transparent", color: C.muted,
+              fontFamily: mono, fontSize: 11, cursor: "pointer", letterSpacing: "0.06em",
+            }}>
+              Try Again
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ background: C.err + "15", border: `1px solid ${C.err}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12, color: C.err, fontSize: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {feedback && stage === "graded" && (
+        <div style={{ background: C.card, border: `1.5px solid ${C.ok}`, borderRadius: 12, padding: 18 }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: C.ok, letterSpacing: "0.12em", marginBottom: 10 }}>AI FEEDBACK</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, color: C.text, lineHeight: 1.65, fontFamily: mono, margin: 0 }}>{feedback}</pre>
+
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.accent, letterSpacing: "0.12em", marginBottom: 8 }}>WHAT THE GRADER WAS LOOKING FOR</div>
+            <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, fontStyle: "italic" }}>{question.signalGuidance}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [module, setModule] = useState("sql");
   const [tab, setTab] = useState("flashcards");
@@ -8785,6 +9840,7 @@ export default function App() {
             { id: "sqlprep", label: "📋 SQL Prep" },
             { id: "coach", label: "◈ Coach" },
             { id: "kpi", label: "📊 Intel" },
+            { id: "behavioral", label: "🌟 STAR" },
             ...(activeDomainPack ? [{ id: "domain", label: `${activeDomainPack.icon} ${activeDomainPack.label}` }] : []),
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -8816,6 +9872,7 @@ export default function App() {
           />
         )}
         {tab === "kpi" && <IntelMode key="kpi" apiKey={apiKey} progress={progress} onScore={handleScore} />}
+        {tab === "behavioral" && <BehavioralSTARMode key="behavioral" apiKey={apiKey} progress={progress} onScore={handleScore} />}
 
         <div style={{ marginTop: 36, padding: "13px 18px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: mono, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
           <span style={{ color: C.accent }}>TIP: </span>
